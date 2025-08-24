@@ -5,12 +5,14 @@ import { motion } from 'framer-motion';
 import { XIcon } from '../Icons';
 import Dashboard from './Dashboard';
 import Roadmap from './Roadmap';
+// import CodeTerminal from './CodeTerminal'; // We will import this dynamically
 import Documentation from './Documentation';
 import dynamic from 'next/dynamic';
 
+// THIS IS THE FIX: Dynamically import CodeTerminal with SSR turned off
 const CodeTerminal = dynamic(() => import('./CodeTerminal'), {
-  ssr: false,
-  loading: () => <p>Loading Interactive Editor...</p>
+    ssr: false,
+    loading: () => <p className="text-center text-gray-400">Loading Interactive Editor...</p>
 });
 
 
