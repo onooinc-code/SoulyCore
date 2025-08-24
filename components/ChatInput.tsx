@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -39,7 +40,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     
     const updateMentionedContacts = (text: string) => {
         const mentionRegex = /@(\w+)/g;
-        const currentMentions = new Set([...text.matchAll(mentionRegex)].map(match => match[1].toLowerCase()));
+        const currentMentions = new Set(Array.from(text.matchAll(mentionRegex)).map(match => match[1].toLowerCase()));
         const newMentionedContacts = contacts.filter(c => currentMentions.has(c.name.toLowerCase()));
         setMentionedContacts(newMentionedContacts);
     };
