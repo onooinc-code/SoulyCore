@@ -1,5 +1,6 @@
 
 
+
 import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
@@ -121,13 +122,21 @@ export const generateProactiveSuggestion = async (history: Content[]): Promise<s
     if (history.length < 2) return null; // Needs at least one user/model exchange
 
     try {
-         const prompt = `Based on the last few messages of this conversation, suggest a relevant proactive action. For example, if they are talking about a person, suggest mentioning them with @. If they discuss planning, suggest creating a task. Be concise and phrase it as a question. If no action is obvious, return an empty string. Conversation:\n\n${history.slice(-4).filter(m => typeof m === 'object' && m !== null && !Array.isArray(m) && m.parts && m.parts.length > 0).map(m => `${m.role}: ${m.parts[0].text}`).join('\n')}`;
+           const conversationHistoryText = history
+                .slice(-4)
+                .filter((m): m is { role: string; parts: { text: string }[] } => 
+                    typeof m === 'object' && m !== null && Array.isArray(m.parts) && m.parts.length > 0
+                )
+                .map(m => `${m.role}: ${m.parts[0].text}`)
+                .join('\n');
 
-         const result = await ai.models.generateContent({ model: modelName, contents: prompt });
-         if (!result || !result.text) {
+           const prompt = `Based on the last few messages of this conversation, suggest a relevant proactive action. For example, if they are talking about a person, suggest mentioning them with @. If they discuss planning, suggest creating a task. Be concise and phrase it as a question. If no action is obvious, return an empty string. Conversation:\n\n${conversationHistoryText}`;
+
+           const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+           if (!result || !result.text) {
             return null;
-         }
-         return result.text.trim() || null;
+           }
+           return result.text.trim() || null;
 
     } catch(e) {
         console.error("Suggestion generation failed:", e);
