@@ -1,31 +1,38 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { SendIcon } from './Icons';
 import LoadingIndicator from './LoadingIndicator';
-import { dbService } from '../context/db/db';
-import type { Contact } from '../../types';
-import { useAppContext } from '../context/AppContext';
+import type { Contact } from '../lib/types';
+import { useAppContext } from './providers/AppProvider';
 
 interface ChatInputProps {
-    onSendMessage: (content: string) => void;
+    onSendMessage: (content: string, mentionedContacts: Contact[]) => void;
     isLoading: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
-    const { dbReady } = useAppContext();
+    const { currentConversation } = useAppContext();
     const [content, setContent] = useState('');
     const [contacts, setContacts] = useState<Contact[]>([]);
+    const [mentionedContacts, setMentionedContacts] = useState<Contact[]>([]);
     const [showMentions, setShowMentions] = useState(false);
     const [mentionQuery, setMentionQuery] = useState('');
 
     useEffect(() => {
-        if (dbReady) {
-            const fetchContacts = async () => {
-                const allContacts = await dbService.contacts.getAll();
-                setContacts(allContacts);
-            };
-            fetchContacts();
-        }
-    }, [dbReady]);
+        const fetchContacts = async () => {
+            try {
+                const res = await fetch('/api/contacts');
+                if (res.ok) {
+                    const data = await res.json();
+                    setContacts(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch contacts:", error);
+            }
+        };
+        fetchContacts();
+    }, []);
 
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
@@ -40,16 +47,18 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         }
     };
     
-    const handleMentionSelect = (name: string) => {
-        const newContent = content.replace(/@\w*$/, `@${name} `);
+    const handleMentionSelect = (contact: Contact) => {
+        const newContent = content.replace(/@\w*$/, `@${contact.name} `);
         setContent(newContent);
+        setMentionedContacts(prev => [...prev, contact]);
         setShowMentions(false);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSendMessage(content);
+        onSendMessage(content, mentionedContacts);
         setContent('');
+        setMentionedContacts([]);
         setShowMentions(false);
     };
 
@@ -63,7 +72,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                     {filteredContacts.map(contact => (
                         <button
                             key={contact.id}
-                            onClick={() => handleMentionSelect(contact.name)}
+                            onClick={() => handleMentionSelect(contact)}
                             className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
                         >
                             {contact.name}
@@ -84,12 +93,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                     placeholder="Type your message here... use @ to mention contacts."
                     className="flex-1 p-2 bg-gray-700 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     rows={1}
-                    disabled={isLoading}
+                    disabled={isLoading || !currentConversation}
                 />
                 <button
                     type="submit"
                     className="p-3 bg-indigo-600 rounded-full text-white hover:bg-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
-                    disabled={isLoading || !content.trim()}
+                    disabled={isLoading || !content.trim() || !currentConversation}
                 >
                     <SendIcon className="w-5 h-5" />
                 </button>

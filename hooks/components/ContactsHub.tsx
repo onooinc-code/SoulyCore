@@ -3,20 +3,24 @@ import type { Contact } from '../../types';
 import { dbService } from '../context/db/db';
 import { motion } from 'framer-motion';
 import { XIcon, PlusIcon, TrashIcon, EditIcon, UploadIcon } from './Icons';
+import { useAppContext } from '../context/AppContext';
 
 interface ContactsHubProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
 const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
+    const { dbReady } = useAppContext();
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [currentContact, setCurrentContact] = useState<Partial<Contact> | null>(null);
 
     const fetchContacts = useCallback(async () => {
-        const allContacts = await dbService.contacts.getAll();
-        setContacts(allContacts.sort((a, b) => a.name.localeCompare(b.name)));
-    }, []);
+        if (dbReady) {
+            const allContacts = await dbService.contacts.getAll();
+            setContacts(allContacts.sort((a, b) => a.name.localeCompare(b.name)));
+        }
+    }, [dbReady]);
 
     useEffect(() => {
         fetchContacts();

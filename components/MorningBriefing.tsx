@@ -1,0 +1,75 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { XIcon } from './Icons';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+const MorningBriefing: React.FC = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [summary, setSummary] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const today = new Date().toDateString();
+        const lastVisit = localStorage.getItem('lastVisit');
+
+        if (lastVisit !== today) {
+            const fetchBriefing = async () => {
+                setIsOpen(true);
+                // In a real implementation, we'd fetch the last conversation and summarize it.
+                // For now, we'll use a placeholder summary.
+                setTimeout(() => {
+                    setSummary("Welcome back! In your last session, you were discussing the technical design for the new proactive suggestions feature. You approved the idea and were about to start outlining the component structure.");
+                    setIsLoading(false);
+                    localStorage.setItem('lastVisit', today);
+                }, 1500);
+            };
+            fetchBriefing();
+        }
+    }, []);
+
+    if (!isOpen) {
+        return null;
+    }
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100] p-4"
+                    onClick={() => setIsOpen(false)}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4 border border-indigo-500/50"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold">Your Morning Briefing</h2>
+                            <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-gray-700">
+                                <XIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="prose-custom max-h-80 overflow-y-auto">
+                            {isLoading ? (
+                                <p>Preparing your daily summary...</p>
+                            ) : (
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
+                            )}
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+export default MorningBriefing;

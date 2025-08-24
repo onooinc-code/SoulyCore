@@ -13,7 +13,7 @@ interface MemoryCenterProps {
 }
 
 const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
-    const { messages, currentConversation } = useAppContext();
+    const { messages, currentConversation, dbReady } = useAppContext();
     const { createEmbedding, extractEntitiesFromText } = useGemini();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,18 +37,20 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
     const [isEntityFormVisible, setIsEntityFormVisible] = useState(false);
 
     const fetchData = useCallback(async () => {
-        const [k, e, t, cacheCount] = await Promise.all([
-            dbService.knowledge.getAll(),
-            dbService.entities.getAll(),
-            dbService.tools.getAll(),
-            dbService.cache.count(),
-        ]);
+        if (dbReady) {
+            const [k, e, t, cacheCount] = await Promise.all([
+                dbService.knowledge.getAll(),
+                dbService.entities.getAll(),
+                dbService.tools.getAll(),
+                dbService.cache.count(),
+            ]);
 
-        setKnowledgeItems(k);
-        setEntities(e);
-        setTools(t);
-        setStats({ knowledge: k.length, entities: e.length, cache: cacheCount });
-    }, []);
+            setKnowledgeItems(k);
+            setEntities(e);
+            setTools(t);
+            setStats({ knowledge: k.length, entities: e.length, cache: cacheCount });
+        }
+    }, [dbReady]);
 
     useEffect(() => {
         fetchData();
