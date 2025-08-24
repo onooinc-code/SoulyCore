@@ -5,8 +5,6 @@ import { knowledgeBaseIndex } from '@/lib/pinecone';
 import { Content } from "@google/genai";
 import { Message, Contact } from '@/lib/types';
 
-export const runtime = 'edge';
-
 export async function POST(req: NextRequest) {
     try {
         const { messages, conversation, mentionedContacts, config } = await req.json();

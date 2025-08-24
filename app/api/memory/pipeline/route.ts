@@ -4,8 +4,6 @@ import { sql } from '@/lib/db';
 import { knowledgeBaseIndex } from '@/lib/pinecone';
 import { v4 as uuidv4 } from 'uuid';
 
-export const runtime = 'edge';
-
 export async function POST(req: NextRequest) {
     try {
         const { textToAnalyze } = await req.json();
