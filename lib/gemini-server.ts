@@ -36,6 +36,7 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
 export const generateChatResponse = async (
     history: Content[],
     systemInstruction: string,
+    config?: { temperature?: number, topP?: number }
 ): Promise<GenerateContentResponse | null> => {
     try {
         const result = await ai.models.generateContent({
@@ -43,8 +44,8 @@ export const generateChatResponse = async (
             contents: history,
             config: {
                 systemInstruction: systemInstruction || "You are a helpful AI assistant.",
-                temperature: 0.7,
-                topP: 0.95,
+                temperature: config?.temperature ?? 0.7,
+                topP: config?.topP ?? 0.95,
             }
         });
         return result;

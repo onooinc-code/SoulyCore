@@ -1,11 +1,9 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { Conversation } from '@/lib/types';
-import { dbService } from '@/lib/db/db';
 import { XIcon } from './Icons';
-import { useAppContext } from '@/lib/context/AppContext';
+import { useAppContext } from '@/components/providers/AppProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AgentConfigModalProps {
@@ -15,32 +13,48 @@ interface AgentConfigModalProps {
 }
 
 const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, conversation }) => {
-    const { loadConversations, setCurrentConversation } = useAppContext();
+    const { loadConversations, setCurrentConversation: setContextConversation, setStatus, clearError } = useAppContext();
     const [systemPrompt, setSystemPrompt] = useState('');
-    const [useSemantic, setUseSemantic] = useState(false);
-    const [useStructured, setUseStructured] = useState(true);
+    const [useSemanticMemory, setUseSemanticMemory] = useState(false);
+    const [useStructuredMemory, setUseStructuredMemory] = useState(true);
 
     useEffect(() => {
         if (conversation && isOpen) {
             setSystemPrompt(conversation.systemPrompt || 'You are a helpful AI assistant.');
-            setUseSemantic(conversation.useSemanticMemory ?? false);
-            setUseStructured(conversation.useStructuredMemory ?? true);
+            setUseSemanticMemory(conversation.useSemanticMemory ?? true);
+            setUseStructuredMemory(conversation.useStructuredMemory ?? true);
         }
     }, [conversation, isOpen]);
 
     const handleSave = async () => {
         if (!conversation) return;
+        clearError();
         
-        const updatedConversation: Conversation = {
-            ...conversation,
+        const updatedConversationData = {
             systemPrompt,
-            useSemanticMemory: useSemantic,
-            useStructuredMemory: useStructured,
+            useSemanticMemory,
+            useStructuredMemory,
         };
-        await dbService.conversations.update(updatedConversation);
-        setCurrentConversation(updatedConversation); // Update context immediately
-        await loadConversations(); // To refresh sidebar list
-        onClose();
+
+        try {
+            const res = await fetch(`/api/conversations/${conversation.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedConversationData)
+            });
+
+            if (!res.ok) throw new Error('Failed to update agent configuration');
+
+            const updatedConversation = await res.json();
+            
+            await loadConversations();
+            // After loading, find the conversation in the new list and set it
+            setContextConversation(updatedConversation.id);
+            onClose();
+        } catch (error) {
+            setStatus({ error: (error as Error).message });
+            console.error(error);
+        }
     };
 
     return (
@@ -72,12 +86,12 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, co
                     <div>
                         <h3 className="text-lg font-medium text-gray-300 mb-2">Memory Association</h3>
                         <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-sm text-gray-400">
-                                <input type="checkbox" checked={useSemantic} onChange={e => setUseSemantic(e.target.checked)} disabled className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50" />
-                                <span>Use Semantic Memory (Knowledge Base - Disabled)</span>
+                            <label className="flex items-center gap-2 text-sm text-gray-300">
+                                <input type="checkbox" checked={useSemanticMemory} onChange={e => setUseSemanticMemory(e.target.checked)} className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                                <span>Use Semantic Memory (Knowledge Base)</span>
                             </label>
                             <label className="flex items-center gap-2 text-sm text-gray-300">
-                                <input type="checkbox" checked={useStructured} onChange={e => setUseStructured(e.target.checked)} className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                                <input type="checkbox" checked={useStructuredMemory} onChange={e => setUseStructuredMemory(e.target.checked)} className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
                                 <span>Use Structured Memory (Entities)</span>
                             </label>
                         </div>

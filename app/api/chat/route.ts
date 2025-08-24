@@ -3,13 +3,13 @@ import { generateChatResponse, generateEmbedding, generateProactiveSuggestion } 
 import { sql } from '@/lib/db';
 import { knowledgeBaseIndex } from '@/lib/pinecone';
 import { Content } from "@google/genai";
-import { Message } from '@/lib/types';
+import { Message, Contact } from '@/lib/types';
 
 export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
     try {
-        const { messages, conversation } = await req.json();
+        const { messages, conversation, mentionedContacts, config } = await req.json();
         
         if (!messages || !conversation) {
             return NextResponse.json({ error: 'Missing messages or conversation data' }, { status: 400 });
@@ -40,21 +40,32 @@ export async function POST(req: NextRequest) {
                 semanticContext = `CONTEXT: Here is some relevant information from your knowledge base:\n${relevantKnowledge}`;
             }
         }
+        
+        // 3. Add Contact Context if present
+        let contactContext = '';
+        if (mentionedContacts && mentionedContacts.length > 0) {
+            contactContext = "CONTEXT: You have the following context about people mentioned in this message:\n" +
+                (mentionedContacts as Contact[]).map(c => 
+                    `- Name: ${c.name}\n  Email: ${c.email || 'N/A'}\n  Company: ${c.company || 'N/A'}\n  Notes: ${c.notes || 'N/A'}`
+                ).join('\n\n');
+        }
 
-        // 3. Construct the full prompt history
+
+        // 4. Construct the full prompt history
         const history: Content[] = messages.slice(0, -1).map((msg: Message) => ({
             role: msg.role,
             parts: [{ text: msg.content }]
         }));
         
         // Inject context directly before the user's final message for maximum relevance
-        const contextualPrompt = [entityContext, semanticContext, userMessage.content].filter(Boolean).join('\n\n');
+        const contextualPrompt = [entityContext, semanticContext, contactContext, userMessage.content].filter(Boolean).join('\n\n');
         history.push({ role: 'user', parts: [{ text: contextualPrompt }]});
 
-        // 4. Generate AI Response
+        // 5. Generate AI Response
         const result = await generateChatResponse(
             history, 
-            conversation.systemPrompt
+            conversation.systemPrompt,
+            config
         );
         
         if (!result) {
@@ -63,7 +74,7 @@ export async function POST(req: NextRequest) {
 
         const responseText = result.text;
         
-        // 5. Generate Proactive Suggestion (non-blocking)
+        // 6. Generate Proactive Suggestion (non-blocking)
         let suggestion = null;
         if (history.length > 1) { // Only suggest after at least one exchange
              const suggestionHistory = [...history, { role: 'model', parts: [{ text: responseText }] }];

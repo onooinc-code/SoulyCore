@@ -50,20 +50,22 @@ const ChatWindow: React.FC = () => {
         setSummaryModalState({ isOpen: true, text: summary, isLoading: false });
     };
 
-    const handleSendMessage = async (content: string, mentionedContacts?: Contact[]) => {
+    const handleSendMessage = async (content: string, mentionedContacts: Contact[]) => {
         if (!content.trim()) return;
-        setIsLoading(true);
-        setStatus({ currentAction: "Processing input..." });
-        setProactiveSuggestion(null);
-        clearError();
-
+        
         const userMessage: Omit<MessageType, 'id' | 'createdAt' | 'conversationId'> = {
             role: 'user',
             content,
             tokenCount: Math.ceil(content.length / 4),
         };
 
-        const { aiResponse, suggestion } = await addMessage(userMessage);
+        const settings = JSON.parse(localStorage.getItem('gemini-settings') || '{}');
+        const config = {
+            temperature: settings.temperature,
+            topP: settings.topP
+        };
+
+        const { aiResponse, suggestion } = await addMessage(userMessage, mentionedContacts, config);
 
         if (aiResponse) {
             setProactiveSuggestion(suggestion);
@@ -75,9 +77,6 @@ const ChatWindow: React.FC = () => {
                 body: JSON.stringify({ textToAnalyze })
             }).catch(err => console.error("Memory pipeline trigger failed:", err)); // Fire-and-forget
         }
-        
-        setIsLoading(false);
-        setStatus({ currentAction: "" });
     };
     
     const handleSuggestionClick = () => {
