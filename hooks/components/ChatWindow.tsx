@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { useGemini } from '../useGemini';
@@ -51,7 +52,7 @@ const ChatWindow: React.FC = () => {
 
         // Handle @ mentions
         const mentionRegex = /@(\w+)/g;
-        const mentions = [...content.matchAll(mentionRegex)].map(match => match[1]);
+        const mentions = Array.from(content.matchAll(mentionRegex)).map(match => match[1]);
         let mentionedContacts: Contact[] = [];
         if (mentions.length > 0) {
             setStatus({ currentAction: "Fetching contact info..." });
