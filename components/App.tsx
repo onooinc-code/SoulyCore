@@ -3,14 +3,27 @@
 import React, { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ChatWindow from '@/components/ChatWindow';
-import MemoryCenter from '@/components/MemoryCenter';
-import DevCenter from '@/components/dev_center/DevCenter';
-import ContactsHub from '@/components/ContactsHub';
 import MorningBriefing from '@/components/MorningBriefing';
 import { MenuIcon, XIcon, MemoryIcon } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import dynamic from 'next/dynamic';
+
+const DevCenter = dynamic(() => import('@/components/dev_center/DevCenter'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Dev Center...</p></div>
+});
+
+const ContactsHub = dynamic(() => import('@/components/ContactsHub'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Contacts Hub...</p></div>
+});
+
+const MemoryCenter = dynamic(() => import('@/components/MemoryCenter'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Memory Center...</p></div>
+});
 
 const App: React.FC = () => {
     const { createNewConversation } = useAppContext();
