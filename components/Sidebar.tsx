@@ -1,9 +1,9 @@
+
 "use client";
 
 import React from 'react';
-import { useAppContext } from './providers/AppProvider';
-import { PlusIcon, MemoryIcon, CodeIcon, UsersIcon } from './Icons';
-import type { Conversation } from '../lib/types';
+import { useAppContext } from '@/lib/context/AppContext';
+import { PlusIcon, MemoryIcon, CodeIcon, UsersIcon } from '@/components/Icons';
 
 interface SidebarProps {
     setMemoryCenterOpen: (isOpen: boolean) => void;
@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setDevCenterOpen
                     {conversations.map(convo => (
                         <li key={convo.id}>
                             <button
-                                onClick={() => setCurrentConversation(convo.id)}
+                                onClick={() => setCurrentConversation(convo)}
                                 className={`w-full text-left p-2 rounded-md text-sm truncate ${currentConversation?.id === convo.id ? 'bg-gray-700' : 'hover:bg-gray-700/50'}`}
                             >
                                 {convo.title}

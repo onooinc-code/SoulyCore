@@ -1,15 +1,15 @@
+
 "use client";
 
 import React, { useState } from 'react';
-import Sidebar from './Sidebar';
-import ChatWindow from './ChatWindow';
-import MemoryCenter from './MemoryCenter';
-import DevCenter from './dev_center/DevCenter';
-import ContactsHub from './ContactsHub';
-import { MenuIcon, XIcon, MemoryIcon } from './Icons';
+import { AppProvider } from '@/lib/context/AppContext';
+import Sidebar from '@/components/Sidebar';
+import ChatWindow from '@/components/ChatWindow';
+import MemoryCenter from '@/components/MemoryCenter';
+import DevCenter from '@/components/dev_center/DevCenter';
+import ContactsHub from '@/components/ContactsHub';
+import { MenuIcon, XIcon, MemoryIcon } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts';
-import MorningBriefing from './MorningBriefing';
 
 
 const App: React.FC = () => {
@@ -18,13 +18,8 @@ const App: React.FC = () => {
     const [isDevCenterOpen, setDevCenterOpen] = useState(false);
     const [isContactsHubOpen, setContactsHubOpen] = useState(false);
 
-    useKeyboardShortcuts({
-        'mod+k': () => setMemoryCenterOpen(true),
-        'mod+n': () => console.log("New chat shortcut pressed"), // Integrate with createNewConversation
-    });
-
     return (
-        <>
+        <AppProvider>
             <div className="flex h-screen bg-gray-900 text-gray-200 font-sans overflow-hidden">
                 <AnimatePresence>
                     {isSidebarOpen && (
@@ -44,6 +39,7 @@ const App: React.FC = () => {
                     )}
                 </AnimatePresence>
                 
+                {/* Overlay for mobile */}
                 <div className={`fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)}></div>
 
                 <div className="flex-1 flex flex-col relative">
@@ -58,7 +54,7 @@ const App: React.FC = () => {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setMemoryCenterOpen(true)} 
                             className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 flex items-center gap-2"
-                            title="Open Memory Center (Cmd+K)"
+                            title="Open Memory Center"
                         >
                             <MemoryIcon className="w-5 h-5" />
                             <span>Memory Center</span>
@@ -75,8 +71,7 @@ const App: React.FC = () => {
                     {isContactsHubOpen && <ContactsHub setIsOpen={setContactsHubOpen} />}
                 </AnimatePresence>
             </div>
-            <MorningBriefing />
-        </>
+        </AppProvider>
     );
 };
 

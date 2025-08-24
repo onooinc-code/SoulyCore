@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useState } from 'react';
-import type { Message as MessageType } from '../lib/types';
+import type { Message as MessageType } from '@/lib/types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
@@ -10,16 +11,16 @@ import MessageFooter from './MessageFooter';
 
 interface MessageProps {
     message: MessageType;
+    onUpdateMessage: (message: MessageType) => void;
     onSummarize: (content: string) => void;
 }
 
-const Message: React.FC<MessageProps> = ({ message, onSummarize }) => {
+const Message: React.FC<MessageProps> = ({ message, onUpdateMessage, onSummarize }) => {
     const isUser = message.role === 'user';
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const handleBookmark = () => {
-        // This would call an API to update the bookmark status
-        console.log("Bookmarking message:", message.id);
+        onUpdateMessage({ ...message, isBookmarked: !message.isBookmarked });
     };
     
     const handleCopy = () => {
