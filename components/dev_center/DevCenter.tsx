@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -6,8 +5,14 @@ import { motion } from 'framer-motion';
 import { XIcon } from '../Icons';
 import Dashboard from './Dashboard';
 import Roadmap from './Roadmap';
-import CodeTerminal from './CodeTerminal';
 import Documentation from './Documentation';
+import dynamic from 'next/dynamic';
+
+const CodeTerminal = dynamic(() => import('./CodeTerminal'), {
+  ssr: false,
+  loading: () => <p>Loading Interactive Editor...</p>
+});
+
 
 type Tab = 'dashboard' | 'roadmap' | 'code' | 'docs';
 
