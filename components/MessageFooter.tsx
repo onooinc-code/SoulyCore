@@ -17,7 +17,7 @@ const MessageFooter: React.FC<MessageFooterProps> = ({ message }) => {
     return (
         <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
             <span>{formattedDate}</span>
-            {message.tokenCount > 0 && <span>{message.tokenCount} tokens</span>}
+            {message.tokenCount && message.tokenCount > 0 && <span>{message.tokenCount} tokens</span>}
             {message.responseTime && <span>{message.responseTime} ms</span>}
         </div>
     );
