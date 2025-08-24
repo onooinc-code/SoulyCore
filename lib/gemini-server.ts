@@ -102,6 +102,10 @@ export const extractDataFromText = async (text: string): Promise<{ entities: any
             }
         });
         
+        if (!result || !result.text) {
+            console.error("Data extraction failed: No text in response.");
+            return { entities: [], knowledge: [] };
+        }
         const jsonStr = result.text.trim();
         return JSON.parse(jsonStr);
 
@@ -118,6 +122,9 @@ export const generateProactiveSuggestion = async (history: Content[]): Promise<s
          const prompt = `Based on the last few messages of this conversation, suggest a relevant proactive action. For example, if they are talking about a person, suggest mentioning them with @. If they discuss planning, suggest creating a task. Be concise and phrase it as a question. If no action is obvious, return an empty string. Conversation:\n\n${history.slice(-4).map(m => `${m.role}: ${m.parts[0].text}`).join('\n')}`;
 
          const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+         if (!result || !result.text) {
+            return null;
+         }
          return result.text.trim() || null;
 
     } catch(e) {
