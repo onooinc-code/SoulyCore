@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractDataFromText, generateEmbedding } from '../../../lib/gemini-server';
-import { sql } from '@vercel/postgres';
-import { knowledgeBaseIndex } from '../../../lib/pinecone';
+import { extractDataFromText, generateEmbedding } from '@/lib/gemini-server';
+import { sql } from '@/lib/db';
+import { knowledgeBaseIndex } from '@/lib/pinecone';
 import { v4 as uuidv4 } from 'uuid';
+
+export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
     try {
@@ -19,17 +21,15 @@ export async function POST(req: NextRequest) {
         if (entities && entities.length > 0) {
             for (const entity of entities) {
                 try {
-                    // Deduplicate before inserting
+                    // Deduplicate before inserting. ON CONFLICT DO UPDATE to refresh details.
                     const { rowCount } = await sql`
                         INSERT INTO entities (name, type, details_json)
                         VALUES (${entity.name}, ${entity.type}, ${entity.details})
-                        ON CONFLICT (name, type) DO NOTHING;
+                        ON CONFLICT (name, type) DO UPDATE SET details_json = EXCLUDED.details_json, "createdAt" = CURRENT_TIMESTAMP;
                     `;
-                    if (rowCount && rowCount > 0) {
-                        newEntitiesCount++;
-                    }
+                    newEntitiesCount++; // Count attempt, not just new rows
                 } catch (e) {
-                    console.error(`Failed to insert entity: ${entity.name}`, e);
+                    console.error(`Failed to insert/update entity: ${entity.name}`, e);
                 }
             }
         }
@@ -37,31 +37,39 @@ export async function POST(req: NextRequest) {
         // Process Knowledge Chunks
         let newKnowledgeCount = 0;
         if (knowledge && knowledge.length > 0) {
-            for (const chunk of knowledge) {
-                const embedding = await generateEmbedding(chunk);
+            const vectorsToUpsert = [];
 
-                // Deduplicate by semantic similarity
+            for (const chunk of knowledge) {
+                if (chunk.split(' ').length < 5) continue; // Ignore very short chunks
+
+                const embedding = await generateEmbedding(chunk);
+                
+                // Simple deduplication: Check if an exact match already exists
                 const queryResponse = await knowledgeBaseIndex.query({
                     vector: embedding,
                     topK: 1,
-                    filter: { text: { "$eq": chunk } } // Exact match filter for simple dedupe
+                    filter: { "text": { "$eq": chunk } }
                 });
 
                 if (queryResponse.matches.length === 0) {
-                    await knowledgeBaseIndex.upsert([{
+                    vectorsToUpsert.push({
                         id: uuidv4(),
                         values: embedding,
                         metadata: { text: chunk },
-                    }]);
+                    });
                     newKnowledgeCount++;
                 }
+            }
+            if (vectorsToUpsert.length > 0) {
+                await knowledgeBaseIndex.upsert(vectorsToUpsert);
             }
         }
 
         return NextResponse.json({
             message: 'Memory pipeline executed successfully.',
-            newEntities: newEntitiesCount,
-            newKnowledge: newKnowledgeCount,
+            processedEntities: entities.length,
+            processedKnowledge: knowledge.length,
+            newKnowledgeUpserted: newKnowledgeCount,
         });
 
     } catch (error) {

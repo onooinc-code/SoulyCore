@@ -1,4 +1,3 @@
-
 export type Role = 'user' | 'model';
 
 export interface Conversation {
@@ -9,10 +8,8 @@ export interface Conversation {
     createdAt: Date;
     lastUpdatedAt: Date;
     systemPrompt?: string;
-    memoryConfig?: {
-        useSemantic: boolean;
-        useStructured: boolean;
-    };
+    useSemanticMemory?: boolean;
+    useStructuredMemory?: boolean;
 }
 
 export interface Message {
@@ -21,27 +18,26 @@ export interface Message {
     role: Role;
     content: string;
     createdAt: Date;
-    tokenCount: number;
-    responseTime: number | null;
-    isBookmarked: boolean;
+    tokenCount?: number;
+    responseTime?: number | null;
+    isBookmarked?: boolean;
 }
 
 export interface Contact {
     id: string;
     name: string;
-    email: string;
-    company: string;
-    tags: string[];
-    notes: string;
+    email?: string;
+    company?: string;
+    phone?: string;
+    linkedin_url?: string;
+    address?: string;
+    tags?: string[];
+    notes?: string;
+    last_contacted_date?: Date;
+    details_json?: Record<string, any>;
     createdAt: Date;
 }
 
-export interface Knowledge {
-    id: string;
-    content: string;
-    embedding: number[];
-    source: string;
-}
 
 export interface Entity {
     id: string;
@@ -55,6 +51,13 @@ export interface Tool {
     name: string;
     description: string;
     schema_json: string;
+}
+
+export interface Knowledge {
+    id: string;
+    content: string;
+    embedding: number[];
+    source: string;
 }
 
 export interface Cache {

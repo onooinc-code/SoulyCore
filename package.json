@@ -1,34 +1,32 @@
-
 {
-  "name": "soulycore-next",
+  "name": "soulycore-next-final",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:create": "node scripts/create-tables.js"
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
     "@pinecone-database/pinecone": "^6.1.2",
     "@vercel/postgres": "^0.10.0",
     "framer-motion": "^11.3.12",
-    "monaco-editor": "0.45.0",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
-    "uuid": "^11.1.0",
-    "xterm": "5.3.0",
-    "xterm-addon-fit": "0.8.0"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/uuid": "^9.0.8",
+    "dotenv": "^16.4.5",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",

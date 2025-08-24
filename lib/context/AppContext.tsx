@@ -108,7 +108,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 createdAt: new Date(),
                 lastUpdatedAt: new Date(),
                 systemPrompt: "You are a helpful AI assistant.", // Default value
-                memoryConfig: { useSemantic: false, useStructured: true } // Default value
+                useSemanticMemory: false, 
+                useStructuredMemory: true 
             };
             await dbService.conversations.add(newConversation);
             conversationToUpdate = newConversation;

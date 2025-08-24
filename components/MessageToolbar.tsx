@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { CopyIcon, BookmarkIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon } from './Icons';
 
 interface MessageToolbarProps {
-    messageContent: string;
     isBookmarked: boolean;
     isCollapsed: boolean;
     onCopy: () => void;
@@ -15,7 +14,7 @@ interface MessageToolbarProps {
 }
 
 const MessageToolbar: React.FC<MessageToolbarProps> = ({
-    messageContent, isBookmarked, isCollapsed, onCopy, onBookmark, onSummarize, onToggleCollapse
+    isBookmarked, isCollapsed, onCopy, onBookmark, onSummarize, onToggleCollapse
 }) => {
     const [copied, setCopied] = useState(false);
 

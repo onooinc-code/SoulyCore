@@ -23,8 +23,8 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, co
     useEffect(() => {
         if (conversation && isOpen) {
             setSystemPrompt(conversation.systemPrompt || 'You are a helpful AI assistant.');
-            setUseSemantic(conversation.memoryConfig?.useSemantic ?? false);
-            setUseStructured(conversation.memoryConfig?.useStructured ?? true);
+            setUseSemantic(conversation.useSemanticMemory ?? false);
+            setUseStructured(conversation.useStructuredMemory ?? true);
         }
     }, [conversation, isOpen]);
 
@@ -34,7 +34,8 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, co
         const updatedConversation: Conversation = {
             ...conversation,
             systemPrompt,
-            memoryConfig: { useSemantic, useStructured },
+            useSemanticMemory: useSemantic,
+            useStructuredMemory: useStructured,
         };
         await dbService.conversations.update(updatedConversation);
         setCurrentConversation(updatedConversation); // Update context immediately

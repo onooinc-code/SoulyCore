@@ -1,8 +1,7 @@
-
 "use client";
 
 import React from 'react';
-import { useAppContext } from '@/lib/context/AppContext';
+import { useAppContext } from '@/components/providers/AppProvider';
 import { PlusIcon, MemoryIcon, CodeIcon, UsersIcon } from '@/components/Icons';
 
 interface SidebarProps {
@@ -25,6 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setDevCenterOpen
             <button
                 onClick={createNewConversation}
                 className="flex items-center justify-center w-full p-2 mb-4 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors"
+                title="New Chat (Cmd+N)"
             >
                 <PlusIcon className="w-5 h-5 mr-2" />
                 New Chat
@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setDevCenterOpen
                     {conversations.map(convo => (
                         <li key={convo.id}>
                             <button
-                                onClick={() => setCurrentConversation(convo)}
+                                onClick={() => setCurrentConversation(convo.id)}
                                 className={`w-full text-left p-2 rounded-md text-sm truncate ${currentConversation?.id === convo.id ? 'bg-gray-700' : 'hover:bg-gray-700/50'}`}
                             >
                                 {convo.title}
@@ -60,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setDevCenterOpen
             </div>
             <div className="p-2 border-t border-gray-700">
                 <p className="text-lg font-bold text-gray-100">SoulyCore</p>
-                <p className="text-xs text-gray-400">Your AI with Memory</p>
+                <p className="text-xs text-gray-400">v2.0 - Full Stack</p>
             </div>
         </div>
     );

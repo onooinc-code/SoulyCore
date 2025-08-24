@@ -8,6 +8,6 @@ const pinecone = new Pinecone({
     apiKey: process.env.PINECONE_API_KEY,
 });
 
-export const knowledgeBaseIndex = pinecone.index('soul-knowledgebase');
+export const knowledgeBaseIndex = pinecone.index<{ text: string }>('soul-knowledgebase');
 
 export default pinecone;

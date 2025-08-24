@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -11,16 +10,16 @@ import MessageFooter from './MessageFooter';
 
 interface MessageProps {
     message: MessageType;
-    onUpdateMessage: (message: MessageType) => void;
     onSummarize: (content: string) => void;
 }
 
-const Message: React.FC<MessageProps> = ({ message, onUpdateMessage, onSummarize }) => {
+const Message: React.FC<MessageProps> = ({ message, onSummarize }) => {
     const isUser = message.role === 'user';
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const handleBookmark = () => {
-        onUpdateMessage({ ...message, isBookmarked: !message.isBookmarked });
+        // This would now be an API call to update the message's bookmark status
+        console.log("Bookmarking feature requires a new API endpoint.");
     };
     
     const handleCopy = () => {
@@ -39,11 +38,10 @@ const Message: React.FC<MessageProps> = ({ message, onUpdateMessage, onSummarize
                     AI
                 </div>
             )}
-            <div className={`w-full max-w-xl`}>
+            <div className={`w-full max-w-2xl`}>
                  <div className={`flex items-center text-xs text-gray-400 mb-1 ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <MessageToolbar 
-                        messageContent={message.content}
-                        isBookmarked={message.isBookmarked}
+                        isBookmarked={message.isBookmarked || false}
                         isCollapsed={isCollapsed}
                         onCopy={handleCopy}
                         onBookmark={handleBookmark}
@@ -51,7 +49,7 @@ const Message: React.FC<MessageProps> = ({ message, onUpdateMessage, onSummarize
                         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
                     />
                 </div>
-                <div className={`prose-custom w-full p-3 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`}>
+                <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`}>
                     {!isCollapsed && (
                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {message.content}

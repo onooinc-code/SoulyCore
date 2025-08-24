@@ -18,13 +18,25 @@ const MorningBriefing: React.FC = () => {
         if (lastVisit !== today) {
             const fetchBriefing = async () => {
                 setIsOpen(true);
-                // In a real implementation, we'd fetch the last conversation and summarize it.
-                // For now, we'll use a placeholder summary.
-                setTimeout(() => {
-                    setSummary("Welcome back! In your last session, you were discussing the technical design for the new proactive suggestions feature. You approved the idea and were about to start outlining the component structure.");
+                try {
+                    // In a real implementation, an API would fetch and summarize the last conversation
+                    // const response = await fetch('/api/briefing');
+                    // const data = await response.json();
+                    // setSummary(data.summary);
+                    
+                    // Using a placeholder for demonstration
+                    setTimeout(() => {
+                        setSummary("Welcome back! In your last session, you were discussing the technical design for the new proactive suggestions feature. You approved the idea and were about to start outlining the component structure.");
+                        setIsLoading(false);
+                    }, 1200);
+
+                } catch (error) {
+                    console.error("Failed to fetch briefing", error);
+                    setSummary("Could not load your morning briefing.");
                     setIsLoading(false);
+                } finally {
                     localStorage.setItem('lastVisit', today);
-                }, 1500);
+                }
             };
             fetchBriefing();
         }
@@ -65,6 +77,7 @@ const MorningBriefing: React.FC = () => {
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
                             )}
                         </div>
+                         <button onClick={() => setIsOpen(false)} className="w-full px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-sm">Continue</button>
                     </motion.div>
                 </motion.div>
             )}

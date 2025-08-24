@@ -1,14 +1,11 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import type { Conversation, Message } from '../../lib/types';
+import type { Conversation, Message } from '@/lib/types';
 
 export interface IStatus {
-  inputTokens: number;
-  conversationTokens: number;
-  conversationMessages: number;
-  model: string;
   currentAction: string;
+  error: string | null;
 }
 
 interface AppContextType {
@@ -16,13 +13,14 @@ interface AppContextType {
     currentConversation: Conversation | null;
     messages: Message[];
     setCurrentConversation: (conversationId: string | null) => void;
-    createNewConversation: () => void;
-    addMessage: (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>) => Promise<void>;
+    createNewConversation: () => Promise<void>;
+    addMessage: (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>) => Promise<{aiResponse: string | null, suggestion: string | null}>;
     loadConversations: () => Promise<void>;
     isLoading: boolean;
     setIsLoading: (loading: boolean) => void;
     status: IStatus;
     setStatus: (status: Partial<IStatus>) => void;
+    clearError: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -33,21 +31,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [status, setBaseStatus] = useState<IStatus>({
-        inputTokens: 0,
-        conversationTokens: 0,
-        conversationMessages: 0,
-        model: 'gemini-2.5-flash',
         currentAction: '',
+        error: null,
     });
 
     const setStatus = (newStatus: Partial<IStatus>) => {
         setBaseStatus(prev => ({ ...prev, ...newStatus }));
     };
 
+    const clearError = () => setStatus({ error: null });
+
     const loadConversations = useCallback(async () => {
-        const response = await fetch('/api/conversations');
-        const convos = await response.json();
-        setConversations(convos);
+        try {
+            const response = await fetch('/api/conversations');
+            if (!response.ok) throw new Error('Failed to fetch conversations');
+            const convos = await response.json();
+            setConversations(convos);
+        } catch (error) {
+            setStatus({ error: 'Could not load conversations.' });
+            console.error(error);
+        }
     }, []);
 
     useEffect(() => {
@@ -55,9 +58,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [loadConversations]);
 
     const fetchMessages = useCallback(async (conversationId: string) => {
-        const response = await fetch(`/api/conversations/${conversationId}/messages`);
-        const msgs = await response.json();
-        setMessages(msgs);
+        try {
+            const response = await fetch(`/api/conversations/${conversationId}/messages`);
+             if (!response.ok) throw new Error('Failed to fetch messages');
+            const msgs = await response.json();
+            setMessages(msgs);
+        } catch (error) {
+             setStatus({ error: 'Could not load messages for this chat.' });
+             console.error(error);
+        }
     }, []);
 
     const setCurrentConversationById = useCallback(async (conversationId: string | null) => {
@@ -66,60 +75,84 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setMessages([]);
             return;
         }
-        const convo = conversations.find(c => c.id === conversationId) || null;
+
+        const convo = conversations.find(c => c.id === conversationId);
         if (convo) {
             setCurrentConversation(convo);
             await fetchMessages(conversationId);
-        } else {
-            // If convo not found in state, fetch it directly
-            const res = await fetch(`/api/conversations/${conversationId}`);
-            if(res.ok) {
-                const fetchedConvo = await res.json();
-                setCurrentConversation(fetchedConvo);
-                 await fetchMessages(conversationId);
-            }
         }
     }, [conversations, fetchMessages]);
 
-    const createNewConversation = () => {
+    const createNewConversation = async () => {
         setCurrentConversation(null);
         setMessages([]);
     };
 
     const addMessage = async (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>) => {
         let conversationToUpdate = currentConversation;
+        
+        const optimisticUserMessage: Message = { ...message, id: crypto.randomUUID(), createdAt: new Date(), conversationId: 'temp' };
+        setMessages(prev => [...prev, optimisticUserMessage]);
 
-        // Create new conversation if one doesn't exist
-        if (!conversationToUpdate) {
-            const res = await fetch('/api/conversations', {
+        try {
+            if (!conversationToUpdate) {
+                const res = await fetch('/api/conversations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: 'New Chat' })
+                });
+                if (!res.ok) throw new Error('Failed to create conversation');
+                const newConversation = await res.json();
+                conversationToUpdate = newConversation;
+                setCurrentConversation(newConversation);
+                await loadConversations();
+            }
+
+            const finalUserMessage: Message = { ...optimisticUserMessage, conversationId: conversationToUpdate.id };
+            
+            await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ message: finalUserMessage }),
+            });
+            
+            // Now call the chat API with the updated messages list
+            const updatedMessages = [...messages, finalUserMessage];
+
+            const chatRes = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: 'New Chat' })
+                body: JSON.stringify({ messages: updatedMessages, conversation: conversationToUpdate })
             });
-            const newConversation = await res.json();
-            conversationToUpdate = newConversation;
-            setCurrentConversation(newConversation);
-            await loadConversations();
+            if (!chatRes.ok) throw new Error('Failed to get AI response');
+            const { response: aiResponse, suggestion } = await chatRes.json();
+            
+            if (aiResponse) {
+                const aiMessage: Message = {
+                    role: 'model',
+                    content: aiResponse,
+                    id: crypto.randomUUID(),
+                    createdAt: new Date(),
+                    conversationId: conversationToUpdate.id
+                };
+                 await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ message: aiMessage }),
+                });
+                setMessages(prev => [...prev, aiMessage]);
+            }
+            
+            // Refetch messages to ensure sync, especially for new conversations
+            await fetchMessages(conversationToUpdate.id);
+            return { aiResponse, suggestion };
+            
+        } catch (error) {
+            setStatus({ error: (error as Error).message });
+            console.error(error);
+            setMessages(messages); // Revert optimistic update on error
+            return { aiResponse: null, suggestion: null };
         }
-
-        // Optimistically update UI
-        const optimisticMessage: Message = {
-            ...message,
-            id: crypto.randomUUID(),
-            createdAt: new Date(),
-            conversationId: conversationToUpdate.id,
-        };
-        setMessages(prev => [...prev, optimisticMessage]);
-
-        // Save to DB
-        await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ message }),
-        });
-        
-        // Optionally refetch messages to ensure consistency
-        // await fetchMessages(conversationToUpdate.id);
     };
 
     return (
@@ -135,6 +168,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setIsLoading,
             status,
             setStatus,
+            clearError,
         }}>
             {children}
         </AppContext.Provider>
