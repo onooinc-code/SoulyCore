@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
