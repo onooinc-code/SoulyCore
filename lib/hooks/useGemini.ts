@@ -92,8 +92,8 @@ export const useGemini = () => {
         const topP = storedSettings.topP || 0.95;
         try {
             setStatus({ currentAction: "Initializing context..." });
-            const useSemantic = conversation.memoryConfig?.useSemantic ?? false;
-            const useStructured = conversation.memoryConfig?.useStructured ?? true;
+            const useSemantic = conversation.useSemanticMemory ?? false;
+            const useStructured = conversation.useStructuredMemory ?? true;
             
             let semanticContext = '';
             let sentKnowledgeCount = 0;
