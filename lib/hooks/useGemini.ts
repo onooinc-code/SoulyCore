@@ -157,11 +157,14 @@ export const useGemini = () => {
 
             const responseText = result.text;
             
-            setStatus({ currentAction: "Analyzing response for entities..." });
-            const extracted = await extractEntitiesFromText(responseText);
-            if (extracted) {
-                setStatus({ extractedEntityCount: extracted.length });
+            if (responseText) {
+                setStatus({ currentAction: "Analyzing response for entities..." });
+                const extracted = await extractEntitiesFromText(responseText);
+                if (extracted) {
+                   setStatus({ extractedEntityCount: extracted.length });
+                }
             }
+            
             setStatus({ currentAction: "" });
 
             return responseText;
