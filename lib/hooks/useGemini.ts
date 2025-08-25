@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useCallback } from 'react';
@@ -60,6 +59,9 @@ export const useGemini = () => {
                 }
             });
 
+            if (!result.text) {
+                return null; // Or handle the error appropriately
+            }
             let jsonStr = result.text.trim();
             if (jsonStr.startsWith('```json')) {
                 jsonStr = jsonStr.substring(7, jsonStr.length - 3).trim();
