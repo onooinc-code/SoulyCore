@@ -1,15 +1,17 @@
 
-
-
 import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
+// This function lazily initializes the GoogleGenAI client, ensuring that
+// process.env.API_KEY is read at runtime inside the API route handler,
+// rather than at build time. This resolves the build error where the API
+// key is not available in the build environment.
+const getAiClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
     throw new Error("API_KEY not set in environment.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 const modelName = 'gemini-2.5-flash';
 
@@ -42,6 +44,7 @@ export const generateChatResponse = async (
     config?: { temperature?: number, topP?: number }
 ): Promise<GenerateContentResponse | null> => {
     try {
+        const ai = getAiClient();
         const result = await ai.models.generateContent({
             model: modelName,
             contents: history,
@@ -60,6 +63,7 @@ export const generateChatResponse = async (
 
 export const extractDataFromText = async (text: string): Promise<{ entities: any[], knowledge: string[] }> => {
     try {
+        const ai = getAiClient();
         const prompt = `
             From the following text, perform two tasks:
             1. Extract key entities (people, places, organizations, projects, concepts).
@@ -122,6 +126,7 @@ export const generateProactiveSuggestion = async (history: Content[]): Promise<s
     if (history.length < 2) return null; // Needs at least one user/model exchange
 
     try {
+           const ai = getAiClient();
            const conversationHistoryText = history
                 .slice(-4)
                 .filter((m): m is { role: string; parts: { text: string }[] } => 
