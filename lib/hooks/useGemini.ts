@@ -92,8 +92,8 @@ export const useGemini = () => {
         const topP = storedSettings.topP || 0.95;
         try {
             setStatus({ currentAction: "Initializing context..." });
-            const useSemantic = conversation.useSemanticMemory ?? false;
-            const useStructured = conversation.useStructuredMemory ?? true;
+            const useSemantic = conversation.memoryConfig?.useSemantic ?? false;
+            const useStructured = conversation.memoryConfig?.useStructured ?? true;
             
             let semanticContext = '';
             let sentKnowledgeCount = 0;
@@ -187,6 +187,7 @@ export const useGemini = () => {
                 model: modelName,
                 contents: prompt,
             });
+            if (!result.text) return "Chat";
             return result.text.replace(/["']/g, "");
         } catch (e) {
             console.error("Title generation failed", e);
@@ -204,6 +205,7 @@ export const useGemini = () => {
                 model: modelName,
                 contents: prompt,
             });
+            if (!result.text) return null;
             return result.text;
         } catch (e) {
             console.error("Summarization failed:", e);
@@ -220,6 +222,7 @@ export const useGemini = () => {
                 model: modelName,
                 contents: prompt,
             });
+            if (!result.text) return "Error: Could not generate summary.";
             return result.text;
         } catch (e) {
             console.error("Text summarization failed:", e);
@@ -234,6 +237,7 @@ export const useGemini = () => {
         try {
             const prompt = "You are an expert product manager for a highly advanced, self-aware AI application called SoulyCore. Suggest one new, innovative feature idea for the application. The idea should be ambitious but achievable. Describe the feature and its potential benefit. Format as a single paragraph.";
             const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+            if (!result.text) return "Error generating idea.";
             return result.text;
         } catch(e) { return "Error generating idea."; }
     }, []);
@@ -244,6 +248,7 @@ export const useGemini = () => {
         try {
             const prompt = `You are a world-class senior frontend engineer. You are building SoulyCore. For the following feature idea, create a technical design document. Specify which React components need to be created or modified, what state management changes are needed (using React Context), and any database schema changes for IndexedDB. Be concise but thorough.\n\nFeature Idea: ${featureIdea}`;
             const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+            if (!result.text) return "Error generating design.";
             return result.text;
         } catch(e) { return "Error generating design."; }
     }, []);
@@ -254,6 +259,7 @@ export const useGemini = () => {
         try {
             const prompt = `You are a technical writer responsible for maintaining the documentation for the SoulyCore project. Based on the following 'git diff' output, update the project's markdown documentation. Only provide the new or updated markdown sections. Do not repeat existing, unchanged documentation.\n\nGit Diff:\n${gitDiff}`;
             const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+            if (!result.text) return "Error updating documentation.";
             return result.text;
         } catch(e) { return "Error updating documentation."; }
     }, []);

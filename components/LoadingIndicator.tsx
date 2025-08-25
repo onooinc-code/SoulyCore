@@ -1,8 +1,7 @@
-
 "use client";
 
 import React from 'react';
-import { useAppContext } from '@/lib/context/AppContext';
+import { useAppContext } from '@/components/providers/AppProvider';
 
 const LoadingIndicator: React.FC = () => {
     const { status } = useAppContext();
