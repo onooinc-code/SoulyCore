@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -28,8 +27,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         try {
             const res = await fetch('/api/contacts');
             if (!res.ok) throw new Error('Failed to fetch contacts');
-            const data = await res.json();
-            setContacts(data);
+            const { contacts } = await res.json();
+            setContacts(contacts);
         } catch (error) {
             setStatus({ error: 'Could not load contacts for @mentions.' });
             console.error(error);

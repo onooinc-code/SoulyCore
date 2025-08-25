@@ -25,8 +25,8 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
         try {
             const res = await fetch('/api/contacts');
             if (!res.ok) throw new Error('Failed to fetch contacts');
-            const data = await res.json();
-            setContacts(data);
+            const { contacts } = await res.json();
+            setContacts(contacts);
         } catch (error) {
             setStatus({ error: 'Could not load contacts.' });
             console.error(error);
@@ -137,6 +137,12 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
                            <input value={currentContact?.company || ''} onChange={e => setCurrentContact({...currentContact, company: e.target.value})} placeholder="Company" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
                            <input value={currentContact?.phone || ''} onChange={e => setCurrentContact({...currentContact, phone: e.target.value})} placeholder="Phone" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
                         </div>
+                        <input
+                            value={currentContact?.tags?.join(', ') || ''}
+                            onChange={e => setCurrentContact({...currentContact, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})}
+                            placeholder="Tags (comma-separated)"
+                            className="w-full p-2 bg-gray-700 rounded-lg text-sm"
+                        />
                         <textarea value={currentContact?.notes || ''} onChange={e => setCurrentContact({...currentContact, notes: e.target.value})} placeholder="Notes..." className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
                         <div className="flex gap-2">
                             <button onClick={handleSaveContact} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save Contact</button>
@@ -152,6 +158,7 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
                                 <SortableHeader sortKey="name" label="Name" />
                                 <SortableHeader sortKey="company" label="Company" />
                                 <SortableHeader sortKey="email" label="Email" />
+                                <th className="p-3 text-left">Tags</th>
                                 <th className="p-3 text-left">Actions</th>
                             </tr>
                         </thead>
@@ -161,6 +168,15 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
                                     <td className="p-3 font-medium">{contact.name}</td>
                                     <td className="p-3">{contact.company}</td>
                                     <td className="p-3">{contact.email}</td>
+                                    <td className="p-3">
+                                        <div className="flex flex-wrap gap-1">
+                                            {contact.tags?.map(tag => (
+                                                <span key={tag} className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </td>
                                     <td className="p-3">
                                         <div className="flex gap-4">
                                             <button onClick={() => handleOpenForm(contact)} title="Edit"><EditIcon className="w-5 h-5 text-gray-400 hover:text-blue-400"/></button>

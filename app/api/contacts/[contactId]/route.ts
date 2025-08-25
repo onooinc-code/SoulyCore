@@ -8,13 +8,13 @@ export async function PUT(req: NextRequest, { params }: { params: { contactId: s
     try {
         const { contactId } = params;
         const contact = await req.json() as Partial<Contact>;
-        const { name, email, company, phone, notes } = contact;
+        const { name, email, company, phone, notes, tags } = contact;
         if (!name) {
             return NextResponse.json({ error: 'Name is required' }, { status: 400 });
         }
         const { rows } = await sql`
             UPDATE contacts
-            SET name = ${name}, email = ${email}, company = ${company}, phone = ${phone}, notes = ${notes}
+            SET name = ${name}, email = ${email}, company = ${company}, phone = ${phone}, notes = ${notes}, tags = ${tags ? (tags as any) : null}
             WHERE id = ${contactId}
             RETURNING *;
         `;
