@@ -2,19 +2,21 @@
 
 import React from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { PlusIcon, MemoryIcon, UsersIcon } from '@/components/Icons';
+import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon } from '@/components/Icons';
 
 interface SidebarProps {
     setMemoryCenterOpen: (isOpen: boolean) => void;
     setContactsHubOpen: (isOpen: boolean) => void;
+    setDevCenterOpen: (isOpen: boolean) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setContactsHubOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setContactsHubOpen, setDevCenterOpen }) => {
     const { conversations, currentConversation, setCurrentConversation, createNewConversation } = useAppContext();
 
     const menuItems = [
         { label: 'Memory Center', icon: MemoryIcon, action: () => setMemoryCenterOpen(true) },
         { label: 'Contacts Hub', icon: UsersIcon, action: () => setContactsHubOpen(true) },
+        { label: 'Dev Center', icon: CodeIcon, action: () => setDevCenterOpen(true) },
     ];
 
     return (

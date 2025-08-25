@@ -20,11 +20,17 @@ const MemoryCenter = dynamic(() => import('@/components/MemoryCenter'), {
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Memory Center...</p></div>
 });
 
+const DevCenter = dynamic(() => import('@/components/dev_center/DevCenter'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Dev Center...</p></div>
+});
+
 const App: React.FC = () => {
     const { createNewConversation } = useAppContext();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isMemoryCenterOpen, setMemoryCenterOpen] = useState(false);
     const [isContactsHubOpen, setContactsHubOpen] = useState(false);
+    const [isDevCenterOpen, setDevCenterOpen] = useState(false);
     
     useKeyboardShortcuts({
         'mod+k': () => setMemoryCenterOpen(prev => !prev),
@@ -47,6 +53,7 @@ const App: React.FC = () => {
                            <Sidebar 
                                 setMemoryCenterOpen={setMemoryCenterOpen}
                                 setContactsHubOpen={setContactsHubOpen} 
+                                setDevCenterOpen={setDevCenterOpen}
                            />
                         </motion.div>
                     )}
@@ -80,6 +87,7 @@ const App: React.FC = () => {
                 <AnimatePresence>
                     {isMemoryCenterOpen && <MemoryCenter setIsOpen={setMemoryCenterOpen} />}
                     {isContactsHubOpen && <ContactsHub setIsOpen={setContactsHubOpen} />}
+                    {isDevCenterOpen && <DevCenter setIsOpen={setDevCenterOpen} />}
                 </AnimatePresence>
             </div>
         </>
