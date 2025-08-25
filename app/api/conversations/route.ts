@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Conversation } from '@/lib/types';
 
-export const runtime = 'edge';
-
 // GET all conversations
 export async function GET() {
     try {

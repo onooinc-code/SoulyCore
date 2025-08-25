@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Contact } from '@/lib/types';
 
-export const runtime = 'edge';
-
 export async function PUT(req: NextRequest, { params }: { params: { contactId: string } }) {
     try {
         const { contactId } = params;

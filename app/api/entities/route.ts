@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
-export const runtime = 'edge';
-
 export async function GET() {
     try {
         const { rows } = await sql`SELECT * FROM entities ORDER BY "createdAt" DESC;`;

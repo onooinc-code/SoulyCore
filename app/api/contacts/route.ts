@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sql } from '@/lib/db';
 import { Contact } from '@/lib/types';
-
-export const runtime = 'edge';
 
 // GET all contacts
 export async function GET() {

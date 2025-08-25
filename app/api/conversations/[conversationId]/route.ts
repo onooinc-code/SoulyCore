@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Conversation } from '@/lib/types';
 
-export const runtime = 'edge';
-
 // PUT (update) a conversation
 export async function PUT(req: NextRequest, { params }: { params: { conversationId: string } }) {
     try {

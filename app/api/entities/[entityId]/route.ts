@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
-export const runtime = 'edge';
-
 export async function PUT(req: NextRequest, { params }: { params: { entityId: string } }) {
     try {
         const { entityId } = params;
