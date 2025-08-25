@@ -167,7 +167,7 @@ export const useGemini = () => {
             
             setStatus({ currentAction: "" });
 
-            return responseText;
+            return responseText ?? null;
 
         } catch (e) {
             console.error("Chat generation failed:", e);
