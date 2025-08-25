@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChatResponse, generateEmbedding, generateProactiveSuggestion } from '@/lib/gemini-server';
 import { sql } from '@/lib/db';
@@ -14,6 +15,28 @@ export async function POST(req: NextRequest) {
         }
         
         const userMessage = messages[messages.length - 1];
+        let userMessageContent = userMessage.content;
+        let imagePart: { inlineData: { mimeType: string; data: string } } | null = null;
+
+        // Regex to find markdown image with a data URL
+        const imageRegex = /!\[.*?\]\((data:image\/(.*?);base64,([a-zA-Z0-9+/=]+))\)/;
+        const match = userMessage.content.match(imageRegex);
+
+        if (match) {
+            const [fullMatch, , mimeSubtype, base64Data] = match;
+            const mimeType = `image/${mimeSubtype}`;
+            
+            imagePart = {
+                inlineData: {
+                    mimeType,
+                    data: base64Data,
+                },
+            };
+            
+            // Remove the image markdown from the text prompt
+            userMessageContent = userMessage.content.replace(fullMatch, '').trim();
+        }
+
 
         // 1. Fetch Structured Memory (Entities)
         let entityContext = '';
@@ -27,15 +50,17 @@ export async function POST(req: NextRequest) {
         // 2. Fetch Semantic Memory (Knowledge from Pinecone)
         let semanticContext = '';
         if (conversation.useSemanticMemory) {
-            const queryEmbedding = await generateEmbedding(userMessage.content);
-            const queryResponse = await knowledgeBaseIndex.query({
-                vector: queryEmbedding,
-                topK: 3,
-                includeMetadata: true,
-            });
-            const relevantKnowledge = queryResponse.matches.map(match => (match.metadata as { text: string }).text).join('\n\n');
-            if (relevantKnowledge) {
-                semanticContext = `CONTEXT: Here is some relevant information from your knowledge base:\n${relevantKnowledge}`;
+            const queryEmbedding = await generateEmbedding(userMessageContent); // Use text part for embedding
+            if(queryEmbedding.length > 0) {
+                const queryResponse = await knowledgeBaseIndex.query({
+                    vector: queryEmbedding,
+                    topK: 3,
+                    includeMetadata: true,
+                });
+                const relevantKnowledge = queryResponse.matches.map(match => (match.metadata as { text: string }).text).join('\n\n');
+                if (relevantKnowledge) {
+                    semanticContext = `CONTEXT: Here is some relevant information from your knowledge base:\n${relevantKnowledge}`;
+                }
             }
         }
         
@@ -55,9 +80,22 @@ export async function POST(req: NextRequest) {
             parts: [{ text: msg.content }]
         }));
         
-        // Inject context directly before the user's final message for maximum relevance
-        const contextualPrompt = [entityContext, semanticContext, contactContext, userMessage.content].filter(Boolean).join('\n\n');
-        history.push({ role: 'user', parts: [{ text: contextualPrompt }]});
+        // Inject context and user message text
+        const contextualPrompt = [entityContext, semanticContext, contactContext, userMessageContent].filter(Boolean).join('\n\n');
+        
+        const userParts: ({ text: string } | { inlineData: { mimeType: string; data: string } })[] = [];
+        if (imagePart) {
+            userParts.push(imagePart);
+        }
+        // Only add a text part if there's actual text content
+        if (contextualPrompt) {
+            userParts.push({ text: contextualPrompt });
+        }
+
+        // If no parts exist (e.g., empty message), avoid pushing an empty entry
+        if (userParts.length > 0) {
+            history.push({ role: 'user', parts: userParts });
+        }
 
         // 5. Generate AI Response
         const result = await generateChatResponse(

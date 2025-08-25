@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { SendIcon } from './Icons';
+import { SendIcon, PaperclipIcon, XIcon } from './Icons';
 import LoadingIndicator from './LoadingIndicator';
 import type { Contact } from '@/lib/types';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -19,8 +19,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     const [showMentions, setShowMentions] = useState(false);
     const [mentionQuery, setMentionQuery] = useState('');
     const [mentionedContacts, setMentionedContacts] = useState<Contact[]>([]);
+    const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
     
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchContacts = useCallback(async () => {
         try {
@@ -73,10 +75,35 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         textareaRef.current?.focus();
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (loadEvent) => {
+                setImageDataUrl(loadEvent.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+        if (e.target) e.target.value = '';
+    };
+
+    const removeImage = () => {
+        setImageDataUrl(null);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSendMessage(content, mentionedContacts);
+        if (!content.trim() && !imageDataUrl) return;
+
+        let messageContent = content;
+        if (imageDataUrl) {
+            // Using markdown format to embed the image data URL
+            messageContent = `![user image](${imageDataUrl})\n\n${content}`;
+        }
+
+        onSendMessage(messageContent, mentionedContacts);
         setContent('');
+        setImageDataUrl(null);
         setMentionedContacts([]);
         setShowMentions(false);
     };
@@ -85,7 +112,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
 
     return (
         <>
-        <div className="p-4 bg-gray-800 border-t border-gray-700">
+        <div className="p-4 bg-gray-800 border-t border-gray-700 relative">
             {showMentions && filteredContacts.length > 0 && (
                 <div className="absolute bottom-full left-4 right-4 mb-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
                     {filteredContacts.map(contact => (
@@ -99,7 +126,31 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                     ))}
                 </div>
             )}
+            {imageDataUrl && (
+                <div className="relative w-20 h-20 mb-2">
+                    <img src={imageDataUrl} alt="Upload preview" className="w-full h-full object-cover rounded-md" />
+                    <button onClick={removeImage} className="absolute -top-2 -right-2 bg-gray-600 rounded-full p-0.5 text-white hover:bg-gray-500 z-10">
+                        <XIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
             <form onSubmit={handleSubmit} className="flex items-start space-x-4">
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden" 
+                />
+                <button 
+                    type="button" 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                    disabled={isLoading || !!imageDataUrl}
+                    title="Attach an image"
+                >
+                    <PaperclipIcon className="w-5 h-5" />
+                </button>
                 <div className="flex-1 relative">
                     <textarea
                         ref={textareaRef}
@@ -111,7 +162,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                                 handleSubmit(e);
                             }
                         }}
-                        placeholder="Type your message... use @ to mention contacts."
+                        placeholder="Type your message or add an image..."
                         className="w-full p-2 pr-24 bg-gray-700 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                         rows={1}
                         disabled={isLoading}
@@ -125,7 +176,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                 <button
                     type="submit"
                     className="p-3 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
-                    disabled={isLoading || !content.trim()}
+                    disabled={isLoading || (!content.trim() && !imageDataUrl)}
                 >
                     <SendIcon className="w-5 h-5" />
                 </button>
