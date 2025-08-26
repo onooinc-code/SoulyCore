@@ -12,10 +12,16 @@ export async function GET() {
     } catch (error) {
         console.error('Failed to fetch contacts:', error);
         const errorMessage = (error as Error).message;
+
         if (errorMessage.includes('relation "contacts" does not exist')) {
-            return NextResponse.json({ error: 'Contacts database table not found. Please initialize the database.' }, { status: 500 });
+            return NextResponse.json({ error: 'Contacts database table not found. Please run the database initialization script against your Vercel Postgres database.' }, { status: 500 });
         }
-        return NextResponse.json({ error: 'Could not connect to the database to fetch contacts.' }, { status: 500 });
+        
+        if (!process.env.POSTGRES_URL) {
+             return NextResponse.json({ error: 'Database connection details are missing. Please link a Vercel Postgres database and ensure environment variables are set in your Vercel project settings.' }, { status: 500 });
+        }
+
+        return NextResponse.json({ error: 'Could not connect to the database to fetch contacts. Please check your Vercel project settings and database status.' }, { status: 500 });
     }
 }
 
@@ -47,6 +53,16 @@ export async function POST(req: NextRequest) {
 
     } catch (error) {
         console.error('Failed to create or update contact:', error);
-        return NextResponse.json({ error: 'Failed to create or update contact' }, { status: 500 });
+        const errorMessage = (error as Error).message;
+        
+        if (errorMessage.includes('relation "contacts" does not exist')) {
+            return NextResponse.json({ error: 'Contacts database table not found. Please run the database initialization script against your Vercel Postgres database.' }, { status: 500 });
+        }
+
+        if (!process.env.POSTGRES_URL) {
+            return NextResponse.json({ error: 'Database connection details are missing. Please link a Vercel Postgres database and ensure environment variables are set in your Vercel project settings.' }, { status: 500 });
+        }
+
+        return NextResponse.json({ error: 'Failed to create or update contact. Please check your Vercel project settings and database status.' }, { status: 500 });
     }
 }
