@@ -26,11 +26,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     const fetchContacts = useCallback(async () => {
         try {
             const res = await fetch('/api/contacts');
-            if (!res.ok) throw new Error('Failed to fetch contacts');
+            if (!res.ok) {
+                let errorMsg = 'An unknown error occurred while fetching contacts.';
+                try {
+                    const errorData = await res.json();
+                    if (errorData.error) {
+                        errorMsg = errorData.error;
+                    }
+                } catch (e) { /* Ignore if response is not JSON */ }
+                throw new Error(errorMsg);
+            }
             const { contacts } = await res.json();
             setContacts(contacts);
         } catch (error) {
-            setStatus({ error: 'Could not load contacts for @mentions.' });
+            setStatus({ error: (error as Error).message });
             console.error(error);
         }
     }, [setStatus]);

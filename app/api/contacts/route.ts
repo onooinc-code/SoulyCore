@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Contact } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 // GET all contacts
 export async function GET() {
     try {
@@ -9,7 +11,11 @@ export async function GET() {
         return NextResponse.json({ contacts: rows });
     } catch (error) {
         console.error('Failed to fetch contacts:', error);
-        return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 });
+        const errorMessage = (error as Error).message;
+        if (errorMessage.includes('relation "contacts" does not exist')) {
+            return NextResponse.json({ error: 'Contacts database table not found. Please initialize the database.' }, { status: 500 });
+        }
+        return NextResponse.json({ error: 'Could not connect to the database to fetch contacts.' }, { status: 500 });
     }
 }
 
