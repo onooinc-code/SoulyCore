@@ -7,7 +7,7 @@ import MorningBriefing from '@/components/MorningBriefing';
 import { MenuIcon, XIcon, MemoryIcon } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import dynamic from 'next/dynamic';
 
 const ContactsHub = dynamic(() => import('@/components/ContactsHub'), {
