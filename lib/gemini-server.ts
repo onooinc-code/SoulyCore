@@ -1,14 +1,14 @@
 
+
 import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/genai";
 
-// This function lazily initializes the GoogleGenAI client, ensuring that
-// process.env.API_KEY is read at runtime inside the API route handler,
-// rather than at build time. This resolves the build error where the API
-// key is not available in the build environment.
+// This function lazily initializes the GoogleGenAI client.
+// It checks for process.env.GEMINI_API_KEY (used by Vercel integrations)
+// and falls back to process.env.API_KEY for other environments.
 const getAiClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API_KEY not set in environment.");
+    throw new Error("API key not found. Please set GEMINI_API_KEY or API_KEY in your environment variables.");
   }
   return new GoogleGenAI({ apiKey });
 };
