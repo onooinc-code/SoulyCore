@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { useAppContext } from './AppProvider';
 
 export interface LogEntry {
     id?: string;
@@ -15,13 +14,14 @@ interface LogContextType {
     logs: LogEntry[];
     log: (message: string, payload?: any, level?: 'info' | 'warn' | 'error') => void;
     clearLogs: () => void;
+    setLoggingEnabled: (enabled: boolean) => void;
 }
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
 export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { settings } = useAppContext();
     const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [loggingEnabled, setLoggingEnabled] = useState(true); // Default to on to capture initial logs
 
     const loadLogs = useCallback(async () => {
         try {
@@ -39,8 +39,8 @@ export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [loadLogs]);
 
     const log = useCallback(async (message: string, payload?: any, level: 'info' | 'warn' | 'error' = 'info') => {
-        if (!settings?.enableDebugLog.enabled) {
-            return; // Don't write new logs if logging is disabled.
+        if (!loggingEnabled) {
+            return;
         }
 
         // Optimistic update
@@ -72,7 +72,7 @@ export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             // Revert optimistic update on failure
             setLogs(prev => prev.filter(l => l.id !== tempId));
         }
-    }, [settings]);
+    }, [loggingEnabled]);
 
     const clearLogs = useCallback(async () => {
         const oldLogs = [...logs];
@@ -88,7 +88,7 @@ export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [logs]);
     
     return (
-        <LogContext.Provider value={{ logs, log, clearLogs }}>
+        <LogContext.Provider value={{ logs, log, clearLogs, setLoggingEnabled }}>
             {children}
         </LogContext.Provider>
     );

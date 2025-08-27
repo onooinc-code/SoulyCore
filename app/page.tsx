@@ -4,10 +4,10 @@ import { LogProvider } from '@/components/providers/LogProvider';
 
 export default function HomePage() {
   return (
-    <AppProvider>
-      <LogProvider>
+    <LogProvider>
+      <AppProvider>
         <App />
-      </LogProvider>
-    </AppProvider>
+      </AppProvider>
+    </LogProvider>
   );
 }

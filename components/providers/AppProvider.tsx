@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
@@ -39,7 +38,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [isLoading, setIsLoading] = useState(false);
     const [status, setBaseStatus] = useState<IStatus>({ currentAction: '', error: null });
     const [settings, setSettings] = useState<AppSettings | null>(null);
-    const { log } = useLog();
+    const { log, setLoggingEnabled } = useLog();
+
+    // Effect to update the LogProvider's setting whenever the app's settings are loaded or changed.
+    useEffect(() => {
+        if (settings) {
+            setLoggingEnabled(settings.enableDebugLog.enabled);
+        }
+    }, [settings, setLoggingEnabled]);
 
     const setStatus = useCallback((newStatus: Partial<IStatus>) => {
         setBaseStatus(prev => ({ ...prev, ...newStatus }));
