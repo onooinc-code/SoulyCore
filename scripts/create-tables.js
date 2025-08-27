@@ -90,7 +90,7 @@ async function createTables() {
 
         console.log("All tables checked/created successfully.");
 
-    } catch (error)
+    } catch (error) {
         console.error("Error creating tables:", error);
         process.exit(1);
     }
