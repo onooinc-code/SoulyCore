@@ -1,6 +1,7 @@
 
 
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Feature } from '@/lib/types';
@@ -44,14 +45,15 @@ export async function PUT(req: NextRequest, { params }: { params: { featureId: s
     } catch (error) {
         console.error(`Failed to update feature ${params.featureId}:`, error);
         let errorMessage = 'Internal Server Error';
+        const errorStack = (error as Error).stack;
         if (error instanceof Error) {
             errorMessage = error.message;
             if (error instanceof SyntaxError) {
                 errorMessage = "Invalid JSON format provided for UI Breakdown or Key Files.";
-                return NextResponse.json({ error: errorMessage, details: (error as Error).stack }, { status: 400 });
+                return NextResponse.json({ error: errorMessage, details: { stack: errorStack } }, { status: 400 });
             }
         }
-        return NextResponse.json({ error: errorMessage, details: (error as Error).stack }, { status: 500 });
+        return NextResponse.json({ error: errorMessage, details: { stack: errorStack } }, { status: 500 });
     }
 }
 
@@ -65,6 +67,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { featureId
         return NextResponse.json({ message: 'Feature deleted successfully' }, { status: 200 });
     } catch (error) {
         console.error(`Failed to delete feature ${params.featureId}:`, error);
-        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }

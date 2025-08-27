@@ -1,6 +1,7 @@
 
 
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChatResponse, generateEmbedding, generateProactiveSuggestion } from '@/lib/gemini-server';
 import { sql } from '@/lib/db';
@@ -147,6 +148,6 @@ export async function POST(req: NextRequest) {
         };
         console.error('Error in chat API:', error);
         await serverLog('Critical error in chat API', { error: errorDetails }, 'error');
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }

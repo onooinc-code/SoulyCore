@@ -20,7 +20,8 @@ export async function PUT(req: NextRequest, { params }: { params: { entityId: st
         return NextResponse.json(rows[0]);
     } catch (error) {
         console.error(`Failed to update entity ${params.entityId}:`, error);
-        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }
 
@@ -34,6 +35,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { entityId:
         return NextResponse.json({ message: 'Entity deleted successfully' }, { status: 200 });
     } catch (error) {
         console.error(`Failed to delete entity ${params.entityId}:`, error);
-        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }

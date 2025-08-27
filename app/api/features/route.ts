@@ -1,6 +1,7 @@
 
 
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Feature } from '@/lib/types';
@@ -14,7 +15,8 @@ export async function GET() {
         return NextResponse.json(rows);
     } catch (error) {
         console.error('Failed to fetch features:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }
 
@@ -56,13 +58,14 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error('Failed to create feature:', error);
         let errorMessage = 'Internal Server Error';
+        const errorStack = (error as Error).stack;
         if (error instanceof Error) {
             errorMessage = error.message;
             if (error instanceof SyntaxError) {
                 errorMessage = "Invalid JSON format provided for UI Breakdown or Key Files.";
-                return NextResponse.json({ error: errorMessage, details: (error as Error).stack }, { status: 400 });
+                return NextResponse.json({ error: errorMessage, details: { stack: errorStack } }, { status: 400 });
             }
         }
-        return NextResponse.json({ error: errorMessage, details: (error as Error).stack }, { status: 500 });
+        return NextResponse.json({ error: errorMessage, details: { stack: errorStack } }, { status: 500 });
     }
 }

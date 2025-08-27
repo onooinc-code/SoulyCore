@@ -1,6 +1,7 @@
 
 
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db, sql } from '@/lib/db';
 import { AppSettings } from '@/lib/types';

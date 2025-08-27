@@ -9,7 +9,8 @@ export async function GET() {
         return NextResponse.json({ entities: rows });
     } catch (error) {
         console.error('Failed to fetch entities:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }
 
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(rows[0], { status: 201 });
     } catch (error) {
         console.error('Failed to create entity:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }

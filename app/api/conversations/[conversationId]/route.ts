@@ -63,6 +63,7 @@ export async function PUT(req: NextRequest, { params }: { params: { conversation
         return NextResponse.json(rows[0] as Conversation);
     } catch (error) {
         console.error(`Failed to update conversation ${params.conversationId}:`, error);
-        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }

@@ -94,6 +94,6 @@ export async function POST(req: NextRequest) {
         };
         console.error('Error in memory pipeline:', error);
         await serverLog('Critical error in memory pipeline.', { error: errorDetails }, 'error');
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }

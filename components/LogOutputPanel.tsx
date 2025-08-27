@@ -1,9 +1,10 @@
+
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLog } from './providers/LogProvider';
-import { InfoIcon, WarningIcon, ErrorIcon, SearchIcon } from './Icons';
+import { InfoIcon, WarningIcon, ErrorIcon, SearchIcon, CopyIcon, CheckIcon } from './Icons';
 import { LogEntry as LogEntryType } from './providers/LogProvider';
 
 
@@ -16,14 +17,31 @@ type FilterLevel = LogLevel | 'all';
 
 // Component for rendering a single log entry
 const LogEntry: React.FC<{ log: LogEntryType }> = ({ log }) => {
+    const [copied, setCopied] = useState(false);
+
     const levelIcon: Record<LogLevel, React.ReactNode> = {
         info: <InfoIcon className="w-4 h-4 text-gray-400" />,
         warn: <WarningIcon className="w-4 h-4 text-yellow-400" />,
         error: <ErrorIcon className="w-4 h-4 text-red-400" />,
     };
 
+    const handleCopy = () => {
+        const payloadString = log.payload ? `\n\nPayload:\n${JSON.stringify(log.payload, null, 2)}` : '';
+        const textToCopy = `[${new Date(log.timestamp).toISOString()}] [${log.level.toUpperCase()}] ${log.message}${payloadString}`;
+        navigator.clipboard.writeText(textToCopy);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
-        <div className="flex gap-3 items-start py-1.5 border-b border-gray-800/50">
+        <div className="group relative flex gap-3 items-start py-1.5 border-b border-gray-800/50 pr-8">
+             <button 
+                onClick={handleCopy} 
+                className="absolute top-1 right-1 p-1 rounded-md bg-gray-700 text-gray-400 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white"
+                title="Copy log details"
+            >
+                {copied ? <CheckIcon className="w-3 h-3 text-green-400" /> : <CopyIcon className="w-3 h-3" />}
+            </button>
             <span className="mt-0.5">{levelIcon[log.level as LogLevel]}</span>
             <span className="text-gray-500 flex-shrink-0">{new Date(log.timestamp).toISOString().slice(11, 23)}</span>
             <div className="flex-1 whitespace-pre-wrap break-words min-w-0">
@@ -46,6 +64,16 @@ const LogOutputPanel: React.FC<LogOutputPanelProps> = ({ isOpen }) => {
     const { logs, clearLogs } = useLog();
     const [filter, setFilter] = useState<FilterLevel>('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+    const logContainerRef = useRef<HTMLDivElement>(null);
+
+    // Effect to handle auto-scrolling to the top when new logs arrive
+    useEffect(() => {
+        if (isAutoScrollEnabled && logContainerRef.current) {
+            // New logs are prepended, so we scroll to the top to see the latest.
+            logContainerRef.current.scrollTop = 0;
+        }
+    }, [logs, isAutoScrollEnabled]);
 
     const logCounts = useMemo(() => {
         return logs.reduce((acc, log) => {
@@ -114,10 +142,17 @@ const LogOutputPanel: React.FC<LogOutputPanelProps> = ({ isOpen }) => {
                             <FilterButton level="info" label="Info" count={logCounts.info} />
                             <FilterButton level="warn" label="Warn" count={logCounts.warn} />
                             <FilterButton level="error" label="Error" count={logCounts.error} />
-                            <button onClick={clearLogs} className="ml-2 px-2 py-0.5 text-xs bg-red-800 text-white rounded hover:bg-red-700">Clear</button>
+                             <button
+                                onClick={() => setIsAutoScrollEnabled(prev => !prev)}
+                                className={`ml-2 px-2 py-0.5 text-xs rounded transition-colors ${isAutoScrollEnabled ? 'bg-blue-600 text-white' : 'bg-gray-600 hover:bg-gray-500'}`}
+                                title="Toggle auto-scrolling to the latest log"
+                            >
+                                Auto-Scroll: {isAutoScrollEnabled ? 'ON' : 'OFF'}
+                            </button>
+                            <button onClick={clearLogs} className="px-2 py-0.5 text-xs bg-red-800 text-white rounded hover:bg-red-700">Clear</button>
                         </div>
                     </div>
-                    <div className="flex-1 p-2 overflow-y-auto text-xs font-mono">
+                    <div ref={logContainerRef} className="flex-1 p-2 overflow-y-auto text-xs font-mono">
                         {filteredLogs.length > 0 ? (
                              filteredLogs.map((log, index) => (
                                 <LogEntry key={`${log.id}-${index}`} log={log} />
