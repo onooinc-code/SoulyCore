@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { db, sql } from '@/lib/db';
 import { Conversation } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -32,23 +32,24 @@ export async function POST(req: NextRequest) {
         const modelConfig = settings.defaultModelConfig || {};
         const agentConfig = settings.defaultAgentConfig || {};
 
-        const { rows } = await sql`
+        const query = `
             INSERT INTO conversations (
-                title, 
-                "systemPrompt", "useSemanticMemory", "useStructuredMemory",
-                model, temperature, "topP"
+                title, "systemPrompt", "useSemanticMemory", "useStructuredMemory", model, temperature, "topP"
             )
-            VALUES (
-                ${newTitle}, 
-                ${agentConfig.systemPrompt || 'You are a helpful AI assistant.'}, 
-                ${agentConfig.useSemanticMemory ?? true}, 
-                ${agentConfig.useStructuredMemory ?? true},
-                ${modelConfig.model || 'gemini-2.5-flash'},
-                ${modelConfig.temperature ?? 0.7},
-                ${modelConfig.topP ?? 0.95}
-            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *;
         `;
+        const values = [
+            newTitle,
+            agentConfig.systemPrompt || 'You are a helpful AI assistant.',
+            agentConfig.useSemanticMemory ?? true,
+            agentConfig.useStructuredMemory ?? true,
+            modelConfig.model || 'gemini-2.5-flash',
+            modelConfig.temperature ?? 0.7,
+            modelConfig.topP ?? 0.95
+        ];
+
+        const { rows } = await db.query(query, values);
         
         return NextResponse.json(rows[0] as Conversation, { status: 201 });
     } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { db } from '@/lib/db';
 import { Conversation } from '@/lib/types';
 
 // PUT (update) a conversation
@@ -54,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: { params: { conversation
         values.push(conversationId);
         const queryString = `UPDATE conversations SET ${updates.join(', ')} WHERE id = $${queryIndex} RETURNING *;`;
 
-        const { rows } = await sql.query(queryString, values);
+        const { rows } = await db.query(queryString, values);
 
         if (rows.length === 0) {
             return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });

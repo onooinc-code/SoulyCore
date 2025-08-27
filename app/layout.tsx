@@ -16,7 +16,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script src="https://cdn.tailwindcss.com"></script>
         <meta name="theme-color" content="#1f2937" />
       </head>
       <body className="bg-gray-800 text-gray-100 font-sans">{children}</body>
