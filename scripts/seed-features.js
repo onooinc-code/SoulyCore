@@ -86,7 +86,7 @@ const featuresData = [
         ui_ux_breakdown_json: JSON.stringify([
             { subFeature: 'Tabbed Interface', description: 'Allows navigation between different developer-focused sections.', status: '✅ Completed' },
             { subFeature: 'Features Dictionary', description: 'A full CRUD interface for managing this very feature list.', status: '✅ Completed' },
-            { subFeature: 'Dashboard', description: 'A placeholder for key project metrics and statistics.', status: '⚪ Planned' },
+            { subFeature: 'Dashboard', description: 'A high-level overview of the project, displaying key metrics, statistics, and potential integrations like GitHub. The purpose is to provide a quick snapshot of the project\'s health and activity.', status: '⚪ Planned' },
             { subFeature: 'Roadmap & Ideas', description: 'A placeholder for an AI-powered idea generation and planning tool.', status: '⚪ Planned' },
             { subFeature: 'Code & Terminal', description: 'A simulated, non-functional code editor and terminal for demonstration.', status: '🟡 Needs Improvement' }
         ]),

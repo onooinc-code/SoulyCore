@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ChatWindow from '@/components/ChatWindow';
 import MorningBriefing from '@/components/MorningBriefing';
@@ -37,7 +38,7 @@ const BookmarksModal = dynamic(() => import('@/components/BookmarksModal'), {
 });
 
 const App: React.FC = () => {
-    const { createNewConversation } = useAppContext();
+    const { createNewConversation, settings } = useAppContext();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isMemoryCenterOpen, setMemoryCenterOpen] = useState(false);
     const [isContactsHubOpen, setContactsHubOpen] = useState(false);
@@ -50,6 +51,12 @@ const App: React.FC = () => {
         'mod+k': () => setMemoryCenterOpen(prev => !prev),
         'mod+n': () => createNewConversation(),
     });
+
+    useEffect(() => {
+        if (settings && !settings.enableDebugLog.enabled) {
+            setLogPanelOpen(false);
+        }
+    }, [settings]);
 
     return (
         <>

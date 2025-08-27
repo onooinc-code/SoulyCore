@@ -86,12 +86,16 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
                         <textarea id="defaultSystemPrompt" name="defaultSystemPrompt" value={localSettings.defaultAgentConfig.systemPrompt} onChange={e => setLocalSettings(s => ({...s!, defaultAgentConfig: {...s!.defaultAgentConfig, systemPrompt: e.target.value}}))} placeholder="System Prompt" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
                     </div>
 
-                     {/* Log Output Setting */}
+                     {/* Developer Settings */}
                     <div className="p-4 bg-gray-900/50 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-2">Developer Settings</h3>
                         <label htmlFor="enableDebugLog" className="flex items-center gap-3 text-sm font-medium text-gray-300 cursor-pointer">
                             <input id="enableDebugLog" name="enableDebugLog" type="checkbox" checked={localSettings.enableDebugLog.enabled} onChange={e => setLocalSettings(s => ({...s!, enableDebugLog: { enabled: e.target.checked }}))} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
                             <span>Enable Developer Log Output Panel</span>
                         </label>
+                        <p className="text-xs text-gray-400 mt-2 pl-8">
+                            When enabled, detailed logs for API calls and state changes will be visible in the log panel. This may impact performance.
+                        </p>
                     </div>
                 </div>
 

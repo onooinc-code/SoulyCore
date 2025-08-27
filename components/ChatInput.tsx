@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -32,20 +33,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             if (!res.ok) {
                 let errorMsg = 'An unknown error occurred while fetching contacts.';
                 try {
+                    // Try to get a more specific error from the API response body
                     const errorData = await res.json();
-                    if (errorData.error) {
-                        errorMsg = errorData.error;
-                    }
-                } catch (e) { /* Ignore if response is not JSON */ }
+                    errorMsg = errorData.error || `Server responded with status: ${res.status}`;
+                } catch (e) { 
+                    // If the response isn't JSON, use the status text
+                    errorMsg = `Server responded with status: ${res.status} ${res.statusText}`;
+                }
                 throw new Error(errorMsg);
             }
             const { contacts } = await res.json();
             setContacts(contacts);
-            log(`Successfully fetched ${contacts.length} contacts.`);
+            log(`Successfully fetched ${contacts.length} contacts for @mentions.`);
         } catch (error) {
-            log('Error fetching contacts', { error: (error as Error).message }, 'error');
-            setStatus({ error: (error as Error).message });
-            console.error(error);
+            const errorMessage = (error as Error).message;
+            // Log the technical error for debugging
+            log('Failed to fetch contacts for @mentions.', { details: errorMessage }, 'error');
+            // Display a more user-friendly message in the status bar
+            setStatus({ error: 'Contacts for @mentions could not be loaded. Please check logs for details.' });
+            console.error("Fetch contacts error:", error);
         }
     }, [setStatus, log]);
 
