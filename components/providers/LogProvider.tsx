@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
@@ -25,7 +26,7 @@ export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const loadLogs = useCallback(async () => {
         try {
-            const res = await fetch('/api/logs');
+            const res = await fetch('/api/logs/all');
             if (!res.ok) throw new Error("Failed to fetch logs.");
             const fetchedLogs = await res.json();
             setLogs(fetchedLogs);
@@ -56,7 +57,7 @@ export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         // Persist to DB
         try {
-            const res = await fetch('/api/logs', {
+            const res = await fetch('/api/logs/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message, payload, level }),
@@ -79,7 +80,7 @@ export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setLogs([]); // Optimistic update
 
         try {
-            const res = await fetch('/api/logs', { method: 'DELETE' });
+            const res = await fetch('/api/logs/all', { method: 'DELETE' });
             if (!res.ok) throw new Error("Failed to clear logs on the server.");
         } catch (error) {
             console.error(error);
