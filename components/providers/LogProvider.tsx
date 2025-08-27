@@ -20,6 +20,7 @@ interface LogContextType {
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
+// Forcing a re-sync for GitHub.
 export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [loggingEnabled, setLoggingEnabled] = useState(true); // Default to on to capture initial logs
