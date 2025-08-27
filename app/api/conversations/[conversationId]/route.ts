@@ -6,7 +6,7 @@ import { Conversation } from '@/lib/types';
 export async function PUT(req: NextRequest, { params }: { params: { conversationId: string } }) {
     try {
         const { conversationId } = params;
-        const { title, summary, systemPrompt, useSemanticMemory, useStructuredMemory } = await req.json();
+        const { title, summary, systemPrompt, useSemanticMemory, useStructuredMemory, model, temperature, topP } = await req.json();
         
         const updates: string[] = [];
         const values: any[] = [];
@@ -31,6 +31,18 @@ export async function PUT(req: NextRequest, { params }: { params: { conversation
         if (useStructuredMemory !== undefined) {
             updates.push(`"useStructuredMemory" = $${queryIndex++}`);
             values.push(useStructuredMemory);
+        }
+        if (model !== undefined) {
+            updates.push(`model = $${queryIndex++}`);
+            values.push(model);
+        }
+        if (temperature !== undefined) {
+            updates.push(`temperature = $${queryIndex++}`);
+            values.push(temperature);
+        }
+        if (topP !== undefined) {
+            updates.push(`"topP" = $${queryIndex++}`);
+            values.push(topP);
         }
         
         updates.push(`"lastUpdatedAt" = CURRENT_TIMESTAMP`);

@@ -110,3 +110,23 @@ export const PaperclipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =>
     <path strokeLinecap="round" strokeLinejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.122 2.122l7.81-7.81" />
   </svg>
 );
+
+export const BookmarkListIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H12m4.5 0H12m0 0H7.5m4.5 0v7.5M7.5 3.75H12m0 0V3.75m0 0H3.75c-.621 0-1.125.504-1.125 1.125v15c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-15c0-.621-.504-1.125-1.125-1.125Z" />
+    </svg>
+);
+
+export const SettingsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-1.007 1.113-1.113l.448-.113a2.25 2.25 0 0 1 2.703 2.703l-.113.448c-.106.553-.572 1.023-1.113 1.113l-.448.113a2.25 2.25 0 0 1-2.703-2.703l.113-.448Zm-2.176 4.384c.09-.542.56-1.007 1.113-1.113l.448-.113a2.25 2.25 0 0 1 2.703 2.703l-.113.448c-.106.553-.572 1.023-1.113 1.113l-.448.113a2.25 2.25 0 0 1-2.703-2.703l.113-.448Z M13.856 13.856c.09-.542.56-1.007 1.113-1.113l.448-.113a2.25 2.25 0 0 1 2.703 2.703l-.113.448c-.106.553-.572 1.023-1.113 1.113l-.448.113a2.25 2.25 0 0 1-2.703-2.703l.113-.448Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 15.06c.09-.542.56-1.007 1.113-1.113l.448-.113a2.25 2.25 0 0 1 2.703 2.703l-.113.448c-.106.553-.572 1.023-1.113 1.113l-.448.113a2.25 2.25 0 0 1-2.703-2.703l.113-.448Z" />
+    </svg>
+);
+
+export const LogIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 15.75L16.5 18l-2.25 2.25" />
+    </svg>
+);

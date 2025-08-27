@@ -18,12 +18,35 @@ export async function GET() {
 // POST a new conversation
 export async function POST(req: NextRequest) {
     try {
-        const { title, systemPrompt, useSemanticMemory, useStructuredMemory } = await req.json();
+        const { title } = await req.json();
         const newTitle = title || 'New Chat';
 
+        // Fetch default settings from the database
+        const { rows: settingsRows } = await sql`SELECT key, value FROM settings WHERE key IN ('defaultModelConfig', 'defaultAgentConfig');`;
+        
+        const settings = settingsRows.reduce((acc, row) => {
+            acc[row.key] = row.value;
+            return acc;
+        }, {} as Record<string, any>);
+
+        const modelConfig = settings.defaultModelConfig || {};
+        const agentConfig = settings.defaultAgentConfig || {};
+
         const { rows } = await sql`
-            INSERT INTO conversations (title, "systemPrompt", "useSemanticMemory", "useStructuredMemory")
-            VALUES (${newTitle}, ${systemPrompt || 'You are a helpful AI assistant.'}, ${useSemanticMemory ?? true}, ${useStructuredMemory ?? true})
+            INSERT INTO conversations (
+                title, 
+                "systemPrompt", "useSemanticMemory", "useStructuredMemory",
+                model, temperature, "topP"
+            )
+            VALUES (
+                ${newTitle}, 
+                ${agentConfig.systemPrompt || 'You are a helpful AI assistant.'}, 
+                ${agentConfig.useSemanticMemory ?? true}, 
+                ${agentConfig.useStructuredMemory ?? true},
+                ${modelConfig.model || 'gemini-2.5-flash'},
+                ${modelConfig.temperature ?? 0.7},
+                ${modelConfig.topP ?? 0.95}
+            )
             RETURNING *;
         `;
         

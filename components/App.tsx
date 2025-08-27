@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import dynamic from 'next/dynamic';
+import LogOutputPanel from './LogOutputPanel';
 
 const ContactsHub = dynamic(() => import('@/components/ContactsHub'), {
   ssr: false,
@@ -25,12 +26,25 @@ const DevCenter = dynamic(() => import('@/components/dev_center/DevCenter'), {
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Dev Center...</p></div>
 });
 
+const GlobalSettingsModal = dynamic(() => import('@/components/GlobalSettingsModal'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Settings...</p></div>
+});
+
+const BookmarksModal = dynamic(() => import('@/components/BookmarksModal'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Bookmarks...</p></div>
+});
+
 const App: React.FC = () => {
     const { createNewConversation } = useAppContext();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isMemoryCenterOpen, setMemoryCenterOpen] = useState(false);
     const [isContactsHubOpen, setContactsHubOpen] = useState(false);
     const [isDevCenterOpen, setDevCenterOpen] = useState(false);
+    const [isGlobalSettingsOpen, setGlobalSettingsOpen] = useState(false);
+    const [isBookmarksOpen, setBookmarksOpen] = useState(false);
+    const [isLogPanelOpen, setLogPanelOpen] = useState(false);
     
     useKeyboardShortcuts({
         'mod+k': () => setMemoryCenterOpen(prev => !prev),
@@ -54,6 +68,9 @@ const App: React.FC = () => {
                                 setMemoryCenterOpen={setMemoryCenterOpen}
                                 setContactsHubOpen={setContactsHubOpen} 
                                 setDevCenterOpen={setDevCenterOpen}
+                                setGlobalSettingsOpen={setGlobalSettingsOpen}
+                                setBookmarksOpen={setBookmarksOpen}
+                                setLogPanelOpen={setLogPanelOpen}
                            />
                         </motion.div>
                     )}
@@ -67,20 +84,10 @@ const App: React.FC = () => {
                             {isSidebarOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
                         </button>
                     </div>
-                     <div className="absolute top-4 right-4 z-20 hidden md:block">
-                        <motion.button 
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setMemoryCenterOpen(true)} 
-                            className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 flex items-center gap-2"
-                            title="Open Memory Center (Cmd+K)"
-                        >
-                            <MemoryIcon className="w-5 h-5" />
-                            <span>Memory Center</span>
-                        </motion.button>
-                    </div>
-                    <main className="flex-1 overflow-y-auto">
+                    
+                    <main className="flex-1 flex flex-col overflow-y-auto">
                         <ChatWindow />
+                        <LogOutputPanel isOpen={isLogPanelOpen} />
                     </main>
                 </div>
                 
@@ -88,6 +95,8 @@ const App: React.FC = () => {
                     {isMemoryCenterOpen && <MemoryCenter setIsOpen={setMemoryCenterOpen} />}
                     {isContactsHubOpen && <ContactsHub setIsOpen={setContactsHubOpen} />}
                     {isDevCenterOpen && <DevCenter setIsOpen={setDevCenterOpen} />}
+                    {isGlobalSettingsOpen && <GlobalSettingsModal setIsOpen={setGlobalSettingsOpen} />}
+                    {isBookmarksOpen && <BookmarksModal setIsOpen={setBookmarksOpen} />}
                 </AnimatePresence>
             </div>
         </>

@@ -10,6 +10,9 @@ export interface Conversation {
     systemPrompt?: string;
     useSemanticMemory?: boolean;
     useStructuredMemory?: boolean;
+    model?: string;
+    temperature?: number;
+    topP?: number;
 }
 
 export interface Message {
@@ -64,4 +67,20 @@ export interface Cache {
     key: string;
     value: string;
     expiresAt: Date;
+}
+
+export interface AppSettings {
+    defaultModelConfig: {
+        model: string;
+        temperature: number;
+        topP: number;
+    };
+    defaultAgentConfig: {
+        systemPrompt: string;
+        useSemanticMemory: boolean;
+        useStructuredMemory: boolean;
+    };
+    enableDebugLog: {
+        enabled: boolean;
+    };
 }

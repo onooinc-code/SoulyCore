@@ -1,40 +1,55 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { XIcon } from './Icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppContext } from './providers/AppProvider';
 
-interface SettingsModalProps {
+interface ConversationSettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const ConversationSettingsModal: React.FC<ConversationSettingsModalProps> = ({ isOpen, onClose }) => {
+    const { currentConversation, updateCurrentConversation, setStatus, clearError } = useAppContext();
     const [model, setModel] = useState('');
     const [temperature, setTemperature] = useState(0.7);
     const [topP, setTopP] = useState(0.95);
 
     useEffect(() => {
-        if (isOpen) {
-            const settings = JSON.parse(localStorage.getItem('gemini-settings') || '{}');
-            setModel(settings.model || 'gemini-2.5-flash');
-            setTemperature(settings.temperature ?? 0.7);
-            setTopP(settings.topP ?? 0.95);
+        if (isOpen && currentConversation) {
+            setModel(currentConversation.model || 'gemini-2.5-flash');
+            setTemperature(currentConversation.temperature ?? 0.7);
+            setTopP(currentConversation.topP ?? 0.95);
         }
-    }, [isOpen]);
+    }, [isOpen, currentConversation]);
 
-    const handleSave = () => {
-        const settings = { model, temperature, topP };
-        localStorage.setItem('gemini-settings', JSON.stringify(settings));
-        onClose();
-        // A reload is used to ensure the Gemini client is re-initialized with new settings.
-        window.location.reload(); 
+    const handleSave = async () => {
+        if (!currentConversation) return;
+        clearError();
+
+        const updatedData = { model, temperature, topP };
+
+        try {
+            const res = await fetch(`/api/conversations/${currentConversation.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+            if (!res.ok) throw new Error('Failed to update model settings');
+            
+            updateCurrentConversation(updatedData);
+            onClose();
+
+        } catch(error) {
+            setStatus({ error: (error as Error).message });
+            console.error(error);
+        }
     };
 
     return (
        <AnimatePresence>
-            {isOpen && (
+            {isOpen && currentConversation && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -51,14 +66,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold">Model Settings</h2>
+                            <h2 className="text-xl font-bold">Conversation Model Settings</h2>
                             <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700">
                                 <XIcon className="w-6 h-6" />
                             </button>
                         </div>
                         <div>
                             <p className="text-sm text-gray-400 mb-2">
-                                The API Key is configured via environment variables and cannot be changed here.
+                                These settings apply only to this conversation. Default settings for new chats can be changed in Global Settings.
                             </p>
                         </div>
                         <div>
@@ -75,7 +90,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                         </div>
                         <div className="flex justify-end gap-2 pt-4">
                             <button onClick={onClose} className="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button>
-                            <button onClick={handleSave} className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500">Save & Reload</button>
+                            <button onClick={handleSave} className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500">Save</button>
                         </div>
                     </motion.div>
                 </motion.div>
@@ -84,4 +99,4 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     );
 };
 
-export default SettingsModal;
+export default ConversationSettingsModal;

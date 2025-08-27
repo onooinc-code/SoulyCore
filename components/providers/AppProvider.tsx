@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import type { Conversation, Message, Contact } from '@/lib/types';
+import type { Conversation, Message, Contact, AppSettings } from '@/lib/types';
 
 export interface IStatus {
   currentAction: string;
@@ -13,14 +13,18 @@ interface AppContextType {
     currentConversation: Conversation | null;
     messages: Message[];
     setCurrentConversation: (conversationId: string | null) => void;
+    updateCurrentConversation: (updatedData: Partial<Conversation>) => void;
     createNewConversation: () => Promise<void>;
-    addMessage: (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[], config?: any) => Promise<{aiResponse: string | null, suggestion: string | null}>;
+    addMessage: (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[]) => Promise<{aiResponse: string | null, suggestion: string | null}>;
+    toggleBookmark: (messageId: string) => Promise<void>;
     loadConversations: () => Promise<void>;
     isLoading: boolean;
     setIsLoading: (loading: boolean) => void;
     status: IStatus;
     setStatus: (status: Partial<IStatus>) => void;
     clearError: () => void;
+    settings: AppSettings | null;
+    loadSettings: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -30,16 +34,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [status, setBaseStatus] = useState<IStatus>({
-        currentAction: '',
-        error: null,
-    });
+    const [status, setBaseStatus] = useState<IStatus>({ currentAction: '', error: null });
+    const [settings, setSettings] = useState<AppSettings | null>(null);
 
     const setStatus = useCallback((newStatus: Partial<IStatus>) => {
         setBaseStatus(prev => ({ ...prev, ...newStatus }));
     }, []);
 
     const clearError = useCallback(() => setStatus({ error: null }), [setStatus]);
+    
+    const loadSettings = useCallback(async () => {
+        try {
+            const res = await fetch('/api/settings');
+            if (!res.ok) throw new Error("Failed to fetch settings.");
+            const appSettings = await res.json();
+            setSettings(appSettings);
+            return appSettings;
+        } catch (error) {
+             setStatus({ error: (error as Error).message });
+             console.error(error);
+        }
+    }, [setStatus]);
 
     const loadConversations = useCallback(async () => {
         try {
@@ -55,7 +70,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     useEffect(() => {
         loadConversations();
-    }, [loadConversations]);
+        loadSettings();
+    }, [loadConversations, loadSettings]);
 
     const fetchMessages = useCallback(async (conversationId: string) => {
         try {
@@ -76,28 +92,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             return;
         }
 
-        const convo = conversations.find(c => c.id === conversationId);
-        if (convo) {
-            setCurrentConversation(convo);
-            await fetchMessages(conversationId);
-        } else {
-            // If convo not found, refetch and try again.
-            await loadConversations();
-            const freshConvos = await (await fetch('/api/conversations')).json();
-            const freshConvo = freshConvos.find((c: Conversation) => c.id === conversationId);
-            if (freshConvo) {
-                setCurrentConversation(freshConvo);
-                await fetchMessages(conversationId);
+        const findAndSetConvo = (convos: Conversation[]) => {
+            const convo = convos.find(c => c.id === conversationId);
+            if (convo) {
+                setCurrentConversation(convo);
+                fetchMessages(conversationId);
+                return true;
             }
+            return false;
+        }
+
+        if (!findAndSetConvo(conversations)) {
+            await loadConversations();
+            // Need to fetch fresh conversations to find the new one
+            const freshResponse = await fetch('/api/conversations');
+            const freshConvos = await freshResponse.json();
+            findAndSetConvo(freshConvos);
         }
     }, [conversations, fetchMessages, loadConversations]);
+
+    const updateCurrentConversation = useCallback((updatedData: Partial<Conversation>) => {
+        if (currentConversation) {
+            const newConversation = { ...currentConversation, ...updatedData };
+            setCurrentConversation(newConversation);
+            setConversations(convos => convos.map(c => c.id === newConversation.id ? newConversation : c));
+        }
+    }, [currentConversation]);
 
     const createNewConversation = useCallback(async () => {
         setCurrentConversation(null);
         setMessages([]);
     }, []);
 
-    const addMessage = useCallback(async (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[], config?: any) => {
+    const addMessage = useCallback(async (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[]) => {
         setIsLoading(true);
         setStatus({ currentAction: "Processing...", error: null });
 
@@ -148,7 +175,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     messages: updatedMessagesHistory, 
                     conversation: conversationToUpdate,
                     mentionedContacts,
-                    config,
                 })
             });
             if (!chatRes.ok) {
@@ -161,6 +187,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 const aiMessageData: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
                     role: 'model',
                     content: aiResponse,
+                    tokenCount: Math.ceil(aiResponse.length / 4), // Estimate token count
                 };
                  const aiMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
                      method: 'POST',
@@ -185,20 +212,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, [currentConversation, loadConversations, messages, setStatus]);
 
+    const toggleBookmark = useCallback(async (messageId: string) => {
+        setStatus({ currentAction: "Updating bookmark..." });
+        try {
+            const res = await fetch(`/api/messages/${messageId}/bookmark`, { method: 'PUT' });
+            if (!res.ok) throw new Error('Failed to toggle bookmark status.');
+            const updatedMessage = await res.json();
+            
+            setMessages(prev => prev.map(m => m.id === messageId ? updatedMessage : m));
+
+        } catch (error) {
+            setStatus({ error: (error as Error).message });
+            console.error(error);
+        } finally {
+            setStatus({ currentAction: "" });
+        }
+    }, [setStatus]);
+
     return (
         <AppContext.Provider value={{
             conversations,
             currentConversation,
             messages,
             setCurrentConversation: setCurrentConversationById,
+            updateCurrentConversation,
             createNewConversation,
             addMessage,
+            toggleBookmark,
             loadConversations,
             isLoading,
             setIsLoading,
             status,
             setStatus,
             clearError,
+            settings,
+            loadSettings
         }}>
             {children}
         </AppContext.Provider>

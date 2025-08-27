@@ -6,7 +6,7 @@ import Message from './Message';
 import ChatInput from './ChatInput';
 import type { Message as MessageType, Contact } from '@/lib/types';
 import StatusBar from './StatusBar';
-import SettingsModal from './SettingsModal';
+import ConversationSettingsModal from './ConversationSettingsModal';
 import AgentConfigModal from './AgentConfigModal';
 import SummaryModal from './SummaryModal';
 import { motion } from 'framer-motion';
@@ -16,8 +16,8 @@ const ChatWindow: React.FC = () => {
         currentConversation, 
         messages, 
         addMessage,
+        toggleBookmark,
         isLoading,
-        setStatus,
         status,
         clearError,
     } = useAppContext();
@@ -57,13 +57,7 @@ const ChatWindow: React.FC = () => {
             tokenCount: Math.ceil(content.length / 4),
         };
 
-        const settings = JSON.parse(localStorage.getItem('gemini-settings') || '{}');
-        const config = {
-            temperature: settings.temperature,
-            topP: settings.topP
-        };
-
-        const { aiResponse, suggestion } = await addMessage(userMessage, mentionedContacts, config);
+        const { aiResponse, suggestion } = await addMessage(userMessage, mentionedContacts);
 
         if (aiResponse) {
             setProactiveSuggestion(suggestion);
@@ -97,6 +91,7 @@ const ChatWindow: React.FC = () => {
                                     key={msg.id} 
                                     message={msg}
                                     onSummarize={handleSummarizeMessage}
+                                    onToggleBookmark={toggleBookmark}
                                 />
                             ))}
                              <div ref={messagesEndRef} />
@@ -161,7 +156,7 @@ const ChatWindow: React.FC = () => {
                 onSettingsClick={() => setSettingsModalOpen(true)}
                 onAgentConfigClick={() => setAgentConfigModalOpen(true)}
             />
-            <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
+            <ConversationSettingsModal isOpen={isSettingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
             <AgentConfigModal 
                 isOpen={isAgentConfigModalOpen} 
                 onClose={() => setAgentConfigModalOpen(false)} 

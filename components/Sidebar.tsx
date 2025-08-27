@@ -2,21 +2,35 @@
 
 import React from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon } from '@/components/Icons';
+import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon } from '@/components/Icons';
 
 interface SidebarProps {
     setMemoryCenterOpen: (isOpen: boolean) => void;
     setContactsHubOpen: (isOpen: boolean) => void;
     setDevCenterOpen: (isOpen: boolean) => void;
+    setGlobalSettingsOpen: (isOpen: boolean) => void;
+    setBookmarksOpen: (isOpen: boolean) => void;
+    // FIX: Changed type to allow functional updates for useState setter
+    setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setContactsHubOpen, setDevCenterOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+    setMemoryCenterOpen, 
+    setContactsHubOpen, 
+    setDevCenterOpen,
+    setGlobalSettingsOpen,
+    setBookmarksOpen,
+    setLogPanelOpen,
+}) => {
     const { conversations, currentConversation, setCurrentConversation, createNewConversation } = useAppContext();
 
     const menuItems = [
         { label: 'Memory Center', icon: MemoryIcon, action: () => setMemoryCenterOpen(true) },
         { label: 'Contacts Hub', icon: UsersIcon, action: () => setContactsHubOpen(true) },
+        { label: 'Bookmarks', icon: BookmarkListIcon, action: () => setBookmarksOpen(true) },
         { label: 'Dev Center', icon: CodeIcon, action: () => setDevCenterOpen(true) },
+        { label: 'Global Settings', icon: SettingsIcon, action: () => setGlobalSettingsOpen(true) },
+        { label: 'Toggle Log Panel', icon: LogIcon, action: () => setLogPanelOpen(prev => !prev) },
     ];
 
     return (
@@ -60,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setMemoryCenterOpen, setContactsHubOp
             </div>
             <div className="p-2 border-t border-gray-700">
                 <p className="text-lg font-bold text-gray-100">SoulyCore</p>
-                <p className="text-xs text-gray-400">v2.0 - Full Stack</p>
+                <p className="text-xs text-gray-400">v2.1 - Enhanced</p>
             </div>
         </div>
     );

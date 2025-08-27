@@ -8,7 +8,7 @@ import { Message, Contact } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
     try {
-        const { messages, conversation, mentionedContacts, config } = await req.json();
+        const { messages, conversation, mentionedContacts } = await req.json();
         
         if (!messages || !conversation) {
             return NextResponse.json({ error: 'Missing messages or conversation data' }, { status: 400 });
@@ -96,12 +96,17 @@ export async function POST(req: NextRequest) {
         if (userParts.length > 0) {
             history.push({ role: 'user', parts: userParts });
         }
+        
+        const modelConfig = {
+            temperature: conversation.temperature,
+            topP: conversation.topP
+        };
 
         // 5. Generate AI Response
         const result = await generateChatResponse(
             history, 
             conversation.systemPrompt,
-            config
+            modelConfig
         );
         
         if (!result) {

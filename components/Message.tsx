@@ -11,16 +11,12 @@ import MessageFooter from './MessageFooter';
 interface MessageProps {
     message: MessageType;
     onSummarize: (content: string) => void;
+    onToggleBookmark: (messageId: string) => void;
 }
 
-const Message: React.FC<MessageProps> = ({ message, onSummarize }) => {
+const Message: React.FC<MessageProps> = ({ message, onSummarize, onToggleBookmark }) => {
     const isUser = message.role === 'user';
     const [isCollapsed, setIsCollapsed] = useState(false);
-
-    const handleBookmark = () => {
-        // This would now be an API call to update the message's bookmark status
-        console.log("Bookmarking feature requires a new API endpoint.");
-    };
     
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
@@ -44,7 +40,7 @@ const Message: React.FC<MessageProps> = ({ message, onSummarize }) => {
                         isBookmarked={message.isBookmarked || false}
                         isCollapsed={isCollapsed}
                         onCopy={handleCopy}
-                        onBookmark={handleBookmark}
+                        onBookmark={() => onToggleBookmark(message.id)}
                         onSummarize={() => onSummarize(message.content)}
                         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
                     />

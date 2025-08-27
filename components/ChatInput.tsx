@@ -5,6 +5,7 @@ import { SendIcon, PaperclipIcon, XIcon } from './Icons';
 import LoadingIndicator from './LoadingIndicator';
 import type { Contact } from '@/lib/types';
 import { useAppContext } from '@/components/providers/AppProvider';
+import { useLog } from './providers/LogProvider';
 
 interface ChatInputProps {
     onSendMessage: (content: string, mentionedContacts: Contact[]) => void;
@@ -13,6 +14,7 @@ interface ChatInputProps {
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     const { setStatus } = useAppContext();
+    const { log } = useLog();
     const [content, setContent] = useState('');
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [showMentions, setShowMentions] = useState(false);
@@ -25,6 +27,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
 
     const fetchContacts = useCallback(async () => {
         try {
+            log('Fetching contacts from API...');
             const res = await fetch('/api/contacts');
             if (!res.ok) {
                 let errorMsg = 'An unknown error occurred while fetching contacts.';
@@ -38,11 +41,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             }
             const { contacts } = await res.json();
             setContacts(contacts);
+            log(`Successfully fetched ${contacts.length} contacts.`);
         } catch (error) {
+            log('Error fetching contacts', { error: (error as Error).message }, 'error');
             setStatus({ error: (error as Error).message });
             console.error(error);
         }
-    }, [setStatus]);
+    }, [setStatus, log]);
 
     useEffect(() => {
         fetchContacts();

@@ -15,7 +15,10 @@ async function createTables() {
                 "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 "systemPrompt" TEXT,
                 "useSemanticMemory" BOOLEAN DEFAULT true,
-                "useStructuredMemory" BOOLEAN DEFAULT true
+                "useStructuredMemory" BOOLEAN DEFAULT true,
+                model VARCHAR(255),
+                temperature REAL,
+                "topP" REAL
             );
         `;
         console.log("Table 'conversations' created or already exists.", conversationsTable.command);
@@ -65,9 +68,29 @@ async function createTables() {
         `;
         console.log("Table 'entities' created or already exists.", entitiesTable.command);
         
+        const settingsTable = await sql`
+            CREATE TABLE IF NOT EXISTS settings (
+                key VARCHAR(255) PRIMARY KEY,
+                value JSONB NOT NULL
+            );
+        `;
+        console.log("Table 'settings' created or already exists.", settingsTable.command);
+        
+        // Insert default settings if they don't exist
+        await sql`
+            INSERT INTO settings (key, value)
+            VALUES 
+                ('defaultModelConfig', '{"model": "gemini-2.5-flash", "temperature": 0.7, "topP": 0.95}'),
+                ('defaultAgentConfig', '{"systemPrompt": "You are a helpful AI assistant.", "useSemanticMemory": true, "useStructuredMemory": true}'),
+                ('enableDebugLog', '{"enabled": false}')
+            ON CONFLICT (key) DO NOTHING;
+        `;
+        console.log("Default settings inserted or already exist.");
+
+
         console.log("All tables checked/created successfully.");
 
-    } catch (error) {
+    } catch (error)
         console.error("Error creating tables:", error);
         process.exit(1);
     }
