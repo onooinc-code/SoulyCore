@@ -87,8 +87,7 @@ const featuresData = [
             { subFeature: 'Tabbed Interface', description: 'Allows navigation between different developer-focused sections.', status: '✅ Completed' },
             { subFeature: 'Features Dictionary', description: 'A full CRUD interface for managing this very feature list.', status: '✅ Completed' },
             { subFeature: 'Dashboard', description: 'A high-level overview of the project, displaying key metrics, statistics, and potential integrations like GitHub. The purpose is to provide a quick snapshot of the project\'s health and activity.', status: '⚪ Planned' },
-            { subFeature: 'Roadmap & Ideas', description: 'A placeholder for an AI-powered idea generation and planning tool.', status: '⚪ Planned' },
-            { subFeature: 'Code & Terminal', description: 'A simulated, non-functional code editor and terminal for demonstration.', status: '🟡 Needs Improvement' }
+            { subFeature: 'Roadmap & Ideas', description: 'A placeholder for an AI-powered idea generation and planning tool.', status: '⚪ Planned' }
         ]),
         logic_flow: 'A primary modal component that dynamically loads different sub-components based on the active tab state. The "Features Dictionary" is fully implemented with GET, POST, PUT, and DELETE functionality via the /api/features API routes, interacting directly with the Vercel Postgres database.',
         key_files_json: JSON.stringify([
@@ -96,7 +95,7 @@ const featuresData = [
             'components/dev_center/FeaturesDictionary.tsx',
             'app/api/features/[...].ts'
         ]),
-        notes: 'The placeholder tabs (Dashboard, Roadmap, Docs) need to be implemented with real functionality and API integrations to be useful. The Code & Terminal is a mock-up and would require significant effort to become a functional tool.'
+        notes: 'The placeholder tabs (Dashboard, Roadmap, Docs) need to be implemented with real functionality and API integrations to be useful.'
     }
 ];
 

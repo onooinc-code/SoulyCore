@@ -10,18 +10,13 @@ import Roadmap from './Roadmap';
 import Documentation from './Documentation';
 import dynamic from 'next/dynamic';
 
-const CodeTerminal = dynamic(() => import('./CodeTerminal'), {
-    ssr: false,
-    loading: () => <p className="text-center text-gray-400">Loading Interactive Editor...</p>
-});
-
 const FeaturesDictionary = dynamic(() => import('./FeaturesDictionary'), {
     ssr: false,
     loading: () => <div className="flex items-center justify-center h-full"><p className="text-white">Loading Features Dictionary...</p></div>
 });
 
 
-type Tab = 'dashboard' | 'roadmap' | 'code' | 'docs' | 'features';
+type Tab = 'dashboard' | 'roadmap' | 'docs' | 'features';
 
 interface DevCenterProps {
     setIsOpen: (isOpen: boolean) => void;
@@ -46,7 +41,6 @@ const DevCenter: React.FC<DevCenterProps> = ({ setIsOpen }) => {
             case 'features': return <FeaturesDictionary />;
             case 'dashboard': return <Dashboard />;
             case 'roadmap': return <Roadmap />;
-            case 'code': return <CodeTerminal />;
             case 'docs': return <Documentation />;
             default: return null;
         }
@@ -77,7 +71,6 @@ const DevCenter: React.FC<DevCenterProps> = ({ setIsOpen }) => {
                     <TabButton tabName="features" label="Features Dictionary" />
                     <TabButton tabName="dashboard" label="Dashboard" />
                     <TabButton tabName="roadmap" label="Roadmap & Ideas" />
-                    <TabButton tabName="code" label="Code & Terminal" />
                     <TabButton tabName="docs" label="Smart Documentation" />
                 </div>
                 
