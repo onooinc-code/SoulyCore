@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -69,10 +70,14 @@ const SafeJsonRenderer: React.FC<{ jsonString: string; type: 'files' | 'ux' }> =
 // Main Feature Item Component
 const FeatureItem: React.FC<{ feature: Feature; onEdit: () => void; onDelete: () => void; }> = ({ feature, onEdit, onDelete }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const { log } = useLog();
 
     return (
         <motion.div layout className="bg-gray-800 rounded-lg overflow-hidden">
-            <motion.div layout className="flex justify-between items-center p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+            <motion.div layout className="flex justify-between items-center p-4 cursor-pointer" onClick={() => {
+                log(`User ${isExpanded ? 'collapsed' : 'expanded'} feature view`, { featureName: feature.name });
+                setIsExpanded(!isExpanded);
+            }}>
                 <div className="flex-1 min-w-0">
                     <h4 className="font-bold truncate">{feature.name}</h4>
                 </div>
@@ -136,7 +141,7 @@ const FeaturesDictionary: React.FC = () => {
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: errorMessage });
-            log('Failed to fetch features.', { error: errorMessage }, 'error');
+            log('Failed to fetch features.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         } finally {
             setIsLoading(false);
@@ -148,6 +153,8 @@ const FeaturesDictionary: React.FC = () => {
     }, [fetchFeatures]);
 
     const handleOpenForm = (feature: Partial<Feature> | null = null) => {
+        const action = feature ? 'edit' : 'new';
+        log(`User opened feature form for ${action} feature.`, { featureId: feature?.id });
         setCurrentFeature(feature || {
             name: '',
             overview: '',
@@ -168,7 +175,9 @@ const FeaturesDictionary: React.FC = () => {
             if (currentFeature.ui_ux_breakdown_json) JSON.parse(currentFeature.ui_ux_breakdown_json);
             if (currentFeature.key_files_json) JSON.parse(currentFeature.key_files_json);
         } catch (e) {
-            setStatus({ error: "Invalid JSON format in one of the fields. Please check and try again."});
+            const errorMessage = "Invalid JSON format in one of the fields. Please check and try again.";
+            setStatus({ error: errorMessage});
+            log('Feature save failed due to invalid JSON.', { error: (e as Error).message }, 'error');
             return;
         }
 
@@ -199,7 +208,7 @@ const FeaturesDictionary: React.FC = () => {
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: errorMessage });
-            log(`Failed to ${action.toLowerCase()} feature.`, { error: errorMessage }, 'error');
+            log(`Failed to ${action.toLowerCase()} feature.`, { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     };
@@ -216,9 +225,11 @@ const FeaturesDictionary: React.FC = () => {
             } catch (error) {
                 const errorMessage = (error as Error).message;
                 setStatus({ error: errorMessage });
-                log('Failed to delete feature.', { id, error: errorMessage }, 'error');
+                log('Failed to delete feature.', { id, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
                 console.error(error);
             }
+        } else {
+            log('User cancelled feature deletion.', { id });
         }
     };
     
@@ -250,7 +261,10 @@ const FeaturesDictionary: React.FC = () => {
                 </div>
                 <div className="flex gap-2 p-4 border-t border-gray-700 flex-shrink-0">
                     <button onClick={handleSaveFeature} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save Feature</button>
-                    <button onClick={() => setIsFormOpen(false)} className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
+                    <button onClick={() => {
+                        log('User cancelled feature form.');
+                        setIsFormOpen(false);
+                    }} className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
                 </div>
             </motion.div>
         </motion.div>

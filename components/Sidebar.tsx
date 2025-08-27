@@ -1,9 +1,12 @@
 
+
+
 "use client";
 
 import React from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon } from '@/components/Icons';
+import { useLog } from './providers/LogProvider';
 
 interface SidebarProps {
     setMemoryCenterOpen: (isOpen: boolean) => void;
@@ -11,7 +14,6 @@ interface SidebarProps {
     setDevCenterOpen: (isOpen: boolean) => void;
     setGlobalSettingsOpen: (isOpen: boolean) => void;
     setBookmarksOpen: (isOpen: boolean) => void;
-    // FIX: Changed type to allow functional updates for useState setter
     setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -24,24 +26,38 @@ const Sidebar: React.FC<SidebarProps> = ({
     setLogPanelOpen,
 }) => {
     const { conversations, currentConversation, setCurrentConversation, createNewConversation, settings } = useAppContext();
+    const { log } = useLog();
+
+    const handleNewChat = () => {
+        log('User clicked "New Chat" button.');
+        createNewConversation();
+    };
+    
+    const handleSetConversation = (id: string) => {
+        log('User selected a conversation.', { conversationId: id });
+        setCurrentConversation(id);
+    };
 
     const menuItems = [
-        { label: 'Memory Center', icon: MemoryIcon, action: () => setMemoryCenterOpen(true) },
-        { label: 'Contacts Hub', icon: UsersIcon, action: () => setContactsHubOpen(true) },
-        { label: 'Bookmarks', icon: BookmarkListIcon, action: () => setBookmarksOpen(true) },
-        { label: 'Dev Center', icon: CodeIcon, action: () => setDevCenterOpen(true) },
-        { label: 'Global Settings', icon: SettingsIcon, action: () => setGlobalSettingsOpen(true) },
+        { label: 'Memory Center', icon: MemoryIcon, action: () => { log('User opened Memory Center.'); setMemoryCenterOpen(true); } },
+        { label: 'Contacts Hub', icon: UsersIcon, action: () => { log('User opened Contacts Hub.'); setContactsHubOpen(true); } },
+        { label: 'Bookmarks', icon: BookmarkListIcon, action: () => { log('User opened Bookmarks modal.'); setBookmarksOpen(true); } },
+        { label: 'Dev Center', icon: CodeIcon, action: () => { log('User opened Dev Center.'); setDevCenterOpen(true); } },
+        { label: 'Global Settings', icon: SettingsIcon, action: () => { log('User opened Global Settings.'); setGlobalSettingsOpen(true); } },
         { 
             label: 'Toggle Log Panel', 
             icon: LogIcon, 
-            action: () => setLogPanelOpen(prev => !prev),
+            action: () => {
+                log('User toggled the log panel.');
+                setLogPanelOpen(prev => !prev);
+            },
         },
     ];
 
     return (
         <div className="flex flex-col h-full bg-gray-800 p-3">
             <button
-                onClick={createNewConversation}
+                onClick={handleNewChat}
                 className="flex items-center justify-center w-full p-2 mb-4 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors"
                 title="New Chat (Cmd+N)"
             >
@@ -68,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {conversations.map(convo => (
                         <li key={convo.id}>
                             <button
-                                onClick={() => setCurrentConversation(convo.id)}
+                                onClick={() => handleSetConversation(convo.id)}
                                 className={`w-full text-left p-2 rounded-md text-sm truncate ${currentConversation?.id === convo.id ? 'bg-gray-700' : 'hover:bg-gray-700/50'}`}
                             >
                                 {convo.title}

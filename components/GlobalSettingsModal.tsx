@@ -1,4 +1,6 @@
 
+
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -22,7 +24,7 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
         if (!settings) {
             loadSettings();
         }
-    }, [settings, loadSettings]);
+    }, [settings, loadSettings, log]);
 
     // This effect synchronizes the local form state with the global context state.
     // It runs whenever the global settings object is updated (e.g., after the fetch).
@@ -36,7 +38,7 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
         if (!localSettings) return;
         clearError();
         setStatus({ currentAction: "Saving settings..." });
-        log('Attempting to save global settings...', { settings: localSettings });
+        log('User clicked "Save" in Global Settings', { settings: localSettings });
         try {
             const res = await fetch('/api/settings', {
                 method: 'PUT',
@@ -51,7 +53,7 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: errorMessage });
-            log('Failed to save settings.', { error: errorMessage }, 'error');
+            log('Failed to save settings.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         } finally {
             setStatus({ currentAction: "" });

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { XIcon } from './Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from './providers/AppProvider';
+import { useLog } from './providers/LogProvider';
 
 interface ConversationSettingsModalProps {
     isOpen: boolean;
@@ -12,6 +13,7 @@ interface ConversationSettingsModalProps {
 
 const ConversationSettingsModal: React.FC<ConversationSettingsModalProps> = ({ isOpen, onClose }) => {
     const { currentConversation, updateCurrentConversation, setStatus, clearError } = useAppContext();
+    const { log } = useLog();
     const [model, setModel] = useState('');
     const [temperature, setTemperature] = useState(0.7);
     const [topP, setTopP] = useState(0.95);
@@ -22,13 +24,14 @@ const ConversationSettingsModal: React.FC<ConversationSettingsModalProps> = ({ i
             setTemperature(currentConversation.temperature ?? 0.7);
             setTopP(currentConversation.topP ?? 0.95);
         }
-    }, [isOpen, currentConversation]);
+    }, [isOpen, currentConversation, log]);
 
     const handleSave = async () => {
         if (!currentConversation) return;
         clearError();
 
         const updatedData = { model, temperature, topP };
+        log('User clicked "Save" in Conversation Settings Modal', { conversationId: currentConversation.id, updatedData });
 
         try {
             const res = await fetch(`/api/conversations/${currentConversation.id}`, {
@@ -42,7 +45,9 @@ const ConversationSettingsModal: React.FC<ConversationSettingsModalProps> = ({ i
             onClose();
 
         } catch(error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to save conversation model settings', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     };

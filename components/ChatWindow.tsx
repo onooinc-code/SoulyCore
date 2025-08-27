@@ -1,4 +1,6 @@
 
+
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -45,6 +47,7 @@ const ChatWindow: React.FC = () => {
     }, [currentConversation]);
 
     const handleSummarizeMessage = async (content: string) => {
+        log('User requested message summary.');
         setSummaryModalState({ isOpen: true, text: '', isLoading: true });
         // This would be an API call in the new architecture
         const summary = "Summary generation is now a server-side capability.";
@@ -66,14 +69,14 @@ const ChatWindow: React.FC = () => {
             setProactiveSuggestion(suggestion);
             // After getting a successful response, trigger the memory pipeline in the background
             const textToAnalyze = `${content}\n${aiResponse}`;
-            log('Triggering background memory pipeline.', { textToAnalyze });
+            log('Triggering background memory pipeline.', { textLength: textToAnalyze.length });
             fetch('/api/memory/pipeline', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ textToAnalyze })
             }).catch(err => {
                 const errorMessage = "Memory pipeline trigger failed.";
-                log(errorMessage, { details: (err as Error).message }, 'error');
+                log(errorMessage, { error: { message: (err as Error).message, stack: (err as Error).stack } }, 'error');
                 console.error(errorMessage, err)
             }); // Fire-and-forget
         }
@@ -156,14 +159,23 @@ const ChatWindow: React.FC = () => {
                 >
                     <p className="text-sm text-indigo-300">{proactiveSuggestion}</p>
                     <button onClick={handleSuggestionClick} className="px-3 py-1 text-sm bg-indigo-600 rounded-md hover:bg-indigo-500">Yes</button>
-                    <button onClick={() => setProactiveSuggestion(null)} className="text-xs text-gray-400 hover:underline">Dismiss</button>
+                    <button onClick={() => {
+                        log('User dismissed proactive suggestion.', { suggestion: proactiveSuggestion });
+                        setProactiveSuggestion(null);
+                    }} className="text-xs text-gray-400 hover:underline">Dismiss</button>
                  </motion.div>
             )}
 
             <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
             <StatusBar 
-                onSettingsClick={() => setSettingsModalOpen(true)}
-                onAgentConfigClick={() => setAgentConfigModalOpen(true)}
+                onSettingsClick={() => {
+                    log('User opened Conversation Settings Modal.');
+                    setSettingsModalOpen(true);
+                }}
+                onAgentConfigClick={() => {
+                    log('User opened Agent Config Modal.');
+                    setAgentConfigModalOpen(true);
+                }}
             />
             <ConversationSettingsModal isOpen={isSettingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
             <AgentConfigModal 

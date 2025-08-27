@@ -1,4 +1,6 @@
 
+
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -28,16 +30,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
 
     const fetchContacts = useCallback(async () => {
         try {
-            log('Fetching contacts from API for @mentions...');
+            log('Fetching contacts for @mentions...');
             const res = await fetch('/api/contacts');
             if (!res.ok) {
                 let errorMsg = 'An unknown error occurred while fetching contacts.';
                 try {
-                    // Try to get a more specific error from the API response body
                     const errorData = await res.json();
                     errorMsg = errorData.error || `Server responded with status: ${res.status}`;
                 } catch (e) { 
-                    // If the response isn't JSON, use the status text
                     errorMsg = `Server responded with status: ${res.status} ${res.statusText}`;
                 }
                 throw new Error(errorMsg);
@@ -47,9 +47,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             log(`Successfully fetched ${contacts.length} contacts for @mentions.`);
         } catch (error) {
             const errorMessage = (error as Error).message;
-            // Log the technical error for debugging
-            log('Failed to fetch contacts for @mentions.', { details: errorMessage }, 'error');
-            // Display a more user-friendly message in the status bar
+            log('Failed to fetch contacts for @mentions.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             setStatus({ error: 'Contacts for @mentions could not be loaded. Please check logs for details.' });
             console.error("Fetch contacts error:", error);
         }
@@ -92,6 +90,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         updateMentionedContacts(newContent);
         setShowMentions(false);
         textareaRef.current?.focus();
+        log('User selected @mention', { contactName: name });
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +100,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             const reader = new FileReader();
             reader.onload = (loadEvent) => {
                 setImageDataUrl(loadEvent.target?.result as string);
+                log('Image file loaded as data URL.');
             };
             reader.readAsDataURL(file);
         }
@@ -122,7 +122,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             messageContent = `![user image](${imageDataUrl})\n\n${content}`;
         }
         
-        log('User submitted message form.', { content, mentionedContacts, hasImage: !!imageDataUrl });
+        log('User submitted message form.', { contentLength: content.length, mentionedContactsCount: mentionedContacts.length, hasImage: !!imageDataUrl });
         onSendMessage(messageContent, mentionedContacts);
         setContent('');
         setImageDataUrl(null);
@@ -166,7 +166,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                 />
                 <button 
                     type="button" 
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                        log('User clicked "Attach file" button.');
+                        fileInputRef.current?.click();
+                    }}
                     className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                     disabled={isLoading || !!imageDataUrl}
                     title="Attach an image"

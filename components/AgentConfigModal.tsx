@@ -5,6 +5,7 @@ import { Conversation } from '@/lib/types';
 import { XIcon } from './Icons';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLog } from './providers/LogProvider';
 
 interface AgentConfigModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ interface AgentConfigModalProps {
 
 const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, conversation }) => {
     const { loadConversations, setCurrentConversation: setContextConversation, setStatus, clearError } = useAppContext();
+    const { log } = useLog();
     const [systemPrompt, setSystemPrompt] = useState('');
     const [useSemanticMemory, setUseSemanticMemory] = useState(false);
     const [useStructuredMemory, setUseStructuredMemory] = useState(true);
@@ -24,7 +26,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, co
             setUseSemanticMemory(conversation.useSemanticMemory ?? true);
             setUseStructuredMemory(conversation.useStructuredMemory ?? true);
         }
-    }, [conversation, isOpen]);
+    }, [conversation, isOpen, log]);
 
     const handleSave = async () => {
         if (!conversation) return;
@@ -35,6 +37,8 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, co
             useSemanticMemory,
             useStructuredMemory,
         };
+        
+        log('User clicked "Save" in Agent Config Modal', { conversationId: conversation.id, updatedData: updatedConversationData });
 
         try {
             const res = await fetch(`/api/conversations/${conversation.id}`, {
@@ -52,7 +56,9 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, co
             setContextConversation(updatedConversation.id);
             onClose();
         } catch (error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to save agent configuration', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     };

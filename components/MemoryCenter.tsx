@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -30,12 +29,9 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
         clearError();
         log('Fetching memory center data (entities)...');
         try {
-            const [entitiesRes] = await Promise.all([
-                fetch('/api/entities'),
-                // In a real app, you might fetch knowledge stats too
-            ]);
+            const entitiesRes = await fetch('/api/entities');
             if (!entitiesRes.ok) throw new Error('Failed to fetch entities');
-            const entitiesData = await entitiesRes.json();
+            const { entities: entitiesData } = await entitiesRes.json();
             
             setEntities(entitiesData);
             setStats({ entities: entitiesData.length, knowledge: 0 }); // Placeholder for knowledge
@@ -43,14 +39,15 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
         } catch (error) {
             const errorMessage = 'Could not load memory data.';
             setStatus({ error: errorMessage });
-            log(errorMessage, { details: (error as Error).message }, 'error');
+            log(errorMessage, { error: { message: (error as Error).message, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     }, [clearError, setStatus, log]);
 
     useEffect(() => {
+        log('Memory Center opened.');
         fetchData();
-    }, [fetchData]);
+    }, [fetchData, log]);
     
     const handleSaveEntity = async () => {
         if (!entityForm.name || !entityForm.type || !entityForm.details_json) return;
@@ -78,17 +75,22 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: errorMessage });
-            log(`Failed to ${action.toLowerCase()} entity.`, { error: errorMessage }, 'error');
+            log(`Failed to ${action.toLowerCase()} entity.`, { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     };
 
     const handleEditEntity = (entity: Entity) => {
+        log('User started editing an entity.', { entityId: entity.id });
         setEntityForm(entity);
         setIsEntityFormVisible(true);
     };
     
     const handleDeleteEntity = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this entity?')) {
+            log('User cancelled entity deletion.', { entityId: id });
+            return;
+        }
         clearError();
         log(`Attempting to delete entity with ID: ${id}`);
         try {
@@ -99,13 +101,16 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
         } catch (error) {
              const errorMessage = (error as Error).message;
              setStatus({ error: errorMessage });
-             log('Failed to delete entity.', { id, error: errorMessage }, 'error');
+             log('Failed to delete entity.', { id, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
              console.error(error);
         }
     };
 
     const TabButton: React.FC<{ tabName: Tab; label: string }> = ({ tabName, label }) => (
-        <button onClick={() => setActiveTab(tabName)} className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === tabName ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}>
+        <button onClick={() => {
+            log('User switched Memory Center tab', { tab: tabName });
+            setActiveTab(tabName);
+        }} className={`px-4 py-2 text-sm font-medium rounded-md ${activeTab === tabName ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-700'}`}>
             {label}
         </button>
     );
@@ -120,7 +125,11 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
                                 Entities are specific facts the AI knows, like people, places, or concepts. This information is always included in the AI's context.
                             </div>
                             <div className="flex gap-2 mb-4">
-                                <button onClick={() => { setIsEntityFormVisible(true); setEntityForm({});}} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm">
+                                <button onClick={() => { 
+                                    log('User clicked "Add Entity" button.');
+                                    setIsEntityFormVisible(true); 
+                                    setEntityForm({});
+                                }} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm">
                                     <PlusIcon className="w-5 h-5" /> Add Entity
                                 </button>
                                 <p className="text-sm text-gray-400 self-center">New entities are added automatically by the memory pipeline after chats.</p>
@@ -133,7 +142,10 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
                                     <textarea value={entityForm.details_json || ''} onChange={e => setEntityForm({...entityForm, details_json: e.target.value})} placeholder="Details" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={2}></textarea>
                                     <div className="flex gap-2">
                                         <button onClick={handleSaveEntity} className="flex-1 p-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save</button>
-                                        <button onClick={() => setIsEntityFormVisible(false)} className="flex-1 p-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
+                                        <button onClick={() => {
+                                            log('User cancelled entity form.');
+                                            setIsEntityFormVisible(false)
+                                        }} className="flex-1 p-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
                                     </div>
                                 </div>
                             )}
@@ -174,28 +186,44 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
                         <div>
                              <h3 className="text-lg font-semibold mb-2">Memory Statistics</h3>
                              <div className="grid grid-cols-2 gap-4 text-center">
-                                 <div className="bg-gray-900 p-4 rounded-lg"><p className="text-2xl font-bold">{stats.entities}</p><p className="text-sm text-gray-400">Structured Entities</p></div>
-                                 <div className="bg-gray-900 p-4 rounded-lg"><p className="text-2xl font-bold">N/A</p><p className="text-sm text-gray-400">Knowledge Vectors</p></div>
+                                 <div className="bg-gray-800 p-4 rounded-lg">
+                                     <p className="text-2xl font-bold">{stats.entities}</p>
+                                     <p className="text-xs text-gray-400">Structured Entities</p>
+                                 </div>
+                                 <div className="bg-gray-800 p-4 rounded-lg">
+                                     <p className="text-2xl font-bold">{stats.knowledge}</p>
+                                     <p className="text-xs text-gray-400">Semantic Knowledge Chunks</p>
+                                 </div>
                              </div>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">Memory Pipeline</h3>
+                            <div className="text-sm text-gray-400">
+                                The pipeline automatically runs after each conversation.
+                            </div>
                         </div>
                     </div>
                 );
         }
     };
-    
+
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-full max-h-[90vh] flex flex-col p-6">
-                <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-700">
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl h-full max-h-[90vh] flex flex-col p-6">
+                 <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-700">
                     <h2 className="text-xl font-bold">Memory Center</h2>
                     <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-gray-700"><XIcon className="w-6 h-6" /></button>
                 </div>
-                <div className="flex items-center gap-2 mb-4">
-                   <TabButton tabName="structured" label="Structured Memory" />
-                   <TabButton tabName="procedural" label="Semantic & Procedural" />
-                   <TabButton tabName="settings" label="Settings" />
+                
+                <div className="flex gap-2 mb-4">
+                    <TabButton tabName="structured" label="Structured Memory (Entities)" />
+                    <TabButton tabName="procedural" label="Semantic & Procedural" />
+                    <TabButton tabName="settings" label="Stats & Settings" />
                 </div>
-                {renderContent()}
+
+                <div className="flex-1 bg-gray-900 rounded-lg p-4 overflow-y-auto flex flex-col">
+                    {renderContent()}
+                </div>
             </motion.div>
         </motion.div>
     );

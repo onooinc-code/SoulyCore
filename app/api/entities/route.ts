@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
     try {
         const { rows } = await sql`SELECT * FROM entities ORDER BY "createdAt" DESC;`;
-        return NextResponse.json(rows);
+        return NextResponse.json({ entities: rows });
     } catch (error) {
         console.error('Failed to fetch entities:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
     }
 }
 
@@ -28,6 +28,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(rows[0], { status: 201 });
     } catch (error) {
         console.error('Failed to create entity:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
     }
 }

@@ -20,6 +20,6 @@ export async function PUT(req: NextRequest, { params }: { params: { messageId: s
         return NextResponse.json(rows[0]);
     } catch (error) {
         console.error(`Failed to toggle bookmark for message ${params.messageId}:`, error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
     }
 }

@@ -1,4 +1,6 @@
 
+
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -35,7 +37,7 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
         } catch (error) {
             const errorMessage = 'Could not load contacts.';
             setStatus({ error: errorMessage });
-            log(errorMessage, { details: (error as Error).message }, 'error');
+            log(errorMessage, { error: { message: (error as Error).message, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     }, [setStatus, clearError, log]);
@@ -45,6 +47,8 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
     }, [fetchContacts]);
 
     const handleOpenForm = (contact: Partial<Contact> | null = null) => {
+        const action = contact ? 'edit' : 'new';
+        log(`User opened contact form for ${action} contact.`, { contactId: contact?.id });
         setCurrentContact(contact || {});
         setIsFormOpen(true);
     };
@@ -75,7 +79,7 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: errorMessage });
-            log(`Failed to ${action.toLowerCase()} contact.`, { error: errorMessage }, 'error');
+            log(`Failed to ${action.toLowerCase()} contact.`, { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     };
@@ -92,9 +96,11 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
             } catch (error) {
                 const errorMessage = (error as Error).message;
                 setStatus({ error: errorMessage });
-                log('Failed to delete contact.', { id, error: errorMessage }, 'error');
+                log('Failed to delete contact.', { id, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
                 console.error(error);
             }
+        } else {
+            log('User cancelled contact deletion.', { id });
         }
     };
     
@@ -121,6 +127,7 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
             direction = 'descending';
         }
+        log('User sorted contacts list', { key, direction });
         setSortConfig({ key, direction });
     };
 
@@ -164,7 +171,10 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
                         <textarea value={currentContact?.notes || ''} onChange={e => setCurrentContact({...currentContact, notes: e.target.value})} placeholder="Notes..." className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
                         <div className="flex gap-2">
                             <button onClick={handleSaveContact} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save Contact</button>
-                            <button onClick={() => setIsFormOpen(false)} className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
+                            <button onClick={() => {
+                                log('User cancelled contact form.');
+                                setIsFormOpen(false);
+                            }} className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
                         </div>
                     </div>
                 )}

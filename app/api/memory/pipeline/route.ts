@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
                         ON CONFLICT (name, type) DO UPDATE SET details_json = EXCLUDED.details_json, "createdAt" = CURRENT_TIMESTAMP;
                     `;
                 } catch (e) {
-                    await serverLog(`Failed to insert/update entity: ${entity.name}`, { error: (e as Error).message }, 'error');
+                    const errorDetails = { message: (e as Error).message, stack: (e as Error).stack };
+                    await serverLog(`Failed to insert/update entity: ${entity.name}`, { error: errorDetails }, 'error');
                 }
             }
         }
@@ -87,9 +88,12 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error) {
-        const errorMessage = (error as Error).message;
+        const errorDetails = {
+            message: (error as Error).message,
+            stack: (error as Error).stack,
+        };
         console.error('Error in memory pipeline:', error);
-        await serverLog('Critical error in memory pipeline.', { error: errorMessage }, 'error');
+        await serverLog('Critical error in memory pipeline.', { error: errorDetails }, 'error');
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

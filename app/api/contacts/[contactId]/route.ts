@@ -22,7 +22,7 @@ export async function PUT(req: NextRequest, { params }: { params: { contactId: s
         return NextResponse.json(rows[0]);
     } catch (error) {
         console.error(`Failed to update contact ${params.contactId}:`, error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
     }
 }
 
@@ -36,6 +36,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { contactId
         return NextResponse.json({ message: 'Contact deleted successfully' }, { status: 200 });
     } catch (error) {
         console.error(`Failed to delete contact ${params.contactId}:`, error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
     }
 }

@@ -11,7 +11,7 @@ export async function GET() {
         return NextResponse.json(rows);
     } catch (error) {
         console.error('Failed to fetch conversations:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
     }
 }
 
@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
             return acc;
         }, {} as Record<string, any>);
 
-        const modelConfig = settings.defaultModelConfig || {};
-        const agentConfig = settings.defaultAgentConfig || {};
+        // FIX: Provide robust fallbacks to prevent crash if settings are missing from DB
+        const modelConfig = settings.defaultModelConfig || { model: 'gemini-2.5-flash', temperature: 0.7, topP: 0.95 };
+        const agentConfig = settings.defaultAgentConfig || { systemPrompt: 'You are a helpful AI assistant.', useSemanticMemory: true, useStructuredMemory: true };
 
         const query = `
             INSERT INTO conversations (
@@ -41,12 +42,12 @@ export async function POST(req: NextRequest) {
         `;
         const values = [
             newTitle,
-            agentConfig.systemPrompt || 'You are a helpful AI assistant.',
-            agentConfig.useSemanticMemory ?? true,
-            agentConfig.useStructuredMemory ?? true,
-            modelConfig.model || 'gemini-2.5-flash',
-            modelConfig.temperature ?? 0.7,
-            modelConfig.topP ?? 0.95
+            agentConfig.systemPrompt,
+            agentConfig.useSemanticMemory,
+            agentConfig.useStructuredMemory,
+            modelConfig.model,
+            modelConfig.temperature,
+            modelConfig.topP
         ];
 
         const { rows } = await db.query(query, values);
@@ -54,6 +55,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(rows[0] as Conversation, { status: 201 });
     } catch (error) {
         console.error('Failed to create conversation:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: { message: (error as Error).message, stack: (error as Error).stack } }, { status: 500 });
     }
 }

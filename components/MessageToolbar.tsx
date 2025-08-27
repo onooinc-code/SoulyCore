@@ -1,8 +1,10 @@
 
+
 "use client";
 
 import React, { useState } from 'react';
 import { CopyIcon, BookmarkIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon } from './Icons';
+import { useLog } from './providers/LogProvider';
 
 interface MessageToolbarProps {
     isBookmarked: boolean;
@@ -17,11 +19,28 @@ const MessageToolbar: React.FC<MessageToolbarProps> = ({
     isBookmarked, isCollapsed, onCopy, onBookmark, onSummarize, onToggleCollapse
 }) => {
     const [copied, setCopied] = useState(false);
+    const { log } = useLog();
 
     const handleCopy = () => {
+        log('User clicked "Copy message" button.');
         onCopy();
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleBookmark = () => {
+        log('User clicked "Bookmark message" button.', { currentStatus: isBookmarked });
+        onBookmark();
+    };
+    
+    const handleSummarize = () => {
+        log('User clicked "Summarize message" button.');
+        onSummarize();
+    };
+
+    const handleToggleCollapse = () => {
+        log('User toggled message collapse.', { currentStatus: isCollapsed });
+        onToggleCollapse();
     };
 
     return (
@@ -29,13 +48,13 @@ const MessageToolbar: React.FC<MessageToolbarProps> = ({
             <button onClick={handleCopy} className="p-1 hover:text-white" title="Copy">
                 {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <CopyIcon className="w-4 h-4" />}
             </button>
-            <button onClick={onBookmark} className={`p-1 hover:text-white ${isBookmarked ? 'text-yellow-400' : ''}`} title="Bookmark">
+            <button onClick={handleBookmark} className={`p-1 hover:text-white ${isBookmarked ? 'text-yellow-400' : ''}`} title="Bookmark">
                 <BookmarkIcon className="w-4 h-4" />
             </button>
-            <button onClick={onSummarize} className="p-1 hover:text-white" title="Summarize">
+            <button onClick={handleSummarize} className="p-1 hover:text-white" title="Summarize">
                 <SummarizeIcon className="w-4 h-4" />
             </button>
-            <button onClick={onToggleCollapse} className="p-1 hover:text-white" title={isCollapsed ? "Expand" : "Collapse"}>
+            <button onClick={handleToggleCollapse} className="p-1 hover:text-white" title={isCollapsed ? "Expand" : "Collapse"}>
                 {isCollapsed ? <ExpandIcon className="w-4 h-4" /> : <CollapseIcon className="w-4 h-4" />}
             </button>
         </div>

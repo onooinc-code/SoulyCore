@@ -1,4 +1,6 @@
 
+
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db, sql } from '@/lib/db';
 import { AppSettings } from '@/lib/types';
@@ -18,16 +20,20 @@ export async function GET() {
     } catch (error) {
         console.error('Failed to fetch settings:', error);
         const errorMessage = (error as Error).message;
+        const errorDetails = {
+            message: errorMessage,
+            stack: (error as Error).stack,
+        };
 
         if (errorMessage.includes('relation "settings" does not exist')) {
-            return NextResponse.json({ error: 'Settings database table not found. Please run the database initialization script against your Vercel Postgres database.' }, { status: 500 });
+            return NextResponse.json({ error: 'Settings database table not found. Please run the database initialization script against your Vercel Postgres database.', details: errorDetails }, { status: 500 });
         }
         
         if (!process.env.POSTGRES_URL) {
-             return NextResponse.json({ error: 'Database connection details are missing. Please link a Vercel Postgres database and ensure environment variables are set in your Vercel project settings.' }, { status: 500 });
+             return NextResponse.json({ error: 'Database connection details are missing. Please link a Vercel Postgres database and ensure environment variables are set in your Vercel project settings.', details: errorDetails }, { status: 500 });
         }
 
-        return NextResponse.json({ error: 'Could not connect to the database to fetch settings. Please check your Vercel project settings and database status.' }, { status: 500 });
+        return NextResponse.json({ error: 'Could not connect to the database to fetch settings. Please check your Vercel project settings and database status.', details: errorDetails }, { status: 500 });
     }
 }
 
@@ -63,12 +69,16 @@ export async function PUT(req: NextRequest) {
         await client.sql`ROLLBACK`;
         console.error('Failed to update settings:', error);
         const errorMessage = (error as Error).message;
+        const errorDetails = {
+            message: errorMessage,
+            stack: (error as Error).stack,
+        };
 
         if (errorMessage.includes('relation "settings" does not exist')) {
-            return NextResponse.json({ error: 'Settings database table not found. Please run the database initialization script.' }, { status: 500 });
+            return NextResponse.json({ error: 'Settings database table not found. Please run the database initialization script.', details: errorDetails }, { status: 500 });
         }
         
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     } finally {
         client.release();
     }

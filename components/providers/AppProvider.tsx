@@ -65,7 +65,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (error) {
              const errorMessage = (error as Error).message;
              setStatus({ error: errorMessage });
-             log('Failed to load global settings.', { error: errorMessage }, 'error');
+             log('Failed to load global settings.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
              console.error(error);
         }
     }, [setStatus, log]);
@@ -81,7 +81,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (error) {
             const errorMessage = 'Could not load conversations.';
             setStatus({ error: errorMessage });
-            log(errorMessage, { details: (error as Error).message }, 'error');
+            log(errorMessage, { error: { message: (error as Error).message, stack: (error as Error).stack } }, 'error');
             console.error(error);
         }
     }, [setStatus, log]);
@@ -102,7 +102,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (error) {
              const errorMessage = 'Could not load messages for this chat.';
              setStatus({ error: errorMessage });
-             log(errorMessage, { conversationId, details: (error as Error).message }, 'error');
+             log(errorMessage, { error: { message: (error as Error).message, stack: (error as Error).stack } }, 'error');
              console.error(error);
         }
     }, [setStatus, log]);
@@ -242,7 +242,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: errorMessage, currentAction: "Error" });
-            log('Error in addMessage process.', { error: errorMessage }, 'error');
+            log('Error in addMessage process.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
             setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
             return { aiResponse: null, suggestion: null };
@@ -265,7 +265,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: errorMessage });
-            log('Failed to toggle bookmark.', { messageId, error: errorMessage }, 'error');
+            log('Failed to toggle bookmark.', { messageId, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
         } finally {
             setStatus({ currentAction: "" });
