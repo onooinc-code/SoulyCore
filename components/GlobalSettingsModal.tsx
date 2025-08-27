@@ -12,13 +12,15 @@ interface GlobalSettingsModalProps {
 }
 
 const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) => {
-    const { settings, loadSettings, setStatus, clearError } = useAppContext();
+    const { settings, loadSettings, setSettings, setStatus, clearError } = useAppContext();
     const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
 
     // This effect runs once when the modal opens to ensure we have the latest settings.
     useEffect(() => {
-        loadSettings();
-    }, [loadSettings]);
+        if (!settings) {
+            loadSettings();
+        }
+    }, [settings, loadSettings]);
 
     // This effect synchronizes the local form state with the global context state.
     // It runs whenever the global settings object is updated (e.g., after the fetch).
@@ -39,7 +41,8 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
                 body: JSON.stringify(localSettings),
             });
             if (!res.ok) throw new Error('Failed to save settings');
-            await loadSettings(); // Reload settings into context
+            const updatedSettings = await res.json();
+            setSettings(updatedSettings as AppSettings); // Update context directly with response
             setIsOpen(false);
         } catch (error) {
             setStatus({ error: (error as Error).message });

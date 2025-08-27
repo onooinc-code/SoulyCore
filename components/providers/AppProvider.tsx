@@ -25,6 +25,7 @@ interface AppContextType {
     clearError: () => void;
     settings: AppSettings | null;
     loadSettings: () => Promise<void>;
+    setSettings: React.Dispatch<React.SetStateAction<AppSettings | null>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -246,7 +247,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setStatus,
             clearError,
             settings,
-            loadSettings
+            loadSettings,
+            setSettings,
         }}>
             {children}
         </AppContext.Provider>

@@ -43,7 +43,7 @@ export async function PUT(req: NextRequest) {
         for (const [key, value] of settingsArray) {
             await client.sql`
                 INSERT INTO settings (key, value)
-                VALUES (${key}, ${JSON.stringify(value)})
+                VALUES (${key}, ${value as any})
                 ON CONFLICT (key) 
                 DO UPDATE SET value = EXCLUDED.value;
             `;
@@ -51,7 +51,14 @@ export async function PUT(req: NextRequest) {
         
         await client.sql`COMMIT`;
         
-        return NextResponse.json({ message: 'Settings updated successfully' });
+        const { rows } = await client.sql`SELECT key, value FROM settings;`;
+        const updatedSettings = rows.reduce((acc, row) => {
+            acc[row.key] = row.value;
+            return acc;
+        }, {} as Record<string, any>);
+
+        return NextResponse.json(updatedSettings);
+
     } catch (error) {
         await client.sql`ROLLBACK`;
         console.error('Failed to update settings:', error);

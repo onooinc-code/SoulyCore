@@ -1,10 +1,47 @@
 
+
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import * as monaco from 'monaco-editor';
+
+// Configure Monaco Environment to load workers correctly and prevent console errors.
+if (typeof window !== 'undefined') {
+  // FIX: Cast self to any to assign MonacoEnvironment and prevent TypeScript error.
+  (self as any).MonacoEnvironment = {
+    getWorker: function (moduleId, label) {
+      const getWorkerUrl = (workerId: string) => {
+        return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+          self.MonacoEnvironment = {
+            baseUrl: 'https://aistudiocdn.com/monaco-editor@^0.52.2/min/'
+          };
+          importScripts('https://aistudiocdn.com/monaco-editor@^0.52.2/min/vs/base/worker/workerMain.js');`
+        )}`;
+      };
+
+      switch (label) {
+        case 'json':
+          return new Worker(getWorkerUrl('json'), { type: 'module' });
+        case 'css':
+        case 'scss':
+        case 'less':
+          return new Worker(getWorkerUrl('css'), { type: 'module' });
+        case 'html':
+        case 'handlebars':
+        case 'razor':
+          return new Worker(getWorkerUrl('html'), { type: 'module' });
+        case 'typescript':
+        case 'javascript':
+          return new Worker(getWorkerUrl('ts'), { type: 'module' });
+        default:
+          return new Worker(getWorkerUrl('editor'), { type: 'module' });
+      }
+    },
+  };
+}
+
 
 const mockFileSystem: Record<string, string> = {
     '/src/index.tsx': `import React from 'react';\n// ...`,
