@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useGemini } from '@/lib/hooks/useGemini';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -14,16 +13,13 @@ interface Idea {
 }
 
 const Roadmap: React.FC = () => {
-    const { generateNewFeatureIdea, generateTechDesign } = useGemini();
     const [ideas, setIdeas] = useState<Idea[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isDesigning, setIsDesigning] = useState<string | null>(null);
 
     const handleGenerateIdea = async () => {
-        setIsLoading(true);
-        const ideaText = await generateNewFeatureIdea();
-        setIdeas(prev => [...prev, { id: crypto.randomUUID(), text: ideaText, status: 'new' }]);
-        setIsLoading(false);
+        // This function needs to be refactored to call a new API endpoint.
+        // For now, it's disabled.
     };
 
     const handleUpdateStatus = (id: string, status: 'approved' | 'rejected') => {
@@ -31,19 +27,20 @@ const Roadmap: React.FC = () => {
     };
 
     const handleGenerateDesign = async (id: string) => {
-        const idea = ideas.find(i => i.id === id);
-        if (!idea) return;
-        setIsDesigning(id);
-        const designText = await generateTechDesign(idea.text);
-        setIdeas(ideas.map(i => i.id === id ? { ...i, design: designText } : i));
-        setIsDesigning(null);
+        // This function needs to be refactored to call a new API endpoint.
+        // For now, it's disabled.
     };
 
     return (
         <div className="p-4">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-2xl font-bold">Roadmap & Ideas</h3>
-                <button onClick={handleGenerateIdea} disabled={isLoading} className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50">
+                <button 
+                    onClick={handleGenerateIdea} 
+                    disabled={true} 
+                    className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="This feature is disabled pending refactor for server-side architecture."
+                >
                     {isLoading ? "Generating..." : "Generate New Idea"}
                 </button>
             </div>
@@ -66,7 +63,12 @@ const Roadmap: React.FC = () => {
                         {idea.status === 'approved' && (
                              <div className="mt-4">
                                 {!idea.design && (
-                                    <button onClick={() => handleGenerateDesign(idea.id)} disabled={isDesigning === idea.id} className="text-sm px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 disabled:opacity-50">
+                                    <button 
+                                        onClick={() => handleGenerateDesign(idea.id)} 
+                                        disabled={true} 
+                                        className="text-sm px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="This feature is disabled pending refactor for server-side architecture."
+                                    >
                                         {isDesigning === idea.id ? "Generating..." : "Generate Technical Design"}
                                     </button>
                                 )}
@@ -82,6 +84,11 @@ const Roadmap: React.FC = () => {
                         )}
                     </div>
                 ))}
+                 {!ideas.length && (
+                    <div className="text-center py-8 text-gray-500">
+                        <p>Generate a new feature idea to get started.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

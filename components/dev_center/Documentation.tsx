@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useGemini } from '@/lib/hooks/useGemini';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -10,40 +9,35 @@ const initialDocs = `
 # SoulyCore Documentation
 
 ## Overview
-SoulyCore is a fully client-side, responsive, and installable Progressive Web App (PWA) using React and TypeScript. 
+SoulyCore is a full-stack Next.js application designed as an intelligent AI assistant with a persistent, cloud-native memory system.
 
 ## Features
-- **Multi-Memory System:** Persists information across sessions.
-- **Chat Interface:** Powered by the Gemini API.
-- **Local First:** All data is stored in the user's browser using IndexedDB.
+- **Cloud-Native Memory:** Utilizes Vercel Postgres for structured memory (entities, contacts, conversations) and Pinecone for semantic memory (knowledge vectors).
+- **Server-Side AI:** All interactions with the Gemini API are handled securely through Next.js API routes.
+- **Dynamic Frontend:** Built with React, Next.js App Router, and Tailwind CSS for a responsive and modern UI.
 `;
 
 const mockGitDiff = `
-diff --git a/src/hooks/components/ChatInput.tsx b/src/hooks/components/ChatInput.tsx
+diff --git a/components/ChatInput.tsx b/components/ChatInput.tsx
 index 123..456 100644
---- a/src/hooks/components/ChatInput.tsx
-+++ b/src/hooks/components/ChatInput.tsx
+--- a/components/ChatInput.tsx
++++ b/components/ChatInput.tsx
 @@ -1,5 +1,6 @@
  import React from 'react';
  import { SendIcon } from './Icons';
-+import LoadingIndicator from './LoadingIndicator';
++import { PaperclipIcon } from './Icons';
 
  // ... rest of diff
 `;
 
 const Documentation: React.FC = () => {
-    const { updateDocumentation } = useGemini();
     const [docs, setDocs] = useState(initialDocs);
     const [isLoading, setIsLoading] = useState(false);
     const [updates, setUpdates] = useState('');
 
     const handleUpdateDocs = async () => {
-        setIsLoading(true);
-        setUpdates('');
-        const docUpdates = await updateDocumentation(mockGitDiff);
-        setUpdates(docUpdates);
-        // In a real app, you would merge 'docUpdates' into 'docs'
-        setIsLoading(false);
+        // This function needs to be refactored to call a new API endpoint.
+        // For now, it's disabled.
     };
 
     return (
@@ -51,7 +45,12 @@ const Documentation: React.FC = () => {
             <div>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-2xl font-bold">Project Documentation</h3>
-                    <button onClick={handleUpdateDocs} disabled={isLoading} className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50">
+                    <button 
+                        onClick={handleUpdateDocs} 
+                        disabled={true} 
+                        className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="This feature is disabled pending refactor for server-side architecture."
+                    >
                         {isLoading ? "Analyzing..." : "Smart Update Docs"}
                     </button>
                 </div>
