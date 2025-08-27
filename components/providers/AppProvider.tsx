@@ -35,11 +35,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         error: null,
     });
 
-    const setStatus = (newStatus: Partial<IStatus>) => {
+    const setStatus = useCallback((newStatus: Partial<IStatus>) => {
         setBaseStatus(prev => ({ ...prev, ...newStatus }));
-    };
+    }, []);
 
-    const clearError = () => setStatus({ error: null });
+    const clearError = useCallback(() => setStatus({ error: null }), [setStatus]);
 
     const loadConversations = useCallback(async () => {
         try {
@@ -51,7 +51,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setStatus({ error: 'Could not load conversations.' });
             console.error(error);
         }
-    }, []);
+    }, [setStatus]);
 
     useEffect(() => {
         loadConversations();
@@ -67,7 +67,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
              setStatus({ error: 'Could not load messages for this chat.' });
              console.error(error);
         }
-    }, []);
+    }, [setStatus]);
 
     const setCurrentConversationById = useCallback(async (conversationId: string | null) => {
         if (!conversationId) {
@@ -92,12 +92,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, [conversations, fetchMessages, loadConversations]);
 
-    const createNewConversation = async () => {
+    const createNewConversation = useCallback(async () => {
         setCurrentConversation(null);
         setMessages([]);
-    };
+    }, []);
 
-    const addMessage = async (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[], config?: any) => {
+    const addMessage = useCallback(async (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[], config?: any) => {
         setIsLoading(true);
         setStatus({ currentAction: "Processing...", error: null });
 
@@ -183,7 +183,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setIsLoading(false);
             setStatus({ currentAction: "" });
         }
-    };
+    }, [currentConversation, loadConversations, messages, setStatus]);
 
     return (
         <AppContext.Provider value={{
