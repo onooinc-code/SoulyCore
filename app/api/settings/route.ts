@@ -33,20 +33,25 @@ export async function GET() {
 // PUT (update) settings
 export async function PUT(req: NextRequest) {
     try {
-        const settingsToUpdate = await req.json() as Partial<AppSettings>;
+        const settingsToUpdate = await req.json() as AppSettings;
 
-        // Iterate over each setting and perform an "upsert" operation.
-        // This is more robust than a manual transaction for this use case.
-        for (const [key, value] of Object.entries(settingsToUpdate)) {
-            // The sql template tag handles parameterization to prevent SQL injection.
-            // We stringify the value object to store it in the JSONB column.
-            await sql`
-                INSERT INTO settings (key, value)
-                VALUES (${key}, ${JSON.stringify(value)})
-                ON CONFLICT (key) DO UPDATE 
-                SET value = EXCLUDED.value;
-            `;
-        }
+        // Perform individual, explicit UPDATE statements for each setting.
+        // This is a more robust pattern that mirrors other working endpoints (e.g., Contacts).
+        
+        await sql`
+            UPDATE settings SET value = ${JSON.stringify(settingsToUpdate.defaultModelConfig)}
+            WHERE key = 'defaultModelConfig';
+        `;
+
+        await sql`
+            UPDATE settings SET value = ${JSON.stringify(settingsToUpdate.defaultAgentConfig)}
+            WHERE key = 'defaultAgentConfig';
+        `;
+
+        await sql`
+            UPDATE settings SET value = ${JSON.stringify(settingsToUpdate.enableDebugLog)}
+            WHERE key = 'enableDebugLog';
+        `;
         
         return NextResponse.json({ message: 'Settings updated successfully' });
     } catch (error) {
