@@ -28,7 +28,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
 
     const fetchContacts = useCallback(async () => {
         try {
-            log('Fetching contacts from API...');
+            log('Fetching contacts from API for @mentions...');
             const res = await fetch('/api/contacts');
             if (!res.ok) {
                 let errorMsg = 'An unknown error occurred while fetching contacts.';
@@ -97,6 +97,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.type.startsWith('image/')) {
+            log('Image file selected by user.', { name: file.name, type: file.type, size: file.size });
             const reader = new FileReader();
             reader.onload = (loadEvent) => {
                 setImageDataUrl(loadEvent.target?.result as string);
@@ -107,6 +108,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     };
 
     const removeImage = () => {
+        log('User removed attached image.');
         setImageDataUrl(null);
     };
 
@@ -119,7 +121,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             // Using markdown format to embed the image data URL
             messageContent = `![user image](${imageDataUrl})\n\n${content}`;
         }
-
+        
+        log('User submitted message form.', { content, mentionedContacts, hasImage: !!imageDataUrl });
         onSendMessage(messageContent, mentionedContacts);
         setContent('');
         setImageDataUrl(null);

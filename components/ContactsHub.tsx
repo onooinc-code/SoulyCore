@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -5,6 +6,7 @@ import type { Contact } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { XIcon, PlusIcon, TrashIcon, EditIcon } from './Icons';
 import { useAppContext } from '@/components/providers/AppProvider';
+import { useLog } from './providers/LogProvider';
 
 interface ContactsHubProps {
     setIsOpen: (isOpen: boolean) => void;
@@ -14,6 +16,7 @@ type SortKey = keyof Contact;
 
 const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
     const { setStatus, clearError } = useAppContext();
+    const { log } = useLog();
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [currentContact, setCurrentContact] = useState<Partial<Contact> | null>(null);
@@ -22,16 +25,20 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
 
     const fetchContacts = useCallback(async () => {
         clearError();
+        log('Fetching all contacts...');
         try {
             const res = await fetch('/api/contacts');
             if (!res.ok) throw new Error('Failed to fetch contacts');
             const { contacts } = await res.json();
             setContacts(contacts);
+            log(`Successfully fetched ${contacts.length} contacts.`);
         } catch (error) {
-            setStatus({ error: 'Could not load contacts.' });
+            const errorMessage = 'Could not load contacts.';
+            setStatus({ error: errorMessage });
+            log(errorMessage, { details: (error as Error).message }, 'error');
             console.error(error);
         }
-    }, [setStatus, clearError]);
+    }, [setStatus, clearError, log]);
 
     useEffect(() => {
         fetchContacts();
@@ -46,6 +53,9 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
         if (!currentContact || !currentContact.name) return;
         clearError();
         const isUpdating = !!currentContact.id;
+        const action = isUpdating ? 'Updating' : 'Creating';
+        log(`${action} contact...`, { contactData: currentContact });
+
         const url = isUpdating ? `/api/contacts/${currentContact.id}` : '/api/contacts';
         const method = isUpdating ? 'PUT' : 'POST';
 
@@ -57,11 +67,15 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
             });
             if (!res.ok) throw new Error(`Failed to ${isUpdating ? 'update' : 'create'} contact`);
             
+            const savedContact = await res.json();
+            log(`Contact ${action.toLowerCase()}d successfully.`, { savedContact });
             await fetchContacts();
             setIsFormOpen(false);
             setCurrentContact(null);
         } catch (error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log(`Failed to ${action.toLowerCase()} contact.`, { error: errorMessage }, 'error');
             console.error(error);
         }
     };
@@ -69,12 +83,16 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
     const handleDeleteContact = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this contact?')) {
             clearError();
+            log(`Attempting to delete contact with ID: ${id}`);
             try {
                 const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Failed to delete contact');
+                log('Contact deleted successfully.', { id });
                 await fetchContacts();
             } catch (error) {
-                setStatus({ error: (error as Error).message });
+                const errorMessage = (error as Error).message;
+                setStatus({ error: errorMessage });
+                log('Failed to delete contact.', { id, error: errorMessage }, 'error');
                 console.error(error);
             }
         }

@@ -2,15 +2,122 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Feature, FeatureStatus } from '@/lib/types';
-import { motion } from 'framer-motion';
+import type { Feature, FeatureStatus, UiUxSubFeature } from '@/lib/types';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PlusIcon, TrashIcon, EditIcon, XIcon } from '../Icons';
 import { useAppContext } from '@/components/providers/AppProvider';
+import { useLog } from '../providers/LogProvider';
 
 const statusOptions: FeatureStatus[] = ['✅ Completed', '🟡 Needs Improvement', '🔴 Needs Refactor', '⚪ Planned'];
 
+const statusColorMap: Record<FeatureStatus, string> = {
+    '✅ Completed': 'bg-green-600 text-green-100',
+    '🟡 Needs Improvement': 'bg-yellow-600 text-yellow-100',
+    '🔴 Needs Refactor': 'bg-red-600 text-red-100',
+    '⚪ Planned': 'bg-gray-600 text-gray-100',
+};
+
+// A component to safely render JSON content from a string
+const SafeJsonRenderer: React.FC<{ jsonString: string; type: 'files' | 'ux' }> = ({ jsonString, type }) => {
+    try {
+        const data = JSON.parse(jsonString);
+
+        if (type === 'files' && Array.isArray(data)) {
+            return (
+                <div className="flex flex-wrap gap-2">
+                    {data.map((file, index) => (
+                        <code key={index} className="text-xs bg-gray-700 text-indigo-300 px-2 py-1 rounded-md">{file}</code>
+                    ))}
+                </div>
+            );
+        }
+
+        if (type === 'ux' && Array.isArray(data)) {
+            return (
+                <table className="w-full text-left text-xs table-fixed">
+                    <thead className="text-gray-400">
+                        <tr>
+                            <th className="p-2 w-1/4">Sub-Feature</th>
+                            <th className="p-2 w-1/2">Description</th>
+                            <th className="p-2 w-1/4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(data as UiUxSubFeature[]).map((item, index) => (
+                            <tr key={index} className="border-t border-gray-700">
+                                <td className="p-2 align-top break-words">{item.subFeature}</td>
+                                <td className="p-2 align-top break-words">{item.description}</td>
+                                <td className="p-2 align-top break-words">
+                                    <span className={`px-2 py-0.5 rounded-full text-xs ${statusColorMap[item.status] || 'bg-gray-600'}`}>
+                                        {item.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            );
+        }
+
+        return <pre className="text-xs text-red-400">Invalid data format for this type.</pre>;
+    } catch (e) {
+        return <pre className="text-xs text-red-400">Error parsing JSON: {(e as Error).message}</pre>;
+    }
+};
+
+
+// Main Feature Item Component
+const FeatureItem: React.FC<{ feature: Feature; onEdit: () => void; onDelete: () => void; }> = ({ feature, onEdit, onDelete }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <motion.div layout className="bg-gray-800 rounded-lg overflow-hidden">
+            <motion.div layout className="flex justify-between items-center p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+                <div className="flex-1 min-w-0">
+                    <h4 className="font-bold truncate">{feature.name}</h4>
+                </div>
+                <div className="flex items-center gap-4 ml-4 flex-shrink-0">
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusColorMap[feature.status]}`}>
+                        {feature.status}
+                    </span>
+                    <div className="flex gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1 hover:text-blue-400" title="Edit"><EditIcon className="w-5 h-5"/></button>
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 hover:text-red-500" title="Delete"><TrashIcon className="w-5 h-5"/></button>
+                    </div>
+                </div>
+            </motion.div>
+            <AnimatePresence>
+                {isExpanded && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="p-4 border-t border-gray-700 space-y-4 text-sm text-gray-300">
+                            <div><strong className="text-gray-400 block mb-1">Overview:</strong><p className="whitespace-pre-wrap">{feature.overview}</p></div>
+                            <div><strong className="text-gray-400 block mb-1">Logic & Data Flow:</strong><p className="whitespace-pre-wrap">{feature.logic_flow}</p></div>
+                             <div>
+                                <strong className="text-gray-400 block mb-2">UI/UX Breakdown:</strong>
+                                <SafeJsonRenderer jsonString={feature.ui_ux_breakdown_json} type="ux" />
+                            </div>
+                            <div>
+                                <strong className="text-gray-400 block mb-2">Key Files:</strong>
+                                <SafeJsonRenderer jsonString={feature.key_files_json} type="files" />
+                            </div>
+                            {feature.notes && <div><strong className="text-gray-400 block mb-1">Notes:</strong><p className="whitespace-pre-wrap">{feature.notes}</p></div>}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+};
+
+
 const FeaturesDictionary: React.FC = () => {
     const { setStatus, clearError } = useAppContext();
+    const { log } = useLog();
     const [features, setFeatures] = useState<Feature[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [currentFeature, setCurrentFeature] = useState<Partial<Feature> | null>(null);
@@ -19,18 +126,22 @@ const FeaturesDictionary: React.FC = () => {
     const fetchFeatures = useCallback(async () => {
         setIsLoading(true);
         clearError();
+        log('Fetching features from dictionary...');
         try {
             const res = await fetch('/api/features');
             if (!res.ok) throw new Error('Failed to fetch features');
             const data = await res.json();
             setFeatures(data);
+            log(`Successfully fetched ${data.length} features.`);
         } catch (error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to fetch features.', { error: errorMessage }, 'error');
             console.error(error);
         } finally {
             setIsLoading(false);
         }
-    }, [setStatus, clearError]);
+    }, [setStatus, clearError, log]);
 
     useEffect(() => {
         fetchFeatures();
@@ -51,8 +162,21 @@ const FeaturesDictionary: React.FC = () => {
     
     const handleSaveFeature = async () => {
         if (!currentFeature || !currentFeature.name) return;
+        
+        // Basic JSON validation before sending
+        try {
+            if (currentFeature.ui_ux_breakdown_json) JSON.parse(currentFeature.ui_ux_breakdown_json);
+            if (currentFeature.key_files_json) JSON.parse(currentFeature.key_files_json);
+        } catch (e) {
+            setStatus({ error: "Invalid JSON format in one of the fields. Please check and try again."});
+            return;
+        }
+
         clearError();
         const isUpdating = !!currentFeature.id;
+        const action = isUpdating ? 'Updating' : 'Creating';
+        log(`${action} feature...`, { featureData: currentFeature });
+
         const url = isUpdating ? `/api/features/${currentFeature.id}` : '/api/features';
         const method = isUpdating ? 'PUT' : 'POST';
 
@@ -67,11 +191,15 @@ const FeaturesDictionary: React.FC = () => {
                 throw new Error(errorData.error || `Failed to ${isUpdating ? 'update' : 'create'} feature`);
             }
             
+            const savedFeature = await res.json();
+            log(`Feature ${action.toLowerCase()}d successfully.`, { savedFeature });
             await fetchFeatures();
             setIsFormOpen(false);
             setCurrentFeature(null);
         } catch (error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log(`Failed to ${action.toLowerCase()} feature.`, { error: errorMessage }, 'error');
             console.error(error);
         }
     };
@@ -79,21 +207,25 @@ const FeaturesDictionary: React.FC = () => {
     const handleDeleteFeature = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this feature?')) {
             clearError();
+            log(`Attempting to delete feature with ID: ${id}`);
             try {
                 const res = await fetch(`/api/features/${id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Failed to delete feature');
+                log('Feature deleted successfully.', { id });
                 await fetchFeatures();
             } catch (error) {
-                setStatus({ error: (error as Error).message });
+                const errorMessage = (error as Error).message;
+                setStatus({ error: errorMessage });
+                log('Failed to delete feature.', { id, error: errorMessage }, 'error');
                 console.error(error);
             }
         }
     };
     
     const renderForm = () => (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
-            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-                <div className="flex justify-between items-center p-4 border-b border-gray-700">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+                <div className="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
                     <h3 className="font-semibold text-lg">{currentFeature?.id ? 'Edit Feature' : 'New Feature'}</h3>
                     <button onClick={() => setIsFormOpen(false)} className="p-1 rounded-full hover:bg-gray-700"><XIcon className="w-5 h-5" /></button>
                 </div>
@@ -105,18 +237,18 @@ const FeaturesDictionary: React.FC = () => {
                         </select>
                     </div>
                     <textarea value={currentFeature?.overview || ''} onChange={e => setCurrentFeature({...currentFeature, overview: e.target.value})} placeholder="Overview" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
-                    <textarea value={currentFeature?.logic_flow || ''} onChange={e => setCurrentFeature({...currentFeature, logic_flow: e.target.value})} placeholder="Logic & Data Flow" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={5}></textarea>
+                    <textarea value={currentFeature?.logic_flow || ''} onChange={e => setCurrentFeature({...currentFeature, logic_flow: e.target.value})} placeholder="Logic & Data Flow" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={4}></textarea>
                     <div>
-                        <label className="text-xs text-gray-400">UI/UX Breakdown (JSON Array)</label>
-                        <textarea value={currentFeature?.ui_ux_breakdown_json || '[]'} onChange={e => setCurrentFeature({...currentFeature, ui_ux_breakdown_json: e.target.value})} className="w-full p-2 bg-gray-700 rounded-lg text-sm font-mono" rows={5}></textarea>
+                        <label className="text-xs text-gray-400">UI/UX Breakdown (Must be a valid JSON Array)</label>
+                        <textarea value={currentFeature?.ui_ux_breakdown_json || '[]'} onChange={e => setCurrentFeature({...currentFeature, ui_ux_breakdown_json: e.target.value})} className="w-full p-2 bg-gray-700 rounded-lg text-sm font-mono" rows={4}></textarea>
                     </div>
                      <div>
-                        <label className="text-xs text-gray-400">Key Files (JSON Array of strings)</label>
+                        <label className="text-xs text-gray-400">Key Files (Must be a valid JSON Array of strings)</label>
                         <textarea value={currentFeature?.key_files_json || '[]'} onChange={e => setCurrentFeature({...currentFeature, key_files_json: e.target.value})} className="w-full p-2 bg-gray-700 rounded-lg text-sm font-mono" rows={3}></textarea>
                     </div>
                     <textarea value={currentFeature?.notes || ''} onChange={e => setCurrentFeature({...currentFeature, notes: e.target.value})} placeholder="Notes & Improvements" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
                 </div>
-                <div className="flex gap-2 p-4 border-t border-gray-700">
+                <div className="flex gap-2 p-4 border-t border-gray-700 flex-shrink-0">
                     <button onClick={handleSaveFeature} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save Feature</button>
                     <button onClick={() => setIsFormOpen(false)} className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
                 </div>
@@ -125,45 +257,38 @@ const FeaturesDictionary: React.FC = () => {
     );
 
     return (
-        <div className="p-4 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold">Features Dictionary</h3>
-                <button onClick={() => handleOpenForm()} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm">
-                    <PlusIcon className="w-5 h-5" /> Add Feature
-                </button>
+        <div className="h-full flex flex-col">
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                 <h3 className="text-2xl font-bold">Features Dictionary</h3>
+                 <button onClick={() => handleOpenForm()} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm">
+                        <PlusIcon className="w-5 h-5" /> Add Feature
+                 </button>
             </div>
 
-            {isFormOpen && renderForm()}
-
-            <div className="flex-1 overflow-auto">
-                <table className="w-full text-sm text-left text-gray-300">
-                    <thead className="text-xs text-gray-400 uppercase bg-gray-800 sticky top-0">
-                        <tr>
-                            <th className="p-3">Name</th>
-                            <th className="p-3">Status</th>
-                            <th className="p-3">Overview</th>
-                            <th className="p-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {isLoading ? (
-                            <tr><td colSpan={4} className="text-center p-4">Loading features...</td></tr>
-                        ) : features.map(feature => (
-                            <motion.tr key={feature.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-gray-700 hover:bg-gray-700/50">
-                                <td className="p-3 font-medium align-top">{feature.name}</td>
-                                <td className="p-3 align-top whitespace-nowrap">{feature.status}</td>
-                                <td className="p-3 align-top max-w-md"><p className="truncate">{feature.overview}</p></td>
-                                <td className="p-3 align-top">
-                                    <div className="flex gap-4">
-                                        <button onClick={() => handleOpenForm(feature)} title="Edit"><EditIcon className="w-5 h-5 text-gray-400 hover:text-blue-400"/></button>
-                                        <button onClick={() => handleDeleteFeature(feature.id)} title="Delete"><TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500"/></button>
-                                    </div>
-                                </td>
-                            </motion.tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {isLoading ? (
+                <div className="flex-1 flex items-center justify-center"><p>Loading features...</p></div>
+            ) : (
+                <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                    {features.length > 0 ? (
+                        features.map(feature => (
+                           <FeatureItem 
+                                key={feature.id} 
+                                feature={feature} 
+                                onEdit={() => handleOpenForm(feature)} 
+                                onDelete={() => handleDeleteFeature(feature.id)}
+                            />
+                        ))
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            <p>No features found. Add one to get started.</p>
+                        </div>
+                    )}
+                </div>
+            )}
+            
+            <AnimatePresence>
+                {isFormOpen && currentFeature && renderForm()}
+            </AnimatePresence>
         </div>
     );
 };

@@ -1,7 +1,9 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { Conversation, Message, Contact, AppSettings } from '@/lib/types';
+import { useLog } from './LogProvider';
 
 export interface IStatus {
   currentAction: string;
@@ -37,6 +39,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [isLoading, setIsLoading] = useState(false);
     const [status, setBaseStatus] = useState<IStatus>({ currentAction: '', error: null });
     const [settings, setSettings] = useState<AppSettings | null>(null);
+    const { log } = useLog();
 
     const setStatus = useCallback((newStatus: Partial<IStatus>) => {
         setBaseStatus(prev => ({ ...prev, ...newStatus }));
@@ -45,29 +48,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const clearError = useCallback(() => setStatus({ error: null }), [setStatus]);
     
     const loadSettings = useCallback(async () => {
+        log('Attempting to load global settings...');
         try {
             const res = await fetch('/api/settings');
             if (!res.ok) throw new Error("Failed to fetch settings.");
             const appSettings = await res.json();
             setSettings(appSettings);
+            log('Global settings loaded successfully.', appSettings);
             return appSettings;
         } catch (error) {
-             setStatus({ error: (error as Error).message });
+             const errorMessage = (error as Error).message;
+             setStatus({ error: errorMessage });
+             log('Failed to load global settings.', { error: errorMessage }, 'error');
              console.error(error);
         }
-    }, [setStatus]);
+    }, [setStatus, log]);
 
     const loadConversations = useCallback(async () => {
+        log('Fetching conversation list...');
         try {
             const response = await fetch('/api/conversations');
             if (!response.ok) throw new Error('Failed to fetch conversations');
             const convos = await response.json();
             setConversations(convos);
+            log(`Successfully fetched ${convos.length} conversations.`);
         } catch (error) {
-            setStatus({ error: 'Could not load conversations.' });
+            const errorMessage = 'Could not load conversations.';
+            setStatus({ error: errorMessage });
+            log(errorMessage, { details: (error as Error).message }, 'error');
             console.error(error);
         }
-    }, [setStatus]);
+    }, [setStatus, log]);
 
     useEffect(() => {
         loadConversations();
@@ -75,24 +86,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [loadConversations, loadSettings]);
 
     const fetchMessages = useCallback(async (conversationId: string) => {
+        log(`Fetching messages for conversation: ${conversationId}`);
         try {
             const response = await fetch(`/api/conversations/${conversationId}/messages`);
              if (!response.ok) throw new Error('Failed to fetch messages');
             const msgs = await response.json();
             setMessages(msgs);
+            log(`Successfully fetched ${msgs.length} messages.`);
         } catch (error) {
-             setStatus({ error: 'Could not load messages for this chat.' });
+             const errorMessage = 'Could not load messages for this chat.';
+             setStatus({ error: errorMessage });
+             log(errorMessage, { conversationId, details: (error as Error).message }, 'error');
              console.error(error);
         }
-    }, [setStatus]);
+    }, [setStatus, log]);
 
     const setCurrentConversationById = useCallback(async (conversationId: string | null) => {
         if (!conversationId) {
+            log('Clearing current conversation.');
             setCurrentConversation(null);
             setMessages([]);
             return;
         }
 
+        log(`Setting current conversation to: ${conversationId}`);
         const findAndSetConvo = (convos: Conversation[]) => {
             const convo = convos.find(c => c.id === conversationId);
             if (convo) {
@@ -104,30 +121,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         if (!findAndSetConvo(conversations)) {
+            log('Conversation not in cache, reloading conversation list.');
             await loadConversations();
             // Need to fetch fresh conversations to find the new one
             const freshResponse = await fetch('/api/conversations');
             const freshConvos = await freshResponse.json();
             findAndSetConvo(freshConvos);
         }
-    }, [conversations, fetchMessages, loadConversations]);
+    }, [conversations, fetchMessages, loadConversations, log]);
 
     const updateCurrentConversation = useCallback((updatedData: Partial<Conversation>) => {
         if (currentConversation) {
+            log('Updating current conversation settings in state.', updatedData);
             const newConversation = { ...currentConversation, ...updatedData };
             setCurrentConversation(newConversation);
             setConversations(convos => convos.map(c => c.id === newConversation.id ? newConversation : c));
         }
-    }, [currentConversation]);
+    }, [currentConversation, log]);
 
     const createNewConversation = useCallback(async () => {
+        log('Creating new conversation.');
         setCurrentConversation(null);
         setMessages([]);
-    }, []);
+    }, [log]);
 
     const addMessage = useCallback(async (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[]) => {
         setIsLoading(true);
         setStatus({ currentAction: "Processing...", error: null });
+        log('Starting addMessage process.', { message, mentionedContacts });
 
         const optimisticUserMessage: Message = { 
             ...message, 
@@ -136,11 +157,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             conversationId: currentConversation?.id || 'temp'
         };
         setMessages(prev => [...prev, optimisticUserMessage]);
+        log('Optimistically added user message to UI.', optimisticUserMessage);
 
         try {
             let conversationToUpdate = currentConversation;
             
             if (!conversationToUpdate) {
+                log('No active conversation, creating a new one.');
                 const res = await fetch('/api/conversations', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -151,12 +174,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 conversationToUpdate = newConversation;
                 setCurrentConversation(newConversation);
                 await loadConversations();
+                log('Successfully created and set new conversation.', newConversation);
             }
             
             if (!conversationToUpdate) throw new Error("Conversation could not be established.");
 
             const finalUserMessage: Message = { ...optimisticUserMessage, conversationId: conversationToUpdate.id };
             
+            log('Saving user message to DB...');
             const userMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
@@ -164,25 +189,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             });
             if (!userMsgRes.ok) throw new Error("Failed to save your message.");
             const savedUserMessage = await userMsgRes.json();
+            log('User message saved successfully.', savedUserMessage);
             
             setMessages(prev => prev.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m));
             
             const updatedMessagesHistory = [...messages.filter(m => m.id !== optimisticUserMessage.id), savedUserMessage];
 
+            const chatApiPayload = { 
+                messages: updatedMessagesHistory, 
+                conversation: conversationToUpdate,
+                mentionedContacts,
+            };
+            log('Sending request to /api/chat', chatApiPayload);
             const chatRes = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    messages: updatedMessagesHistory, 
-                    conversation: conversationToUpdate,
-                    mentionedContacts,
-                })
+                body: JSON.stringify(chatApiPayload)
             });
             if (!chatRes.ok) {
                  const errorData = await chatRes.json();
                  throw new Error(errorData.error || 'Failed to get AI response');
             }
             const { response: aiResponse, suggestion } = await chatRes.json();
+            log('Received response from /api/chat.', { aiResponse, suggestion });
             
             if (aiResponse) {
                 const aiMessageData: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
@@ -190,6 +219,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     content: aiResponse,
                     tokenCount: Math.ceil(aiResponse.length / 4), // Estimate token count
                 };
+                log('Saving AI message to DB...');
                  const aiMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
                      method: 'POST',
                      headers: { 'Content-Type': 'application/json' },
@@ -197,13 +227,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 });
                 if (!aiMsgRes.ok) throw new Error("Failed to save AI's message.");
                 const savedAiMessage = await aiMsgRes.json();
+                log('AI message saved successfully.', savedAiMessage);
                 setMessages(prev => [...prev, savedAiMessage!]);
             }
             
             return { aiResponse, suggestion };
             
         } catch (error) {
-            setStatus({ error: (error as Error).message, currentAction: "Error" });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage, currentAction: "Error" });
+            log('Error in addMessage process.', { error: errorMessage }, 'error');
             console.error(error);
             setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
             return { aiResponse: null, suggestion: null };
@@ -211,24 +244,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setIsLoading(false);
             setStatus({ currentAction: "" });
         }
-    }, [currentConversation, loadConversations, messages, setStatus]);
+    }, [currentConversation, loadConversations, messages, setStatus, log]);
 
     const toggleBookmark = useCallback(async (messageId: string) => {
         setStatus({ currentAction: "Updating bookmark..." });
+        log(`Toggling bookmark for message: ${messageId}`);
         try {
             const res = await fetch(`/api/messages/${messageId}/bookmark`, { method: 'PUT' });
             if (!res.ok) throw new Error('Failed to toggle bookmark status.');
             const updatedMessage = await res.json();
             
             setMessages(prev => prev.map(m => m.id === messageId ? updatedMessage : m));
-
+            log('Bookmark toggled successfully.', { messageId, newStatus: updatedMessage.isBookmarked });
         } catch (error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to toggle bookmark.', { messageId, error: errorMessage }, 'error');
             console.error(error);
         } finally {
             setStatus({ currentAction: "" });
         }
-    }, [setStatus]);
+    }, [setStatus, log]);
 
     return (
         <AppContext.Provider value={{

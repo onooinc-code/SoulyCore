@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,6 +11,7 @@ import ConversationSettingsModal from './ConversationSettingsModal';
 import AgentConfigModal from './AgentConfigModal';
 import SummaryModal from './SummaryModal';
 import { motion } from 'framer-motion';
+import { useLog } from './providers/LogProvider';
 
 const ChatWindow: React.FC = () => {
     const { 
@@ -21,6 +23,7 @@ const ChatWindow: React.FC = () => {
         status,
         clearError,
     } = useAppContext();
+    const { log } = useLog();
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -63,16 +66,22 @@ const ChatWindow: React.FC = () => {
             setProactiveSuggestion(suggestion);
             // After getting a successful response, trigger the memory pipeline in the background
             const textToAnalyze = `${content}\n${aiResponse}`;
+            log('Triggering background memory pipeline.', { textToAnalyze });
             fetch('/api/memory/pipeline', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ textToAnalyze })
-            }).catch(err => console.error("Memory pipeline trigger failed:", err)); // Fire-and-forget
+            }).catch(err => {
+                const errorMessage = "Memory pipeline trigger failed.";
+                log(errorMessage, { details: (err as Error).message }, 'error');
+                console.error(errorMessage, err)
+            }); // Fire-and-forget
         }
     };
     
     const handleSuggestionClick = () => {
         if (!proactiveSuggestion) return;
+        log('User clicked proactive suggestion.', { suggestion: proactiveSuggestion });
         // This is a placeholder; a real implementation might pre-fill the input
         alert(`Action triggered: ${proactiveSuggestion}`);
         setProactiveSuggestion(null);

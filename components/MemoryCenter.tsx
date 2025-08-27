@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -5,6 +6,7 @@ import type { Entity, Tool } from '@/lib/types';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { XIcon, TrashIcon, PlusIcon, EditIcon } from './Icons';
 import { motion } from 'framer-motion';
+import { useLog } from './providers/LogProvider';
 
 type Tab = 'structured' | 'procedural' | 'settings';
 
@@ -14,6 +16,7 @@ interface MemoryCenterProps {
 
 const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
     const { setStatus, clearError } = useAppContext();
+    const { log } = useLog();
     
     const [activeTab, setActiveTab] = useState<Tab>('structured');
     const [entities, setEntities] = useState<Entity[]>([]);
@@ -25,6 +28,7 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
 
     const fetchData = useCallback(async () => {
         clearError();
+        log('Fetching memory center data (entities)...');
         try {
             const [entitiesRes] = await Promise.all([
                 fetch('/api/entities'),
@@ -35,11 +39,14 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
             
             setEntities(entitiesData);
             setStats({ entities: entitiesData.length, knowledge: 0 }); // Placeholder for knowledge
+            log(`Successfully fetched ${entitiesData.length} entities.`);
         } catch (error) {
-            setStatus({ error: 'Could not load memory data.' });
+            const errorMessage = 'Could not load memory data.';
+            setStatus({ error: errorMessage });
+            log(errorMessage, { details: (error as Error).message }, 'error');
             console.error(error);
         }
-    }, [clearError, setStatus]);
+    }, [clearError, setStatus, log]);
 
     useEffect(() => {
         fetchData();
@@ -49,6 +56,9 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
         if (!entityForm.name || !entityForm.type || !entityForm.details_json) return;
         clearError();
         const isUpdating = !!entityForm.id;
+        const action = isUpdating ? 'Updating' : 'Creating';
+        log(`${action} memory entity...`, { entityData: entityForm });
+
         const url = isUpdating ? `/api/entities/${entityForm.id}` : '/api/entities';
         const method = isUpdating ? 'PUT' : 'POST';
 
@@ -60,11 +70,15 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
             });
             if (!res.ok) throw new Error('Failed to save entity');
             
+            const savedEntity = await res.json();
+            log(`Entity ${action.toLowerCase()}d successfully.`, { savedEntity });
             await fetchData();
             setEntityForm({});
             setIsEntityFormVisible(false);
         } catch (error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log(`Failed to ${action.toLowerCase()} entity.`, { error: errorMessage }, 'error');
             console.error(error);
         }
     };
@@ -76,12 +90,16 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
     
     const handleDeleteEntity = async (id: string) => {
         clearError();
+        log(`Attempting to delete entity with ID: ${id}`);
         try {
             const res = await fetch(`/api/entities/${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to delete entity');
+            log('Entity deleted successfully.', { id });
             await fetchData();
         } catch (error) {
-             setStatus({ error: (error as Error).message });
+             const errorMessage = (error as Error).message;
+             setStatus({ error: errorMessage });
+             log('Failed to delete entity.', { id, error: errorMessage }, 'error');
              console.error(error);
         }
     };

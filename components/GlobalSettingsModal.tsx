@@ -6,6 +6,7 @@ import { XIcon } from './Icons';
 import { motion } from 'framer-motion';
 import { useAppContext } from './providers/AppProvider';
 import type { AppSettings } from '@/lib/types';
+import { useLog } from './providers/LogProvider';
 
 interface GlobalSettingsModalProps {
     setIsOpen: (isOpen: boolean) => void;
@@ -13,6 +14,7 @@ interface GlobalSettingsModalProps {
 
 const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) => {
     const { settings, loadSettings, setSettings, setStatus, clearError } = useAppContext();
+    const { log } = useLog();
     const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
 
     // This effect runs once when the modal opens to ensure we have the latest settings.
@@ -34,6 +36,7 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
         if (!localSettings) return;
         clearError();
         setStatus({ currentAction: "Saving settings..." });
+        log('Attempting to save global settings...', { settings: localSettings });
         try {
             const res = await fetch('/api/settings', {
                 method: 'PUT',
@@ -43,9 +46,12 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
             if (!res.ok) throw new Error('Failed to save settings');
             const updatedSettings = await res.json();
             setSettings(updatedSettings as AppSettings); // Update context directly with response
+            log('Global settings saved successfully.', { updatedSettings });
             setIsOpen(false);
         } catch (error) {
-            setStatus({ error: (error as Error).message });
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to save settings.', { error: errorMessage }, 'error');
             console.error(error);
         } finally {
             setStatus({ currentAction: "" });
