@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:create": "node scripts/create-tables.js"
+    "db:create": "node scripts/create-tables.js",
+    "postinstall": "npm run db:create"
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
