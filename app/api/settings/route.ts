@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { AppSettings } from '@/lib/types';
@@ -30,23 +31,25 @@ export async function GET() {
     }
 }
 
-// PUT (update) settings using a robust UPSERT strategy
+// PUT (update) settings using a robust UPSERT strategy inside a transaction
 export async function PUT(req: NextRequest) {
     try {
         const settingsToUpdate = await req.json() as AppSettings;
 
-        // Iterate over the settings and perform an "UPSERT" for each one.
-        // This is atomic and ensures that if a setting key doesn't exist, it's created.
-        const settingsArray = Object.entries(settingsToUpdate);
-
-        for (const [key, value] of settingsArray) {
-            await sql`
-                INSERT INTO settings (key, value)
-                VALUES (${key}, ${JSON.stringify(value)})
-                ON CONFLICT (key) 
-                DO UPDATE SET value = EXCLUDED.value;
-            `;
-        }
+        // Use a transaction to ensure all settings are updated atomically.
+        // sql.begin handles BEGIN, COMMIT, and ROLLBACK automatically.
+        await sql.begin(async (tx) => {
+            const settingsArray = Object.entries(settingsToUpdate);
+            for (const [key, value] of settingsArray) {
+                // Use the transactional sql client 'tx' for each operation
+                await tx`
+                    INSERT INTO settings (key, value)
+                    VALUES (${key}, ${JSON.stringify(value)})
+                    ON CONFLICT (key) 
+                    DO UPDATE SET value = EXCLUDED.value;
+                `;
+            }
+        });
         
         return NextResponse.json({ message: 'Settings updated successfully' });
     } catch (error) {
