@@ -1,8 +1,9 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { XIcon } from './Icons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAppContext } from './providers/AppProvider';
 import type { AppSettings } from '@/lib/types';
 
@@ -14,6 +15,13 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
     const { settings, loadSettings, setStatus, clearError } = useAppContext();
     const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
 
+    // This effect runs once when the modal opens to ensure we have the latest settings.
+    useEffect(() => {
+        loadSettings();
+    }, [loadSettings]);
+
+    // This effect synchronizes the local form state with the global context state.
+    // It runs whenever the global settings object is updated (e.g., after the fetch).
     useEffect(() => {
         if (settings) {
             setLocalSettings(JSON.parse(JSON.stringify(settings))); // Deep copy
@@ -41,16 +49,17 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
         }
     };
 
-    if (!localSettings) return null;
-
-    return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold">Global Settings</h2>
-                    <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-gray-700"><XIcon className="w-6 h-6" /></button>
+    const renderContent = () => {
+        if (!localSettings) {
+            return (
+                <div className="flex justify-center items-center p-8">
+                    <p className="text-gray-400">Loading current settings...</p>
                 </div>
-                
+            );
+        }
+
+        return (
+            <>
                 <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
                     {/* Default Model Config */}
                     <div className="p-4 bg-gray-900/50 rounded-lg">
@@ -88,6 +97,18 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
                     <button onClick={() => setIsOpen(false)} className="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500 text-sm">Cancel</button>
                     <button onClick={handleSave} className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-sm">Save Settings</button>
                 </div>
+            </>
+        );
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Global Settings</h2>
+                    <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-gray-700"><XIcon className="w-6 h-6" /></button>
+                </div>
+                {renderContent()}
             </motion.div>
         </motion.div>
     );
