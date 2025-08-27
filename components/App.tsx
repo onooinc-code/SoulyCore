@@ -52,12 +52,6 @@ const App: React.FC = () => {
         'mod+n': () => createNewConversation(),
     });
 
-    useEffect(() => {
-        if (settings && !settings.enableDebugLog.enabled) {
-            setLogPanelOpen(false);
-        }
-    }, [settings]);
-
     return (
         <>
             <MorningBriefing />

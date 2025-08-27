@@ -32,8 +32,8 @@ const LogOutputPanel: React.FC<LogOutputPanelProps> = ({ isOpen }) => {
                         <button onClick={clearLogs} className="px-2 py-0.5 text-xs bg-gray-600 rounded hover:bg-gray-500">Clear</button>
                     </div>
                     <div className="flex-1 p-2 overflow-y-auto text-xs font-mono">
-                        {logs.map((log, index) => (
-                            <div key={index} className="flex gap-2 items-start">
+                        {logs.map((log) => (
+                            <div key={log.id} className="flex gap-2 items-start">
                                 <span className="text-gray-500 flex-shrink-0">{new Date(log.timestamp).toLocaleTimeString()}</span>
                                 <p className={`${levelColor[log.level]} whitespace-pre-wrap break-all`}>
                                     {log.message}

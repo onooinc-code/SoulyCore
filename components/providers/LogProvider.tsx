@@ -1,9 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { useAppContext } from './AppProvider';
 
 export interface LogEntry {
+    id?: string;
     timestamp: string;
     message: string;
     payload?: any;
@@ -22,24 +23,69 @@ export const LogProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { settings } = useAppContext();
     const [logs, setLogs] = useState<LogEntry[]>([]);
 
-    const log = useCallback((message: string, payload?: any, level: 'info' | 'warn' | 'error' = 'info') => {
+    const loadLogs = useCallback(async () => {
+        try {
+            const res = await fetch('/api/logs');
+            if (!res.ok) throw new Error("Failed to fetch logs.");
+            const fetchedLogs = await res.json();
+            setLogs(fetchedLogs);
+        } catch (error) {
+            console.error("Failed to load logs:", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadLogs();
+    }, [loadLogs]);
+
+    const log = useCallback(async (message: string, payload?: any, level: 'info' | 'warn' | 'error' = 'info') => {
         if (!settings?.enableDebugLog.enabled) {
-            return;
+            return; // Don't write new logs if logging is disabled.
         }
 
+        // Optimistic update
+        const tempId = crypto.randomUUID();
         const newLog: LogEntry = {
+            id: tempId,
             timestamp: new Date().toISOString(),
             message,
             payload,
             level,
         };
-        
-        setLogs(prevLogs => [...prevLogs, newLog]);
+        setLogs(prevLogs => [newLog, ...prevLogs]);
+
+        // Persist to DB
+        try {
+            const res = await fetch('/api/logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, payload, level }),
+            });
+            if (!res.ok) throw new Error("Failed to save log.");
+            
+            const savedLog = await res.json();
+            // Replace optimistic log with the one from the DB to get the real ID and timestamp
+            setLogs(prev => prev.map(l => l.id === tempId ? savedLog : l));
+
+        } catch (error) {
+            console.error("Failed to persist log:", error);
+            // Revert optimistic update on failure
+            setLogs(prev => prev.filter(l => l.id !== tempId));
+        }
     }, [settings]);
 
-    const clearLogs = useCallback(() => {
-        setLogs([]);
-    }, []);
+    const clearLogs = useCallback(async () => {
+        const oldLogs = [...logs];
+        setLogs([]); // Optimistic update
+
+        try {
+            const res = await fetch('/api/logs', { method: 'DELETE' });
+            if (!res.ok) throw new Error("Failed to clear logs on the server.");
+        } catch (error) {
+            console.error(error);
+            setLogs(oldLogs); // Revert on failure
+        }
+    }, [logs]);
     
     return (
         <LogContext.Provider value={{ logs, log, clearLogs }}>

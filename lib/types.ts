@@ -106,3 +106,11 @@ export interface AppSettings {
         enabled: boolean;
     };
 }
+
+export interface Log {
+    id: string;
+    timestamp: Date;
+    message: string;
+    payload: Record<string, any> | null;
+    level: 'info' | 'warn' | 'error';
+}

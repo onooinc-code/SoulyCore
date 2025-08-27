@@ -92,6 +92,17 @@ async function createTables() {
         `;
         console.log("Table 'features' created or already exists.", featuresTable.command);
 
+        const logsTable = await sql`
+            CREATE TABLE IF NOT EXISTS logs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                message TEXT NOT NULL,
+                payload JSONB,
+                level VARCHAR(10) NOT NULL DEFAULT 'info'
+            );
+        `;
+        console.log("Table 'logs' created or already exists.", logsTable.command);
+
 
         // Insert default settings if they don't exist
         await sql`

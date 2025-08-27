@@ -35,7 +35,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             label: 'Toggle Log Panel', 
             icon: LogIcon, 
             action: () => setLogPanelOpen(prev => !prev),
-            disabled: !settings?.enableDebugLog.enabled
         },
     ];
 
@@ -54,7 +53,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                      <button
                         key={item.label}
                         onClick={item.action}
-                        disabled={item.disabled}
                         className="flex items-center w-full p-2 text-sm font-semibold text-gray-300 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <item.icon className="w-5 h-5 mr-3" />
