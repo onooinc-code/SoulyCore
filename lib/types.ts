@@ -49,6 +49,28 @@ export interface Entity {
     details_json: string;
 }
 
+export type FeatureStatus = '✅ Completed' | '🟡 Needs Improvement' | '🔴 Needs Refactor' | '⚪ Planned';
+
+export interface UiUxSubFeature {
+    subFeature: string;
+    description: string;
+    status: FeatureStatus;
+}
+
+export interface Feature {
+    id: string;
+    name: string;
+    overview: string;
+    status: FeatureStatus;
+    ui_ux_breakdown_json: string; // Stored as a JSON string
+    logic_flow: string;
+    key_files_json: string; // Stored as a JSON string
+    notes: string;
+    createdAt: Date;
+    lastUpdatedAt: Date;
+}
+
+
 export interface Tool {
     id:string;
     name: string;

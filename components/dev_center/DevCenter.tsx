@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState } from 'react';
@@ -14,14 +15,20 @@ const CodeTerminal = dynamic(() => import('./CodeTerminal'), {
     loading: () => <p className="text-center text-gray-400">Loading Interactive Editor...</p>
 });
 
-type Tab = 'dashboard' | 'roadmap' | 'code' | 'docs';
+const FeaturesDictionary = dynamic(() => import('./FeaturesDictionary'), {
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full"><p className="text-white">Loading Features Dictionary...</p></div>
+});
+
+
+type Tab = 'dashboard' | 'roadmap' | 'code' | 'docs' | 'features';
 
 interface DevCenterProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
 const DevCenter: React.FC<DevCenterProps> = ({ setIsOpen }) => {
-    const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+    const [activeTab, setActiveTab] = useState<Tab>('features');
 
     const TabButton: React.FC<{ tabName: Tab; label: string }> = ({ tabName, label }) => (
         <button
@@ -36,6 +43,7 @@ const DevCenter: React.FC<DevCenterProps> = ({ setIsOpen }) => {
     
     const renderContent = () => {
         switch (activeTab) {
+            case 'features': return <FeaturesDictionary />;
             case 'dashboard': return <Dashboard />;
             case 'roadmap': return <Roadmap />;
             case 'code': return <CodeTerminal />;
@@ -66,6 +74,7 @@ const DevCenter: React.FC<DevCenterProps> = ({ setIsOpen }) => {
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
+                    <TabButton tabName="features" label="Features Dictionary" />
                     <TabButton tabName="dashboard" label="Dashboard" />
                     <TabButton tabName="roadmap" label="Roadmap & Ideas" />
                     <TabButton tabName="code" label="Code & Terminal" />

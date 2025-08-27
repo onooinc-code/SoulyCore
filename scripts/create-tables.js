@@ -76,6 +76,23 @@ async function createTables() {
         `;
         console.log("Table 'settings' created or already exists.", settingsTable.command);
         
+        const featuresTable = await sql`
+            CREATE TABLE IF NOT EXISTS features (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                name VARCHAR(255) NOT NULL,
+                overview TEXT,
+                status VARCHAR(50) NOT NULL DEFAULT 'Planned',
+                ui_ux_breakdown_json JSONB,
+                logic_flow TEXT,
+                key_files_json JSONB,
+                notes TEXT,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'features' created or already exists.", featuresTable.command);
+
+
         // Insert default settings if they don't exist
         await sql`
             INSERT INTO settings (key, value)
