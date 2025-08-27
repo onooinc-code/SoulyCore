@@ -1,9 +1,11 @@
+
+
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Entity, Tool } from '@/lib/types';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { XIcon, TrashIcon, PlusIcon, EditIcon } from './Icons';
+import { XIcon, TrashIcon, PlusIcon, EditIcon, SearchIcon } from './Icons';
 import { motion } from 'framer-motion';
 import { useLog } from './providers/LogProvider';
 
@@ -13,7 +15,8 @@ interface MemoryCenterProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
-const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const MemoryCenter = ({ setIsOpen }: MemoryCenterProps) => {
     const { setStatus, clearError } = useAppContext();
     const { log } = useLog();
     
@@ -24,6 +27,10 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
     
     const [entityForm, setEntityForm] = useState<Partial<Entity>>({});
     const [isEntityFormVisible, setIsEntityFormVisible] = useState(false);
+    const [formErrors, setFormErrors] = useState<{ name?: string; type?: string; details_json?: string }>({});
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [typeFilter, setTypeFilter] = useState('all');
 
     const fetchData = useCallback(async () => {
         clearError();
@@ -49,8 +56,28 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
         fetchData();
     }, [fetchData, log]);
     
+    const validateForm = (): boolean => {
+        const errors: { name?: string; type?: string; details_json?: string } = {};
+        if (!entityForm.name?.trim()) errors.name = "Name is required.";
+        if (!entityForm.type?.trim()) errors.type = "Type is required.";
+        if (!entityForm.details_json?.trim()) {
+            errors.details_json = "Details (in JSON format) are required.";
+        } else {
+            try {
+                JSON.parse(entityForm.details_json);
+            } catch (e) {
+                errors.details_json = "Details must be valid JSON. Example: {\"info\": \"value\"}";
+            }
+        }
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSaveEntity = async () => {
-        if (!entityForm.name || !entityForm.type || !entityForm.details_json) return;
+        if (!validateForm()) {
+            log('Entity form validation failed.', { errors: formErrors });
+            return;
+        }
         clearError();
         const isUpdating = !!entityForm.id;
         const action = isUpdating ? 'Updating' : 'Creating';
@@ -82,6 +109,7 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
 
     const handleEditEntity = (entity: Entity) => {
         log('User started editing an entity.', { entityId: entity.id });
+        setFormErrors({});
         setEntityForm(entity);
         setIsEntityFormVisible(true);
     };
@@ -106,7 +134,24 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
         }
     };
 
-    const TabButton: React.FC<{ tabName: Tab; label: string }> = ({ tabName, label }) => (
+    const uniqueEntityTypes = useMemo(() => {
+        const types = new Set(entities.map(e => e.type));
+        return ['all', ...Array.from(types).sort()];
+    }, [entities]);
+
+    const filteredEntities = useMemo(() => {
+        return entities.filter(entity => {
+            const filterMatch = typeFilter === 'all' || entity.type === typeFilter;
+            const searchMatch = searchTerm.trim() === '' ||
+                entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                entity.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                entity.details_json.toLowerCase().includes(searchTerm.toLowerCase());
+            return filterMatch && searchMatch;
+        });
+    }, [entities, typeFilter, searchTerm]);
+
+    // FIX: Removed React.FC to fix framer-motion type inference issue.
+    const TabButton = ({ tabName, label }: { tabName: Tab; label: string }) => (
         <button onClick={() => {
             log('User switched Memory Center tab', { tab: tabName });
             setActiveTab(tabName);
@@ -120,55 +165,94 @@ const MemoryCenter: React.FC<MemoryCenterProps> = ({ setIsOpen }) => {
             case 'structured':
                  return (
                     <>
-                        <div className="flex-1 overflow-y-auto pr-2">
-                             <div className="mb-4 text-sm text-gray-400">
-                                Entities are specific facts the AI knows, like people, places, or concepts. This information is always included in the AI's context.
+                        <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+                            <button onClick={() => { 
+                                log('User clicked "Add Entity" button.');
+                                setFormErrors({});
+                                setIsEntityFormVisible(true); 
+                                setEntityForm({});
+                            }} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm w-full md:w-auto">
+                                <PlusIcon className="w-5 h-5" /> Add Entity
+                            </button>
+                             <div className="flex items-center gap-2 w-full md:w-auto">
+                                <div className="relative flex-grow">
+                                    <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input 
+                                        type="text"
+                                        placeholder="Search entities..."
+                                        value={searchTerm}
+                                        onChange={e => setSearchTerm(e.target.value)}
+                                        className="w-full bg-gray-700 rounded-md pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    />
+                                </div>
+                                <select 
+                                    value={typeFilter}
+                                    onChange={e => setTypeFilter(e.target.value)}
+                                    className="bg-gray-700 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                >
+                                    {uniqueEntityTypes.map(type => (
+                                        <option key={type} value={type}>{type === 'all' ? 'All Types' : type}</option>
+                                    ))}
+                                </select>
                             </div>
-                            <div className="flex gap-2 mb-4">
-                                <button onClick={() => { 
-                                    log('User clicked "Add Entity" button.');
-                                    setIsEntityFormVisible(true); 
-                                    setEntityForm({});
-                                }} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm">
-                                    <PlusIcon className="w-5 h-5" /> Add Entity
-                                </button>
-                                <p className="text-sm text-gray-400 self-center">New entities are added automatically by the memory pipeline after chats.</p>
-                            </div>
-                            {isEntityFormVisible && (
-                                <div className="bg-gray-900 p-4 rounded-lg mb-4 space-y-3">
-                                    <h3 className="font-semibold">{entityForm.id ? 'Edit Entity' : 'New Entity'}</h3>
-                                    <input value={entityForm.name || ''} onChange={e => setEntityForm({...entityForm, name: e.target.value})} placeholder="Name" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
-                                    <input value={entityForm.type || ''} onChange={e => setEntityForm({...entityForm, type: e.target.value})} placeholder="Type (e.g., Person, Project)" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
-                                    <textarea value={entityForm.details_json || ''} onChange={e => setEntityForm({...entityForm, details_json: e.target.value})} placeholder="Details" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={2}></textarea>
-                                    <div className="flex gap-2">
-                                        <button onClick={handleSaveEntity} className="flex-1 p-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save</button>
-                                        <button onClick={() => {
-                                            log('User cancelled entity form.');
-                                            setIsEntityFormVisible(false)
-                                        }} className="flex-1 p-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
+                        </div>
+                        {isEntityFormVisible && (
+                            <div className="bg-gray-900/70 p-4 rounded-lg mb-4 space-y-4">
+                                <h3 className="font-semibold text-lg">{entityForm.id ? 'Edit Entity' : 'New Entity'}</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label htmlFor="entityName" className="text-xs text-gray-400">Name</label>
+                                        <input id="entityName" value={entityForm.name || ''} onChange={e => setEntityForm({...entityForm, name: e.target.value})} placeholder="Project X" className="w-full mt-1 p-2 bg-gray-700 rounded-lg text-sm" aria-invalid={!!formErrors.name} aria-describedby="name-error" />
+                                        {formErrors.name && <p id="name-error" className="text-red-400 text-xs mt-1">{formErrors.name}</p>}
+                                    </div>
+                                    <div>
+                                        <label htmlFor="entityType" className="text-xs text-gray-400">Type</label>
+                                        <input id="entityType" value={entityForm.type || ''} onChange={e => setEntityForm({...entityForm, type: e.target.value})} placeholder="Project" className="w-full mt-1 p-2 bg-gray-700 rounded-lg text-sm" aria-invalid={!!formErrors.type} aria-describedby="type-error"/>
+                                        {formErrors.type && <p id="type-error" className="text-red-400 text-xs mt-1">{formErrors.type}</p>}
                                     </div>
                                 </div>
-                            )}
-                            <table className="w-full text-left text-sm">
-                                <thead className="text-xs text-gray-400 uppercase bg-gray-900">
-                                    <tr><th className="p-2">Name</th><th className="p-2">Type</th><th className="p-2">Details</th><th className="p-2">Actions</th></tr>
+                                <div>
+                                    <label htmlFor="entityDetails" className="text-xs text-gray-400">Details (JSON Format)</label>
+                                    <textarea id="entityDetails" value={entityForm.details_json || ''} onChange={e => setEntityForm({...entityForm, details_json: e.target.value})} placeholder='{ "status": "in-progress", "lead": "Jane Doe" }' className="w-full mt-1 p-2 bg-gray-700 rounded-lg text-sm font-mono" rows={3} aria-invalid={!!formErrors.details_json} aria-describedby="details-error"></textarea>
+                                    {formErrors.details_json && <p id="details-error" className="text-red-400 text-xs mt-1">{formErrors.details_json}</p>}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={handleSaveEntity} className="flex-1 p-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save</button>
+                                    <button onClick={() => {
+                                        log('User cancelled entity form.');
+                                        setIsEntityFormVisible(false)
+                                    }} className="flex-1 p-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex-1 overflow-y-auto pr-2">
+                            <table className="w-full text-left text-sm table-fixed">
+                                <thead className="text-xs text-gray-400 uppercase bg-gray-900/70 sticky top-0">
+                                    <tr><th className="p-2 w-[25%]">Name</th><th className="p-2 w-[15%]">Type</th><th className="p-2 w-[45%]">Details</th><th className="p-2 w-[15%]">Actions</th></tr>
                                 </thead>
                                 <tbody>
-                                    {entities.map(e => (
-                                        <tr key={e.id} className="border-b border-gray-700">
-                                            <td className="p-2 align-top">{e.name}</td>
-                                            <td className="p-2 align-top">{e.type}</td>
-                                            <td className="p-2 align-top break-all">{e.details_json}</td>
+                                    {filteredEntities.map(e => (
+                                        <tr key={e.id} className="border-b border-gray-700/50">
+                                            <td className="p-2 align-top break-words font-medium">{e.name}</td>
+                                            <td className="p-2 align-top break-words">
+                                                 <span className="text-xs bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded-full">
+                                                    {e.type}
+                                                </span>
+                                            </td>
+                                            <td className="p-2 align-top break-all font-mono text-xs text-gray-400">{e.details_json}</td>
                                             <td className="p-2 align-top">
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => handleEditEntity(e)}><EditIcon className="w-4 h-4 hover:text-blue-400"/></button>
-                                                    <button onClick={() => handleDeleteEntity(e.id)}><TrashIcon className="w-4 h-4 hover:text-red-500"/></button>
+                                                <div className="flex gap-2 items-center">
+                                                    <button onClick={() => handleEditEntity(e)} title="Edit"><EditIcon className="w-4 h-4 hover:text-blue-400"/></button>
+                                                    <button onClick={() => handleDeleteEntity(e.id)} title="Delete"><TrashIcon className="w-4 h-4 hover:text-red-500"/></button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+                            {filteredEntities.length === 0 && (
+                                <p className="text-center text-gray-500 py-8">No entities match your criteria.</p>
+                            )}
                         </div>
                     </>
                 );

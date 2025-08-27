@@ -1,6 +1,8 @@
 
 
 
+
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -16,7 +18,8 @@ interface ContactsHubProps {
 
 type SortKey = keyof Contact;
 
-const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const ContactsHub = ({ setIsOpen }: ContactsHubProps) => {
     const { setStatus, clearError } = useAppContext();
     const { log } = useLog();
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -131,7 +134,8 @@ const ContactsHub: React.FC<ContactsHubProps> = ({ setIsOpen }) => {
         setSortConfig({ key, direction });
     };
 
-    const SortableHeader: React.FC<{ sortKey: SortKey; label: string }> = ({ sortKey, label }) => (
+    // FIX: Removed React.FC to fix framer-motion type inference issue.
+    const SortableHeader = ({ sortKey, label }: { sortKey: SortKey; label: string }) => (
         <th className="p-3 text-left cursor-pointer" onClick={() => requestSort(sortKey)}>
             {label}
             {sortConfig.key === sortKey && (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼')}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,7 +13,8 @@ interface BookmarksModalProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
-const BookmarksModal: React.FC<BookmarksModalProps> = ({ setIsOpen }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const BookmarksModal = ({ setIsOpen }: BookmarksModalProps) => {
     const { setStatus, clearError } = useAppContext();
     const [bookmarks, setBookmarks] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(true);

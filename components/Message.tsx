@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -14,7 +15,8 @@ interface MessageProps {
     onToggleBookmark: (messageId: string) => void;
 }
 
-const Message: React.FC<MessageProps> = ({ message, onSummarize, onToggleBookmark }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const Message = ({ message, onSummarize, onToggleBookmark }: MessageProps) => {
     const isUser = message.role === 'user';
     const [isCollapsed, setIsCollapsed] = useState(false);
     

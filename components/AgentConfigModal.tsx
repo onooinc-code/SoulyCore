@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -13,7 +14,8 @@ interface AgentConfigModalProps {
     conversation: Conversation | null;
 }
 
-const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ isOpen, onClose, conversation }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const AgentConfigModal = ({ isOpen, onClose, conversation }: AgentConfigModalProps) => {
     const { loadConversations, setCurrentConversation: setContextConversation, setStatus, clearError } = useAppContext();
     const { log } = useLog();
     const [systemPrompt, setSystemPrompt] = useState('');

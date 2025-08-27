@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -37,7 +38,8 @@ const BookmarksModal = dynamic(() => import('@/components/BookmarksModal'), {
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Bookmarks...</p></div>
 });
 
-const App: React.FC = () => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const App = () => {
     const { createNewConversation, settings } = useAppContext();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isMemoryCenterOpen, setMemoryCenterOpen] = useState(false);

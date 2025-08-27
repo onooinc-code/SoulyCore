@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -11,7 +12,8 @@ interface ConversationSettingsModalProps {
     onClose: () => void;
 }
 
-const ConversationSettingsModal: React.FC<ConversationSettingsModalProps> = ({ isOpen, onClose }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const ConversationSettingsModal = ({ isOpen, onClose }: ConversationSettingsModalProps) => {
     const { currentConversation, updateCurrentConversation, setStatus, clearError } = useAppContext();
     const { log } = useLog();
     const [model, setModel] = useState('');

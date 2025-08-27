@@ -1,6 +1,7 @@
 
 
 
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -14,7 +15,8 @@ interface GlobalSettingsModalProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
-const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const GlobalSettingsModal = ({ setIsOpen }: GlobalSettingsModalProps) => {
     const { settings, loadSettings, setSettings, setStatus, clearError } = useAppContext();
     const { log } = useLog();
     const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);

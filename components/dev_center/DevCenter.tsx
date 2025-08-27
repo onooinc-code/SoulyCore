@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import React, { useState } from 'react';
@@ -22,10 +23,12 @@ interface DevCenterProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
-const DevCenter: React.FC<DevCenterProps> = ({ setIsOpen }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const DevCenter = ({ setIsOpen }: DevCenterProps) => {
     const [activeTab, setActiveTab] = useState<Tab>('features');
 
-    const TabButton: React.FC<{ tabName: Tab; label: string }> = ({ tabName, label }) => (
+    // FIX: Removed React.FC to fix framer-motion type inference issue.
+    const TabButton = ({ tabName, label }: { tabName: Tab; label: string }) => (
         <button
             onClick={() => setActiveTab(tabName)}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${

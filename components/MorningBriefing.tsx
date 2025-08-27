@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,7 +7,8 @@ import { XIcon } from './Icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const MorningBriefing: React.FC = () => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const MorningBriefing = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [summary, setSummary] = useState('');
     const [isLoading, setIsLoading] = useState(true);

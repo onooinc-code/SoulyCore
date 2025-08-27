@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -19,7 +20,8 @@ const statusColorMap: Record<FeatureStatus, string> = {
 };
 
 // A component to safely render JSON content from a string
-const SafeJsonRenderer: React.FC<{ jsonString: string; type: 'files' | 'ux' }> = ({ jsonString, type }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const SafeJsonRenderer = ({ jsonString, type }: { jsonString: string; type: 'files' | 'ux' }) => {
     try {
         const data = JSON.parse(jsonString);
 
@@ -68,7 +70,8 @@ const SafeJsonRenderer: React.FC<{ jsonString: string; type: 'files' | 'ux' }> =
 
 
 // Main Feature Item Component
-const FeatureItem: React.FC<{ feature: Feature; onEdit: () => void; onDelete: () => void; }> = ({ feature, onEdit, onDelete }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const FeatureItem = ({ feature, onEdit, onDelete }: { feature: Feature; onEdit: () => void; onDelete: () => void; }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const { log } = useLog();
 
@@ -120,7 +123,8 @@ const FeatureItem: React.FC<{ feature: Feature; onEdit: () => void; onDelete: ()
 };
 
 
-const FeaturesDictionary: React.FC = () => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const FeaturesDictionary = () => {
     const { setStatus, clearError } = useAppContext();
     const { log } = useLog();
     const [features, setFeatures] = useState<Feature[]>([]);

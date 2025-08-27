@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React from 'react';
@@ -14,7 +15,8 @@ interface SummaryModalProps {
     isLoading: boolean;
 }
 
-const SummaryModal: React.FC<SummaryModalProps> = ({ isOpen, onClose, summaryText, isLoading }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const SummaryModal = ({ isOpen, onClose, summaryText, isLoading }: SummaryModalProps) => {
     return (
         <AnimatePresence>
             {isOpen && (

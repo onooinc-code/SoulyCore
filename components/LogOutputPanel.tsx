@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -16,7 +17,8 @@ type LogLevel = 'info' | 'warn' | 'error';
 type FilterLevel = LogLevel | 'all';
 
 // Component for rendering a single log entry
-const LogEntry: React.FC<{ log: LogEntryType }> = ({ log }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const LogEntry = ({ log }: { log: LogEntryType }) => {
     const [copied, setCopied] = useState(false);
 
     const levelIcon: Record<LogLevel, React.ReactNode> = {
@@ -60,7 +62,8 @@ const LogEntry: React.FC<{ log: LogEntryType }> = ({ log }) => {
 };
 
 
-const LogOutputPanel: React.FC<LogOutputPanelProps> = ({ isOpen }) => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const LogOutputPanel = ({ isOpen }: LogOutputPanelProps) => {
     const { logs, clearLogs } = useLog();
     const [filter, setFilter] = useState<FilterLevel>('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -103,7 +106,8 @@ const LogOutputPanel: React.FC<LogOutputPanelProps> = ({ isOpen }) => {
         });
     }, [logs, filter, searchTerm]);
 
-    const FilterButton: React.FC<{ level: FilterLevel, label: string, count: number }> = ({ level, label, count }) => (
+    // FIX: Removed React.FC to fix framer-motion type inference issue.
+    const FilterButton = ({ level, label, count }: { level: FilterLevel, label: string, count: number }) => (
         <button
             onClick={() => setFilter(level)}
             className={`flex items-center gap-1.5 px-2 py-0.5 text-xs rounded transition-colors ${filter === level ? 'bg-indigo-600 text-white' : 'bg-gray-600 hover:bg-gray-500'}`}

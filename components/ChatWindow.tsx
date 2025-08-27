@@ -1,6 +1,8 @@
 
 
 
+
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -15,7 +17,8 @@ import SummaryModal from './SummaryModal';
 import { motion } from 'framer-motion';
 import { useLog } from './providers/LogProvider';
 
-const ChatWindow: React.FC = () => {
+// FIX: Removed React.FC to fix framer-motion type inference issue.
+const ChatWindow = () => {
     const { 
         currentConversation, 
         messages, 
