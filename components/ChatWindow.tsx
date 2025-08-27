@@ -17,7 +17,6 @@ const ChatWindow: React.FC = () => {
         messages, 
         addMessage,
         isLoading,
-        setIsLoading,
         setStatus,
         status,
         clearError,
@@ -45,7 +44,6 @@ const ChatWindow: React.FC = () => {
     const handleSummarizeMessage = async (content: string) => {
         setSummaryModalState({ isOpen: true, text: '', isLoading: true });
         // This would be an API call in the new architecture
-        // const summary = await summarizeText(content);
         const summary = "Summary generation is now a server-side capability.";
         setSummaryModalState({ isOpen: true, text: summary, isLoading: false });
     };
@@ -120,15 +118,18 @@ const ChatWindow: React.FC = () => {
             {status.error && (
                 <div className="p-4 bg-red-800/50 text-red-200 text-sm border-t border-red-700">
                     <div className="max-w-4xl mx-auto text-left">
-                        <p className="font-bold text-base mb-2">An Error Occurred</p>
-                        <p className="mb-4">{status.error}</p>
+                        <div className="flex justify-between items-center">
+                            <p className="font-bold text-base mb-2">An Error Occurred</p>
+                            <button onClick={clearError} className="text-xs underline hover:text-white">Dismiss</button>
+                        </div>
+                        <p className="mb-4 bg-red-900/50 p-2 rounded-md font-mono">{status.error}</p>
                         
                         {isDbError && (
                              <div className="mt-4 p-4 bg-red-900/50 rounded-lg text-xs">
                                 <p className="font-bold mb-2">How to Fix This Deployment Error:</p>
                                 <ol className="list-decimal list-inside space-y-2">
                                     <li>
-                                        <strong>Check Vercel Integration:</strong> Go to your project dashboard on Vercel, navigate to the "Storage" tab, and ensure your Postgres database is successfully connected to your project.
+                                        <strong>Check Vercel Integration:</strong> Go to your project dashboard on Vercel, navigate to the "Storage" tab, and ensure your Postgres database is successfully connected to this project.
                                     </li>
                                     <li>
                                         <strong>Create Database Tables:</strong> In the Vercel "Storage" tab, click your database, then go to the "Query" tab. You must run the table creation script there. You can find the necessary SQL commands in the `scripts/create-tables.js` file in your project.
@@ -139,10 +140,6 @@ const ChatWindow: React.FC = () => {
                                 </ol>
                             </div>
                         )}
-
-                        <div className="text-center mt-4">
-                            <button onClick={clearError} className="text-xs underline">Dismiss</button>
-                        </div>
                     </div>
                 </div>
             )}
