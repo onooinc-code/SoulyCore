@@ -16,7 +16,17 @@ export async function GET() {
         return NextResponse.json(settings);
     } catch (error) {
         console.error('Failed to fetch settings:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        const errorMessage = (error as Error).message;
+
+        if (errorMessage.includes('relation "settings" does not exist')) {
+            return NextResponse.json({ error: 'Settings database table not found. Please run the database initialization script against your Vercel Postgres database.' }, { status: 500 });
+        }
+        
+        if (!process.env.POSTGRES_URL) {
+             return NextResponse.json({ error: 'Database connection details are missing. Please link a Vercel Postgres database and ensure environment variables are set in your Vercel project settings.' }, { status: 500 });
+        }
+
+        return NextResponse.json({ error: 'Could not connect to the database to fetch settings. Please check your Vercel project settings and database status.' }, { status: 500 });
     }
 }
 
@@ -46,6 +56,12 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ message: 'Settings updated successfully' });
     } catch (error) {
         console.error('Failed to update settings:', error);
+        const errorMessage = (error as Error).message;
+
+        if (errorMessage.includes('relation "settings" does not exist')) {
+            return NextResponse.json({ error: 'Settings database table not found. Please run the database initialization script.' }, { status: 500 });
+        }
+        
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

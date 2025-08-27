@@ -6,7 +6,7 @@ import Message from './Message';
 import ChatInput from './ChatInput';
 import type { Message as MessageType, Contact } from '@/lib/types';
 import StatusBar from './StatusBar';
-import ConversationSettingsModal from './SettingsModal';
+import ConversationSettingsModal from './ConversationSettingsModal';
 import AgentConfigModal from './AgentConfigModal';
 import SummaryModal from './SummaryModal';
 import { motion } from 'framer-motion';
@@ -78,7 +78,7 @@ const ChatWindow: React.FC = () => {
         setProactiveSuggestion(null);
     };
 
-    const isDbError = status.error && /database|vercel|table|relation "contacts" does not exist/i.test(status.error);
+    const isDbError = status.error && /database|vercel|table|relation.+does not exist/i.test(status.error);
 
     return (
         <div className="flex flex-col h-full">
