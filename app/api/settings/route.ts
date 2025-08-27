@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { db, sql } from '@/lib/db';
 import { AppSettings } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -31,28 +31,29 @@ export async function GET() {
     }
 }
 
-// PUT (update) settings using a robust UPSERT strategy inside a transaction
+// PUT (update) settings using a robust transaction
 export async function PUT(req: NextRequest) {
+    const client = await db.connect();
     try {
         const settingsToUpdate = await req.json() as AppSettings;
 
-        // Use a transaction to ensure all settings are updated atomically.
-        // sql.begin handles BEGIN, COMMIT, and ROLLBACK automatically.
-        await sql.begin(async (tx) => {
-            const settingsArray = Object.entries(settingsToUpdate);
-            for (const [key, value] of settingsArray) {
-                // Use the transactional sql client 'tx' for each operation
-                await tx`
-                    INSERT INTO settings (key, value)
-                    VALUES (${key}, ${JSON.stringify(value)})
-                    ON CONFLICT (key) 
-                    DO UPDATE SET value = EXCLUDED.value;
-                `;
-            }
-        });
+        await client.sql`BEGIN`;
+        
+        const settingsArray = Object.entries(settingsToUpdate);
+        for (const [key, value] of settingsArray) {
+            await client.sql`
+                INSERT INTO settings (key, value)
+                VALUES (${key}, ${JSON.stringify(value)})
+                ON CONFLICT (key) 
+                DO UPDATE SET value = EXCLUDED.value;
+            `;
+        }
+        
+        await client.sql`COMMIT`;
         
         return NextResponse.json({ message: 'Settings updated successfully' });
     } catch (error) {
+        await client.sql`ROLLBACK`;
         console.error('Failed to update settings:', error);
         const errorMessage = (error as Error).message;
 
@@ -61,5 +62,7 @@ export async function PUT(req: NextRequest) {
         }
         
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    } finally {
+        client.release();
     }
 }
