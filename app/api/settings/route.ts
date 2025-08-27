@@ -30,28 +30,23 @@ export async function GET() {
     }
 }
 
-// PUT (update) settings
+// PUT (update) settings using a robust UPSERT strategy
 export async function PUT(req: NextRequest) {
     try {
         const settingsToUpdate = await req.json() as AppSettings;
 
-        // Perform individual, explicit UPDATE statements for each setting.
-        // This is a more robust pattern that mirrors other working endpoints (e.g., Contacts).
-        
-        await sql`
-            UPDATE settings SET value = ${JSON.stringify(settingsToUpdate.defaultModelConfig)}
-            WHERE key = 'defaultModelConfig';
-        `;
+        // Iterate over the settings and perform an "UPSERT" for each one.
+        // This is atomic and ensures that if a setting key doesn't exist, it's created.
+        const settingsArray = Object.entries(settingsToUpdate);
 
-        await sql`
-            UPDATE settings SET value = ${JSON.stringify(settingsToUpdate.defaultAgentConfig)}
-            WHERE key = 'defaultAgentConfig';
-        `;
-
-        await sql`
-            UPDATE settings SET value = ${JSON.stringify(settingsToUpdate.enableDebugLog)}
-            WHERE key = 'enableDebugLog';
-        `;
+        for (const [key, value] of settingsArray) {
+            await sql`
+                INSERT INTO settings (key, value)
+                VALUES (${key}, ${JSON.stringify(value)})
+                ON CONFLICT (key) 
+                DO UPDATE SET value = EXCLUDED.value;
+            `;
+        }
         
         return NextResponse.json({ message: 'Settings updated successfully' });
     } catch (error) {

@@ -66,14 +66,15 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
                         <h3 className="font-semibold text-lg mb-2">Default Model Config</h3>
                         <p className="text-sm text-gray-400 mb-4">Settings applied to all new conversations.</p>
                         <div className="space-y-4">
-                            <input type="text" value={localSettings.defaultModelConfig.model} onChange={e => setLocalSettings(s => ({...s!, defaultModelConfig: {...s!.defaultModelConfig, model: e.target.value}}))} placeholder="Model Name" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
+                            <label htmlFor="defaultModel" className="sr-only">Model Name</label>
+                            <input id="defaultModel" name="defaultModel" type="text" value={localSettings.defaultModelConfig.model} onChange={e => setLocalSettings(s => ({...s!, defaultModelConfig: {...s!.defaultModelConfig, model: e.target.value}}))} placeholder="Model Name" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
                             <div>
-                                <label className="block text-sm text-gray-400">Temperature: {localSettings.defaultModelConfig.temperature.toFixed(2)}</label>
-                                <input type="range" min="0" max="1" step="0.01" value={localSettings.defaultModelConfig.temperature} onChange={e => setLocalSettings(s => ({...s!, defaultModelConfig: {...s!.defaultModelConfig, temperature: parseFloat(e.target.value)}}))} className="w-full" />
+                                <label htmlFor="defaultTemperature" className="block text-sm text-gray-400">Temperature: {localSettings.defaultModelConfig.temperature.toFixed(2)}</label>
+                                <input id="defaultTemperature" name="defaultTemperature" type="range" min="0" max="1" step="0.01" value={localSettings.defaultModelConfig.temperature} onChange={e => setLocalSettings(s => ({...s!, defaultModelConfig: {...s!.defaultModelConfig, temperature: parseFloat(e.target.value)}}))} className="w-full" />
                             </div>
                              <div>
-                                <label className="block text-sm text-gray-400">Top P: {localSettings.defaultModelConfig.topP.toFixed(2)}</label>
-                                <input type="range" min="0" max="1" step="0.01" value={localSettings.defaultModelConfig.topP} onChange={e => setLocalSettings(s => ({...s!, defaultModelConfig: {...s!.defaultModelConfig, topP: parseFloat(e.target.value)}}))} className="w-full" />
+                                <label htmlFor="defaultTopP" className="block text-sm text-gray-400">Top P: {localSettings.defaultModelConfig.topP.toFixed(2)}</label>
+                                <input id="defaultTopP" name="defaultTopP" type="range" min="0" max="1" step="0.01" value={localSettings.defaultModelConfig.topP} onChange={e => setLocalSettings(s => ({...s!, defaultModelConfig: {...s!.defaultModelConfig, topP: parseFloat(e.target.value)}}))} className="w-full" />
                             </div>
                         </div>
                     </div>
@@ -81,13 +82,14 @@ const GlobalSettingsModal: React.FC<GlobalSettingsModalProps> = ({ setIsOpen }) 
                     {/* Default Agent Config */}
                     <div className="p-4 bg-gray-900/50 rounded-lg">
                          <h3 className="font-semibold text-lg mb-2">Default Agent Config</h3>
-                        <textarea value={localSettings.defaultAgentConfig.systemPrompt} onChange={e => setLocalSettings(s => ({...s!, defaultAgentConfig: {...s!.defaultAgentConfig, systemPrompt: e.target.value}}))} placeholder="System Prompt" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
+                        <label htmlFor="defaultSystemPrompt" className="sr-only">System Prompt</label>
+                        <textarea id="defaultSystemPrompt" name="defaultSystemPrompt" value={localSettings.defaultAgentConfig.systemPrompt} onChange={e => setLocalSettings(s => ({...s!, defaultAgentConfig: {...s!.defaultAgentConfig, systemPrompt: e.target.value}}))} placeholder="System Prompt" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
                     </div>
 
                      {/* Log Output Setting */}
                     <div className="p-4 bg-gray-900/50 rounded-lg">
-                        <label className="flex items-center gap-3 text-sm font-medium text-gray-300 cursor-pointer">
-                            <input type="checkbox" checked={localSettings.enableDebugLog.enabled} onChange={e => setLocalSettings(s => ({...s!, enableDebugLog: { enabled: e.target.checked }}))} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                        <label htmlFor="enableDebugLog" className="flex items-center gap-3 text-sm font-medium text-gray-300 cursor-pointer">
+                            <input id="enableDebugLog" name="enableDebugLog" type="checkbox" checked={localSettings.enableDebugLog.enabled} onChange={e => setLocalSettings(s => ({...s!, enableDebugLog: { enabled: e.target.checked }}))} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
                             <span>Enable Developer Log Output Panel</span>
                         </label>
                     </div>
