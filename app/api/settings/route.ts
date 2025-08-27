@@ -35,22 +35,17 @@ export async function PUT(req: NextRequest) {
     try {
         const settingsToUpdate = await req.json() as Partial<AppSettings>;
 
-        // Use a transaction to update all settings atomically
-        const client = await sql.connect();
-        try {
-            await client.query('BEGIN');
-            for (const [key, value] of Object.entries(settingsToUpdate)) {
-                await client.query(
-                    'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2',
-                    [key, JSON.stringify(value)]
-                );
-            }
-            await client.query('COMMIT');
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
+        // Iterate over each setting and perform an "upsert" operation.
+        // This is more robust than a manual transaction for this use case.
+        for (const [key, value] of Object.entries(settingsToUpdate)) {
+            // The sql template tag handles parameterization to prevent SQL injection.
+            // We stringify the value object to store it in the JSONB column.
+            await sql`
+                INSERT INTO settings (key, value)
+                VALUES (${key}, ${JSON.stringify(value)})
+                ON CONFLICT (key) DO UPDATE 
+                SET value = EXCLUDED.value;
+            `;
         }
         
         return NextResponse.json({ message: 'Settings updated successfully' });
