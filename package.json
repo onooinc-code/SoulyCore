@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "db:create": "node scripts/create-tables.js",
-    "postinstall": "npm run db:create"
+    "db:seed": "node scripts/seed-features.js",
+    "postinstall": "npm run db:create && npm run db:seed"
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
