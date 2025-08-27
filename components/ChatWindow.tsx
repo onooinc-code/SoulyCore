@@ -6,7 +6,7 @@ import Message from './Message';
 import ChatInput from './ChatInput';
 import type { Message as MessageType, Contact } from '@/lib/types';
 import StatusBar from './StatusBar';
-import ConversationSettingsModal from './ConversationSettingsModal';
+import ConversationSettingsModal from './SettingsModal';
 import AgentConfigModal from './AgentConfigModal';
 import SummaryModal from './SummaryModal';
 import { motion } from 'framer-motion';
