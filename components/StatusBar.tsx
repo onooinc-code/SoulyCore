@@ -16,7 +16,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ onSettingsClick, onAgentConfigCli
 
     return (
         <div className="bg-gray-900 text-gray-400 text-xs p-2 border-t border-gray-700 flex justify-between items-center gap-4">
-            <div className="flex items-center gap-x-3 truncate">
+            <div className="flex items-center gap-x-3 truncate min-w-0">
                <span className="italic truncate">{status.currentAction || 'Ready'}</span>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">

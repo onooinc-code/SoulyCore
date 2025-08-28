@@ -19,7 +19,8 @@ interface MessageProps {
 
 type TextAlign = 'left' | 'right';
 
-const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate }: MessageProps) => {
+// FIX: Explicitly typed the Message component as React.FC<MessageProps> to resolve the issue of 'key' prop not being recognized by TypeScript when used in a list.
+const Message: React.FC<MessageProps> = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate }) => {
     const isUser = message.role === 'user';
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [textAlign, setTextAlign] = useState<TextAlign>('left');

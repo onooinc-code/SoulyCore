@@ -109,7 +109,7 @@ const ChatWindow = () => {
     const isDbError = status.error && /database|vercel|table|relation.+does not exist/i.test(status.error);
 
     return (
-        <div className="flex flex-col h-full bg-gray-900">
+        <div className="flex flex-col flex-1 min-h-0 bg-gray-900">
             <Header />
             <div className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-4xl mx-auto">

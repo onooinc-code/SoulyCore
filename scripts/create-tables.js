@@ -23,6 +23,26 @@ async function createTables() {
         `;
         console.log("Table 'conversations' created or already exists.", conversationsTable.command);
 
+        // Add columns introduced in later versions to support existing databases
+        console.log("Ensuring conversation model columns exist...");
+        try {
+            await sql`ALTER TABLE conversations ADD COLUMN model VARCHAR(255);`;
+        } catch (e) {
+            if (!e.message.includes('column "model" already exists')) throw e;
+        }
+        try {
+            await sql`ALTER TABLE conversations ADD COLUMN temperature REAL;`;
+        } catch (e) {
+            if (!e.message.includes('column "temperature" already exists')) throw e;
+        }
+        try {
+            await sql`ALTER TABLE conversations ADD COLUMN "topP" REAL;`;
+        } catch (e) {
+            if (!e.message.includes('column "topP" already exists')) throw e;
+        }
+        console.log("Conversation model columns checked.");
+
+
         const messagesTable = await sql`
             CREATE TABLE IF NOT EXISTS messages (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

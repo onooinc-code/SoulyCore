@@ -1,6 +1,7 @@
 
 
 
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -70,8 +71,14 @@ const SafeJsonRenderer = ({ jsonString, type }: { jsonString: string; type: 'fil
 
 
 // Main Feature Item Component
+// FIX: Explicitly typed FeatureItem as React.FC to resolve TypeScript error where 'key' prop was not recognized.
+interface FeatureItemProps {
+    feature: Feature;
+    onEdit: () => void;
+    onDelete: () => void;
+}
 // FIX: Removed React.FC to fix framer-motion type inference issue.
-const FeatureItem = ({ feature, onEdit, onDelete }: { feature: Feature; onEdit: () => void; onDelete: () => void; }) => {
+const FeatureItem: React.FC<FeatureItemProps> = ({ feature, onEdit, onDelete }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const { log } = useLog();
 
