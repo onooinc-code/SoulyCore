@@ -46,13 +46,16 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
     }, [fetchPrompts]);
 
     const handleOpenForm = (prompt: Partial<Prompt> | null = null) => {
-        if (currentPrompt?.id === prompt?.id) {
+        // This condition should only apply for toggling an existing prompt's edit form.
+        if (prompt && currentPrompt?.id === prompt.id) {
             setCurrentPrompt(null);
             return;
         }
+    
         const action = prompt ? 'edit' : 'new';
         log(`User opened prompt form for ${action} prompt.`, { promptId: prompt?.id });
-        setCurrentPrompt(prompt || { type: 'single', name: '', content: '' });
+        // Initialize with empty chain_definition for new prompts for robustness
+        setCurrentPrompt(prompt || { type: 'single', name: '', content: '', chain_definition: [] });
     };
 
     const handleSavePrompt = async () => {
@@ -199,7 +202,6 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
                     </div>
 
                     <div className="flex-1 flex flex-col overflow-hidden">
-                         {/* FIX: Corrected typo from renderForm to renderPromptForm */}
                          <AnimatePresence>{currentPrompt && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden flex-shrink-0">{renderPromptForm()}</motion.div>}</AnimatePresence>
 
                         <div className="flex-1 overflow-y-auto pr-2 space-y-3">

@@ -10,6 +10,7 @@ import {
     CopyIcon, FullscreenIcon, ExitFullscreenIcon, ClearIcon, KnowledgeIcon,
     KeyboardIcon,
     PromptsIcon,
+    RefreshIcon,
 } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -134,6 +135,18 @@ const App = () => {
         });
     };
 
+    const closeAllModals = () => {
+        setMemoryCenterOpen(false);
+        setContactsHubOpen(false);
+        setPromptsHubOpen(false);
+        setDevCenterOpen(false);
+        setGlobalSettingsOpen(false);
+        setBookmarksOpen(false);
+        setAddKnowledgeOpen(false);
+        setShortcutsOpen(false);
+    };
+    const anyModalOpen = isMemoryCenterOpen || isContactsHubOpen || isPromptsHubOpen || isDevCenterOpen || isGlobalSettingsOpen || isBookmarksOpen || isAddKnowledgeOpen || isShortcutsOpen;
+
     const lastModelMessage = messages.filter(m => m.role === 'model').pop();
 
     const menuItems: MenuItem[] = [
@@ -142,6 +155,8 @@ const App = () => {
         { label: 'Toggle Sidebar', icon: SidebarLeftIcon, action: () => setSidebarOpen(p => !p) },
         { label: 'Toggle Log Panel', icon: LogIcon, action: () => setLogPanelOpen(p => !p) },
         { label: isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen', icon: isFullscreen ? ExitFullscreenIcon : FullscreenIcon, action: toggleFullscreen },
+        { label: 'Refresh Application', icon: RefreshIcon, action: () => window.location.reload() },
+        { label: 'Close Modal', icon: XIcon, action: closeAllModals, disabled: !anyModalOpen },
         { label: 'Conversation', isSeparator: true },
         { label: 'Generate Title', icon: SparklesIcon, action: () => currentConversation && generateConversationTitle(currentConversation.id), disabled: !currentConversation },
         { label: 'Clear Messages', icon: ClearIcon, action: () => currentConversation && clearMessages(currentConversation.id), disabled: !currentConversation },
