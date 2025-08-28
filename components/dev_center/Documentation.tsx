@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState } from 'react';
@@ -51,4 +49,24 @@ const Documentation = () => {
                         onClick={handleUpdateDocs} 
                         disabled={true} 
                         className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        
+                        title="This feature is disabled pending refactor for server-side architecture."
+                    >
+                        {isLoading ? "Updating..." : "Update Docs from Git"}
+                    </button>
+                </div>
+                <div className="prose-custom bg-gray-900/50 p-4 rounded-lg h-full overflow-y-auto">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{docs}</ReactMarkdown>
+                </div>
+            </div>
+            <div>
+                <h3 className="text-2xl font-bold mb-4">Recent Changes (Mock)</h3>
+                <div className="prose-custom bg-gray-900/50 p-4 rounded-lg h-full overflow-y-auto">
+                    <pre><code>{mockGitDiff}</code></pre>
+                    {updates && <ReactMarkdown remarkPlugins={[remarkGfm]}>{updates}</ReactMarkdown>}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Documentation;
