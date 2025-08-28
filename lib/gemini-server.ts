@@ -1,5 +1,7 @@
 
 
+
+
 import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/genai";
 
 // This function lazily initializes the GoogleGenAI client.
@@ -109,6 +111,7 @@ export const extractDataFromText = async (text: string): Promise<{ entities: any
             }
         });
         
+        // FIX: Per @google/genai guidelines, access the text property directly from the response object.
         if (!result || !result.text) {
             console.error("Data extraction failed: No text in response.");
             return { entities: [], knowledge: [] };
@@ -138,6 +141,7 @@ export const generateProactiveSuggestion = async (history: Content[]): Promise<s
            const prompt = `Based on the last few messages of this conversation, suggest a relevant proactive action. For example, if they are talking about a person, suggest mentioning them with @. If they discuss planning, suggest creating a task. Be concise and phrase it as a question. If no action is obvious, return an empty string. Conversation:\n\n${conversationHistoryText}`;
 
            const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+           // FIX: Per @google/genai guidelines, access the text property directly from the response object.
            if (!result || !result.text) {
             return null;
            }
@@ -164,6 +168,7 @@ export const generateTitleFromHistory = async (history: Content[]): Promise<stri
         const prompt = `Based on the following conversation, create a short and concise title (5 words or less). Do not add quotes or any other formatting.\n\n---\n\n${conversationHistoryText}`;
 
         const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+        // FIX: Per @google/genai guidelines, access the text property directly from the response object.
         if (!result || !result.text) {
             return null;
         }
@@ -180,6 +185,7 @@ export const generateSummary = async (text: string): Promise<string | null> => {
         const ai = getAiClient();
         const prompt = `Provide a concise summary of the following text:\n\n---\n\n${text}`;
         const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+        // FIX: Per @google/genai guidelines, access the text property directly from the response object.
         return result?.text?.trim() || null;
     } catch (e) {
         console.error("Summary generation failed:", e);
@@ -214,6 +220,7 @@ export const regenerateUserPrompt = async (
         `;
 
         const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+        // FIX: Per @google/genai guidelines, access the text property directly from the response object.
         if (!result || !result.text) {
             return null;
         }

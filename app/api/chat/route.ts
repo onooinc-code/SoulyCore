@@ -2,6 +2,8 @@
 
 
 
+
+
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChatResponse, generateEmbedding, generateProactiveSuggestion } from '@/lib/gemini-server';
 import { sql } from '@/lib/db';
@@ -101,6 +103,7 @@ export async function POST(req: NextRequest) {
         if (imagePart) {
             userParts.push(imagePart);
         }
+        // FIX: Ensure contextualPrompt is added as a text part, even if it's the only part.
         if (contextualPrompt) {
             userParts.push({ text: contextualPrompt });
         }
@@ -126,6 +129,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Failed to get response from AI.' }, { status: 500 });
         }
 
+        // FIX: Per @google/genai guidelines, access the text property directly from the response object.
         const responseText = result.text;
         await serverLog('Successfully received AI response');
         

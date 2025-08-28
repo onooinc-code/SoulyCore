@@ -8,7 +8,8 @@ interface MessageFooterProps {
     message: Message;
 }
 
-const MessageFooter: React.FC<MessageFooterProps> = ({ message }) => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const MessageFooter = ({ message }: MessageFooterProps) => {
     const formattedDate = new Date(message.createdAt).toLocaleString([], {
         dateStyle: 'short',
         timeStyle: 'short',

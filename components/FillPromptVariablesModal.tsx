@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -13,6 +14,7 @@ interface FillPromptVariablesModalProps {
     onSubmit: (values: Record<string, string>) => void;
 }
 
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const FillPromptVariablesModal = ({ isOpen, onClose, prompt, variables, onSubmit }: FillPromptVariablesModalProps) => {
     const [variableValues, setVariableValues] = useState<Record<string, string>>({});
 

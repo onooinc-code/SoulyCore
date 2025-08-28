@@ -1,9 +1,11 @@
+
 "use client";
 
 import React from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
 
-const LoadingIndicator: React.FC = () => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const LoadingIndicator = () => {
     const { status } = useAppContext();
 
     return (

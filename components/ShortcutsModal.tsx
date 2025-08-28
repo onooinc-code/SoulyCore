@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -17,6 +18,7 @@ const shortcuts = [
     { key: 'Escape', description: 'Close modals or context menu' },
 ];
 
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
     return (
         <AnimatePresence>

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -12,6 +13,7 @@ interface PromptsHubProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
     const { setStatus, clearError } = useAppContext();
     const { log } = useLog();
@@ -231,6 +233,7 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
 };
 
 
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const WorkflowBuilder = ({ chainDefinition, onChainChange, singlePrompts }: { chainDefinition: PromptChainStep[], onChainChange: (newChain: PromptChainStep[]) => void, singlePrompts: Prompt[] }) => {
     
     const getPromptVariables = (promptId: string): string[] => {

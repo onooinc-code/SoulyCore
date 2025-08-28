@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState } from 'react';
@@ -30,7 +31,8 @@ index 123..456 100644
  // ... rest of diff
 `;
 
-const Documentation: React.FC = () => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const Documentation = () => {
     const [docs, setDocs] = useState(initialDocs);
     const [isLoading, setIsLoading] = useState(false);
     const [updates, setUpdates] = useState('');
@@ -49,28 +51,4 @@ const Documentation: React.FC = () => {
                         onClick={handleUpdateDocs} 
                         disabled={true} 
                         className="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="This feature is disabled pending refactor for server-side architecture."
-                    >
-                        {isLoading ? "Analyzing..." : "Smart Update Docs"}
-                    </button>
-                </div>
-                <div className="prose-custom bg-gray-800 p-4 rounded-lg max-h-[70vh] overflow-y-auto">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{docs}</ReactMarkdown>
-                </div>
-            </div>
-             <div>
-                <h3 className="text-2xl font-bold mb-4">AI-Generated Updates</h3>
-                <div className="prose-custom bg-gray-800 p-4 rounded-lg max-h-[70vh] overflow-y-auto">
-                    {isLoading && <p>Generating documentation updates based on simulated git diff...</p>}
-                    {updates ? (
-                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{updates}</ReactMarkdown>
-                    ) : (
-                        !isLoading && <p className="text-gray-400">Click "Smart Update Docs" to simulate a git diff and have the AI generate new documentation sections.</p>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default Documentation;
+                        

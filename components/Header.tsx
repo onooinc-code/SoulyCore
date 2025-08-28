@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -5,6 +6,7 @@ import { useAppContext } from './providers/AppProvider';
 import { SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LogIcon, MinusIcon, PlusIcon } from './Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// FIX: Removed `React.FC` to fix framer-motion type inference issue.
 const Header = () => {
     const { 
         currentConversation, 

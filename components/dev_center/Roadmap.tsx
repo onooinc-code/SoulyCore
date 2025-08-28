@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState } from 'react';
@@ -12,7 +13,8 @@ interface Idea {
     design?: string;
 }
 
-const Roadmap: React.FC = () => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const Roadmap = () => {
     const [ideas, setIdeas] = useState<Idea[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isDesigning, setIsDesigning] = useState<string | null>(null);

@@ -1,8 +1,10 @@
+
 "use client";
 
-import React, { useState } from 'react';
-import { CopyIcon, BookmarkIcon, BookmarkFilledIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon } from './Icons';
+import React, { useState, useRef, useEffect } from 'react';
+import { CopyIcon, BookmarkIcon, BookmarkFilledIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon, DotsHorizontalIcon } from './Icons';
 import { useLog } from './providers/LogProvider';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MessageToolbarProps {
     isBookmarked: boolean;
@@ -18,11 +20,24 @@ interface MessageToolbarProps {
     onRegenerate: () => void;
 }
 
-const MessageToolbar: React.FC<MessageToolbarProps> = ({
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const MessageToolbar = ({
     isBookmarked, isCollapsed, isUser, onCopy, onBookmark, onSummarize, onToggleCollapse, onSetAlign, onEdit, onDelete, onRegenerate
-}) => {
+}: MessageToolbarProps) => {
     const [copied, setCopied] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
     const { log } = useLog();
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleCopy = () => {
         log('User clicked "Copy message" button.');
@@ -31,33 +46,59 @@ const MessageToolbar: React.FC<MessageToolbarProps> = ({
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const mainActions = [
+        { id: 'copy', icon: copied ? CheckIcon : CopyIcon, action: handleCopy, title: 'Copy message content', className: copied ? 'text-green-400' : 'hover:text-white' },
+        { id: 'bookmark', icon: isBookmarked ? BookmarkFilledIcon : BookmarkIcon, action: onBookmark, title: 'Bookmark this message', className: isBookmarked ? 'text-yellow-400' : 'hover:text-yellow-400' },
+        { id: 'regenerate', icon: RefreshIcon, action: onRegenerate, title: isUser ? 'Rewrite prompt and get new response' : 'Get a new response', className: 'hover:text-white' },
+    ];
+
+    const menuActions = [
+        { id: 'summarize', icon: SummarizeIcon, action: onSummarize, title: 'Summarize message' },
+        { id: 'collapse', icon: isCollapsed ? ExpandIcon : CollapseIcon, action: onToggleCollapse, title: isCollapsed ? 'Expand message' : 'Collapse message' },
+        { id: 'align-left', icon: TextAlignLeftIcon, action: () => onSetAlign('left'), title: 'Align text left' },
+        { id: 'align-right', icon: TextAlignRightIcon, action: () => onSetAlign('right'), title: 'Align text right' },
+        ...(isUser ? [{ id: 'edit', icon: EditIcon, action: onEdit, title: 'Edit your message' }] : []),
+        { id: 'delete', icon: TrashIcon, action: onDelete, title: 'Delete message', className: 'text-red-400' },
+    ];
+
     return (
-        <div className="flex items-center gap-1 text-gray-400 bg-gray-800/50 rounded-full px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={handleCopy} className="p-1 hover:text-white" title="Copy: Copies the raw text content of this message to your clipboard.">
-                {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <CopyIcon className="w-4 h-4" />}
-            </button>
-            <button onClick={onBookmark} className={`p-1 hover:text-yellow-400 ${isBookmarked ? 'text-yellow-400' : ''}`} title="Bookmark: Adds this message to your global list of bookmarks for easy access later.">
-                {isBookmarked ? <BookmarkFilledIcon className="w-4 h-4" /> : <BookmarkIcon className="w-4 h-4" />}
-            </button>
-            <button onClick={onSummarize} className="p-1 hover:text-white" title="Summarize: Generates a concise summary of this message's content.">
-                <SummarizeIcon className="w-4 h-4" />
-            </button>
-            <button onClick={onToggleCollapse} className="p-1 hover:text-white" title={isCollapsed ? "Expand: Show the full content of the message." : "Collapse: Hide the content of this message."}>
-                {isCollapsed ? <ExpandIcon className="w-4 h-4" /> : <CollapseIcon className="w-4 h-4" />}
-            </button>
+        <div className="relative flex items-center gap-1 text-gray-400 bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-full px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {mainActions.map(action => (
+                <button key={action.id} onClick={action.action} className={`p-1.5 rounded-full hover:bg-gray-700/50 ${action.className}`} title={action.title}>
+                    <action.icon className="w-4 h-4" />
+                </button>
+            ))}
             
             <div className="w-px h-4 bg-gray-600 mx-1"></div>
 
-            <button onClick={() => onSetAlign('left')} className="p-1 hover:text-white" title="Align text to the left"><TextAlignLeftIcon className="w-4 h-4"/></button>
-            <button onClick={() => onSetAlign('right')} className="p-1 hover:text-white" title="Align text to the right"><TextAlignRightIcon className="w-4 h-4"/></button>
-
-            <div className="w-px h-4 bg-gray-600 mx-1"></div>
-            
-            {isUser && (
-                 <button onClick={onEdit} className="p-1 hover:text-white" title="Edit: Change the content of your message. The conversation will proceed from the edited version."><EditIcon className="w-4 h-4"/></button>
-            )}
-            <button onClick={onRegenerate} className="p-1 hover:text-white" title={isUser ? "Regenerate: Ask the AI to rewrite your prompt for better clarity and get a new response." : "Regenerate: Request a completely new response from the AI based on the same preceding prompt."}><RefreshIcon className="w-4 h-4"/></button>
-            <button onClick={onDelete} className="p-1 hover:text-red-400" title="Delete: Permanently removes this message from the conversation history."><TrashIcon className="w-4 h-4"/></button>
+            <div className="relative">
+                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 rounded-full hover:bg-gray-700/50 hover:text-white" title="More actions">
+                    <DotsHorizontalIcon className="w-4 h-4" />
+                </button>
+                <AnimatePresence>
+                    {isMenuOpen && (
+                        <motion.div
+                            ref={menuRef}
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            transition={{ duration: 0.15, ease: "easeOut" }}
+                            className="absolute bottom-full right-0 mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-1 z-10"
+                        >
+                            {menuActions.map(action => (
+                                <button
+                                    key={action.id}
+                                    onClick={() => { action.action(); setIsMenuOpen(false); }}
+                                    className={`w-full flex items-center gap-3 text-left px-3 py-1.5 text-sm text-gray-200 rounded-md hover:bg-indigo-600 disabled:opacity-50 ${action.className || ''}`}
+                                >
+                                    <action.icon className="w-4 h-4" />
+                                    <span>{action.title}</span>
+                                </button>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     );
 };

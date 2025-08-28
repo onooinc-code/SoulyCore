@@ -19,6 +19,8 @@
 
 .prose-custom {
   color: #d1d5db;
+  font-size: 1rem; /* Inherit root font size for scaling */
+  line-height: 1.6;
 }
 .prose-custom code {
     color: #e5e7eb;
@@ -55,6 +57,7 @@
 .prose-custom p {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
+    font-size: inherit; /* Ensure paragraphs scale too */
 }
 .prose-custom li > p {
   margin: 0;

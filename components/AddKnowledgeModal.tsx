@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -11,6 +12,7 @@ interface AddKnowledgeModalProps {
     onClose: () => void;
 }
 
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const AddKnowledgeModal = ({ isOpen, onClose }: AddKnowledgeModalProps) => {
     const { setStatus } = useAppContext();
     const { log } = useLog();

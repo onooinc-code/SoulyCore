@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Message as MessageType } from '@/lib/types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -18,15 +19,43 @@ interface MessageProps {
 }
 
 type TextAlign = 'left' | 'right';
+interface MessageSettings {
+    collapsed: boolean;
+    align: TextAlign;
+}
 
-// FIX: Explicitly typed the Message component as React.FC<MessageProps> to resolve the issue of 'key' prop not being recognized by TypeScript when used in a list.
-const Message: React.FC<MessageProps> = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate }) => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate }: MessageProps) => {
     const isUser = message.role === 'user';
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const [textAlign, setTextAlign] = useState<TextAlign>('left');
     const [isEditing, setIsEditing] = useState(false);
     const [editedContent, setEditedContent] = useState(message.content);
     
+    // State for message settings, persisted in local storage
+    const [settings, setSettings] = useState<MessageSettings>({ collapsed: false, align: 'left' });
+
+    useEffect(() => {
+        try {
+            const allSettings = JSON.parse(localStorage.getItem('messageSettings') || '{}');
+            if (allSettings[message.id]) {
+                setSettings(allSettings[message.id]);
+            }
+        } catch (error) {
+            console.error("Failed to parse message settings from localStorage", error);
+        }
+    }, [message.id]);
+    
+    const updateSetting = <K extends keyof MessageSettings>(key: K, value: MessageSettings[K]) => {
+        const newSettings = { ...settings, [key]: value };
+        setSettings(newSettings);
+        try {
+            const allSettings = JSON.parse(localStorage.getItem('messageSettings') || '{}');
+            allSettings[message.id] = newSettings;
+            localStorage.setItem('messageSettings', JSON.stringify(allSettings));
+        } catch (error) {
+             console.error("Failed to save message settings to localStorage", error);
+        }
+    };
+
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
     };
@@ -59,19 +88,19 @@ const Message: React.FC<MessageProps> = ({ message, onSummarize, onToggleBookmar
                  <div className={`flex items-center text-xs text-gray-400 mb-1 ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <MessageToolbar 
                         isBookmarked={message.isBookmarked || false}
-                        isCollapsed={isCollapsed}
+                        isCollapsed={settings.collapsed}
                         isUser={isUser}
                         onCopy={handleCopy}
                         onBookmark={() => onToggleBookmark(message.id)}
                         onSummarize={() => onSummarize(message.content)}
-                        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-                        onSetAlign={setTextAlign}
+                        onToggleCollapse={() => updateSetting('collapsed', !settings.collapsed)}
+                        onSetAlign={(align) => updateSetting('align', align)}
                         onDelete={() => onDelete(message.id)}
                         onEdit={() => setIsEditing(true)}
                         onRegenerate={() => onRegenerate(message.id)}
                     />
                 </div>
-                <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`} style={{ textAlign: textAlign }}>
+                <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`} style={{ textAlign: settings.align }}>
                     {isEditing ? (
                         <div className="not-prose">
                             <textarea
@@ -86,7 +115,7 @@ const Message: React.FC<MessageProps> = ({ message, onSummarize, onToggleBookmar
                                 <button onClick={handleCancelEdit} className="px-3 py-1 text-xs bg-gray-600 rounded hover:bg-gray-500">Cancel</button>
                             </div>
                         </div>
-                    ) : !isCollapsed ? (
+                    ) : !settings.collapsed ? (
                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {message.content}
                         </ReactMarkdown>

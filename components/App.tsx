@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -63,6 +64,7 @@ const PromptsHub = dynamic(() => import('@/components/PromptsHub'), {
 
 type ModalType = 'contactsHub' | 'memoryCenter' | 'devCenter' | 'globalSettings' | 'bookmarks' | 'addKnowledge' | 'shortcuts' | 'promptsHub' | null;
 
+// FIX: Removed `React.FC` to fix framer-motion type inference issue.
 const App = () => {
     const [activeModal, setActiveModal] = useState<ModalType>(null);
     const [contextMenu, setContextMenu] = useState<{ isOpen: boolean; position: { x: number; y: number } }>({ isOpen: false, position: { x: 0, y: 0 } });

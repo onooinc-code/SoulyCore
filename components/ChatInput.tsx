@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -19,7 +20,8 @@ interface ChatInputProps {
     isLoading: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     const { setStatus, setIsLoading } = useAppContext();
     const { log } = useLog();
     const [content, setContent] = useState('');

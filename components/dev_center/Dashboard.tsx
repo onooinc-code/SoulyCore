@@ -1,9 +1,11 @@
 
+
 "use client";
 
 import React from 'react';
 
-const Dashboard: React.FC = () => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const Dashboard = () => {
     // Placeholder functions for stats
     const getComponentCount = () => 25;
     const getHookCount = () => 5;

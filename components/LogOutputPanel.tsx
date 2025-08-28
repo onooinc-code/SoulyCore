@@ -1,6 +1,7 @@
 
 
 
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -18,9 +19,8 @@ type LogLevel = 'info' | 'warn' | 'error';
 type FilterLevel = LogLevel | 'all';
 
 // Component for rendering a single log entry
-// FIX: Explicitly typed LogEntry as React.FC to fix TypeScript error where 'key' prop was not recognized.
-// FIX: Removed React.FC to fix framer-motion type inference issue.
-const LogEntry: React.FC<{ log: LogEntryType }> = ({ log }) => {
+// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+const LogEntry = ({ log }: { log: LogEntryType }) => {
     const [copied, setCopied] = useState(false);
 
     const levelIcon: Record<LogLevel, React.ReactNode> = {

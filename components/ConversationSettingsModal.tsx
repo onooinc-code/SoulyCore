@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -16,6 +17,7 @@ const geminiModels = [
     'gemini-2.5-flash',
 ];
 
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const ConversationSettingsModal = ({ isOpen, onClose }: ConversationSettingsModalProps) => {
     const { currentConversation, updateCurrentConversation, setStatus, clearError } = useAppContext();
     const { log } = useLog();

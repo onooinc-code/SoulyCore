@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -28,6 +29,7 @@ interface ContextMenuProps {
     onClose: () => void;
 }
 
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const ContextMenu = ({ items, position, isOpen, onClose }: ContextMenuProps) => {
     const menuRef = useRef<HTMLDivElement>(null);
 
