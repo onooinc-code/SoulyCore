@@ -407,7 +407,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } finally {
             setStatus({ currentAction: "" });
         }
-    }, [setStatus, log]);
+    }, [messages, setStatus, log]);
 
     const deleteConversation = useCallback(async (conversationId: string) => {
         log(`Deleting conversation: ${conversationId}`);
@@ -508,40 +508,75 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
      const regenerateAiResponse = useCallback(async (messageId: string) => {
         log(`Regenerating AI response for message: ${messageId}`);
+        if (!currentConversation) return;
+
         const messageIndex = messages.findIndex(m => m.id === messageId);
-        
-        // Ensure the message exists and is not the very first message
-        if (messageIndex < 1) return;
-
-        const aiMessageToDelete = messages[messageIndex];
-        // Ensure we are regenerating a 'model' response
-        if (aiMessageToDelete.role !== 'model') return;
-
-        const historyToResend = messages.slice(0, messageIndex);
-        const userPromptMessage = historyToResend[historyToResend.length - 1];
-
-        // Ensure the preceding message is from the user
-        if (userPromptMessage.role !== 'user') return;
-        
-        // Delete the old AI response from the database and UI
-        try {
-            const res = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error('Failed to delete the previous AI response.');
-            log('Successfully deleted old AI response from DB.', { messageId });
-            // Update UI state after successful deletion
-            setMessages(prev => prev.filter(m => m.id !== messageId));
-        } catch (error) {
-            const errorMessage = (error as Error).message;
-            setStatus({ error: `Failed to remove the previous response. Please try again. Error: ${errorMessage}` });
-            log('Error deleting old AI response during regeneration.', { messageId, error }, 'error');
-            return; // Stop the process if deletion fails
+        if (messageIndex < 1 || messages[messageIndex].role !== 'model') {
+            log('Regeneration aborted: Invalid message selected.', { messageId, role: messages[messageIndex]?.role });
+            return;
         }
 
-        // Call addMessage with the history *before* the deleted AI message
-        // It will handle the API call and add the new AI response to the UI
-        await addMessage(userPromptMessage, [], historyToResend);
+        const historyToResend = messages.slice(0, messageIndex);
+        if (historyToResend[historyToResend.length - 1].role !== 'user') {
+            log('Regeneration aborted: Preceding message is not from user.', { messageId });
+            return;
+        }
+        
+        setIsLoading(true);
+        setStatus({ currentAction: "Getting new response...", error: null });
 
-    }, [messages, addMessage, log, setStatus]);
+        try {
+            // Delete the old AI response from the database and UI first
+            const deleteRes = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
+            if (!deleteRes.ok) throw new Error('Failed to delete the previous AI response.');
+            log('Successfully deleted old AI response from DB.', { messageId });
+            setMessages(prev => prev.filter(m => m.id !== messageId));
+
+            // Now, get a new response
+            const chatApiPayload = { 
+                messages: historyToResend, 
+                conversation: currentConversation,
+            };
+            log('Sending request to /api/chat for regeneration', chatApiPayload);
+
+            const chatRes = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(chatApiPayload)
+            });
+            if (!chatRes.ok) {
+                 const errorData = await chatRes.json();
+                 throw new Error(errorData.error || 'Failed to get new AI response');
+            }
+            const { response: aiResponse } = await chatRes.json();
+            log('Received regenerated response from /api/chat.', { aiResponse });
+            
+            if (aiResponse) {
+                const aiMessageData: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
+                    role: 'model',
+                    content: aiResponse,
+                    tokenCount: Math.ceil(aiResponse.length / 4),
+                };
+                const aiMsgRes = await fetch(`/api/conversations/${currentConversation.id}/messages`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ message: aiMessageData }),
+                });
+                if (!aiMsgRes.ok) throw new Error("Failed to save new AI's message.");
+                const savedAiMessage = await aiMsgRes.json();
+                setMessages(prev => [...prev, savedAiMessage!]);
+            }
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: `Failed during regeneration. ${errorMessage}` });
+            log('Error regenerating AI response.', { messageId, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
+            // If something fails after deleting the message, we should probably try to refetch
+            fetchMessages(currentConversation.id);
+        } finally {
+            setIsLoading(false);
+            setStatus({ currentAction: "" });
+        }
+    }, [messages, currentConversation, log, setStatus, fetchMessages]);
 
     const regenerateUserPromptAndGetResponse = useCallback(async (messageId: string) => {
         log(`Regenerating user prompt and getting new response for message: ${messageId}`);

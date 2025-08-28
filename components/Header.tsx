@@ -58,7 +58,9 @@ const Header = () => {
                     animation: 'move-glow 4s linear infinite'
                 }}
             ></div>
-            <style jsx global>{`
+            {/* FIX: Replaced duplicated and non-standard <style jsx> tags with a single standard <style> tag.
+                This resolves the TypeScript error and removes the redundant CSS definition. */}
+            <style>{`
                 @keyframes move-glow {
                     0% { transform: translateX(-100%); }
                     100% { transform: translateX(100%); }
