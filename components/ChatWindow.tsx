@@ -109,9 +109,9 @@ const ChatWindow = () => {
     const isDbError = status.error && /database|vercel|table|relation.+does not exist/i.test(status.error);
 
     return (
-        <div className="flex flex-col h-full relative">
+        <div className="flex flex-col h-full bg-gray-900">
             <Header />
-            <div className="flex-1 p-6 overflow-y-auto"> {/* Removed padding-top */}
+            <div className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-4xl mx-auto">
                     {messages.length > 0 ? (
                         <div className="space-y-4">

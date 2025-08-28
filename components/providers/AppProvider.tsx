@@ -136,14 +136,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         if (!findAndSetConvo(conversations)) {
-            log('Conversation not in cache, reloading conversation list.');
-            await loadConversations();
-            // Need to fetch fresh conversations to find the new one
+            log('Conversation not in cache, reloading conversation list to find it.');
             const freshResponse = await fetch('/api/conversations');
+            if (!freshResponse.ok) {
+                 log('Failed to reload conversation list.', null, 'error');
+                 return;
+            }
             const freshConvos = await freshResponse.json();
-            findAndSetConvo(freshConvos);
+            setConversations(freshConvos);
+            if (!findAndSetConvo(freshConvos)) {
+                log('Could not find the new conversation even after refresh.', { conversationId }, 'error');
+            }
         }
-    }, [conversations, fetchMessages, loadConversations, log]);
+    }, [conversations, fetchMessages, log]);
 
     const updateCurrentConversation = useCallback((updatedData: Partial<Conversation>) => {
         if (currentConversation) {
@@ -153,18 +158,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setConversations(convos => convos.map(c => c.id === newConversation.id ? newConversation : c));
         }
     }, [currentConversation, log]);
-
+    
     const createNewConversation = useCallback(async () => {
-        log('Creating new conversation.');
-        setCurrentConversation(null);
-        setMessages([]);
-    }, [log]);
+        log('Creating new conversation via API.');
+        setIsLoading(true);
+        setStatus({ currentAction: "Creating new chat..." });
+        try {
+            const res = await fetch('/api/conversations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: 'New Chat' })
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({ error: 'Failed to create conversation on the server.' }));
+                throw new Error(errorData.error || 'Failed to create conversation');
+            }
+            const newConversation: Conversation = await res.json();
+            log('Successfully created new conversation in DB.', newConversation);
+
+            await loadConversations(); // Refresh the sidebar list
+            setCurrentConversationById(newConversation.id); // Set the new conversation as active
+
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Error in createNewConversation process.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
+        } finally {
+            setIsLoading(false);
+            setStatus({ currentAction: "" });
+        }
+    }, [log, setIsLoading, setStatus, loadConversations, setCurrentConversationById]);
 
     const addMessage = useCallback(async (
         message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, 
         mentionedContacts?: Contact[],
         historyOverride?: Message[],
     ) => {
+        if (!currentConversation) {
+            setStatus({ error: "Cannot send a message. No active conversation selected." });
+            log('addMessage failed: No current conversation.', null, 'error');
+            return { aiResponse: null, suggestion: null };
+        }
+
         setIsLoading(true);
         setStatus({ currentAction: "Processing...", error: null });
         log('Starting addMessage process.', { message, mentionedContacts, historyOverride });
@@ -173,7 +209,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             ...message, 
             id: crypto.randomUUID(), 
             createdAt: new Date(), 
-            conversationId: currentConversation?.id || 'temp'
+            conversationId: currentConversation.id
         };
         // Only add user message to UI if it's a new message, not a regeneration
         if (!historyOverride) {
@@ -182,36 +218,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         try {
-            let conversationToUpdate = currentConversation;
-            
-            if (!conversationToUpdate) {
-                log('No active conversation, creating a new one.');
-                const res = await fetch('/api/conversations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title: 'New Chat' })
-                });
-                if (!res.ok) throw new Error('Failed to create conversation');
-                const newConversation = await res.json();
-                conversationToUpdate = newConversation;
-                setCurrentConversation(newConversation);
-                await loadConversations();
-                log('Successfully created and set new conversation.', newConversation);
-            }
-            
-            if (!conversationToUpdate) throw new Error("Conversation could not be established.");
-
-            const finalUserMessage: Message = { ...optimisticUserMessage, conversationId: conversationToUpdate.id };
-            
             // For a normal message send, add the optimistic message before sending.
             // For a regeneration, the history is provided and already correct.
             let messageHistory = historyOverride ? [...historyOverride] : [...messages.filter(m => m.id !== optimisticUserMessage.id)];
 
             log('Saving user message to DB...');
-            const userMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
+            const userMsgRes = await fetch(`/api/conversations/${currentConversation.id}/messages`, {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ message: finalUserMessage }),
+                 body: JSON.stringify({ message: optimisticUserMessage }),
             });
             if (!userMsgRes.ok) throw new Error("Failed to save your message.");
             const savedUserMessage = await userMsgRes.json();
@@ -228,7 +243,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             
             const chatApiPayload = { 
                 messages: messageHistory, 
-                conversation: conversationToUpdate,
+                conversation: currentConversation,
                 mentionedContacts,
             };
             log('Sending request to /api/chat', chatApiPayload);
@@ -251,7 +266,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     tokenCount: Math.ceil(aiResponse.length / 4), // Estimate token count
                 };
                 log('Saving AI message to DB...');
-                 const aiMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
+                 const aiMsgRes = await fetch(`/api/conversations/${currentConversation.id}/messages`, {
                      method: 'POST',
                      headers: { 'Content-Type': 'application/json' },
                      body: JSON.stringify({ message: aiMessageData }),
@@ -289,7 +304,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setIsLoading(false);
             setStatus({ currentAction: "" });
         }
-    }, [currentConversation, loadConversations, messages, setStatus, log]);
+    }, [currentConversation, messages, setStatus, log]);
 
     const toggleBookmark = useCallback(async (messageId: string) => {
         setStatus({ currentAction: "Updating bookmark..." });

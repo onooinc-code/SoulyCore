@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -86,8 +87,10 @@ const App = () => {
                         {isSidebarOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
                     </button>
                     
-                    <main className="flex-1 flex flex-col overflow-y-auto">
-                        <ChatWindow />
+                    <main className="flex-1 flex flex-col overflow-hidden">
+                        <div className="flex-1 min-h-0">
+                            <ChatWindow />
+                        </div>
                         <LogOutputPanel isOpen={isLogPanelOpen} />
                     </main>
                 </div>
