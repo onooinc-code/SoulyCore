@@ -7,14 +7,19 @@ import type { SVGProps } from 'react';
 // Define a generic IconType
 export type IconType = React.FC<SVGProps<SVGSVGElement>>;
 
-
-export interface MenuItem {
+export type MenuItem = {
+    isSeparator: true;
+    label?: never;
+    action?: never;
+    icon?: never;
+    disabled?: never;
+} | {
     label: string;
     action?: () => void;
     icon?: IconType;
     disabled?: boolean;
-    isSeparator?: boolean;
-}
+    isSeparator?: false | undefined;
+};
 
 interface ContextMenuProps {
     items: MenuItem[];

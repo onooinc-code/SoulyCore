@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -5,12 +6,13 @@ import Sidebar from '@/components/Sidebar';
 import ChatWindow from '@/components/ChatWindow';
 import MorningBriefing from '@/components/MorningBriefing';
 import { 
-    MenuIcon, XIcon, MemoryIcon, PlusIcon, TrashIcon, SparklesIcon,
+    XIcon, MemoryIcon, PlusIcon, TrashIcon, SparklesIcon,
     SidebarLeftIcon, LogIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon,
-    CopyIcon, FullscreenIcon, ExitFullscreenIcon, ClearIcon, KnowledgeIcon,
+    FullscreenIcon, ExitFullscreenIcon, ClearIcon, KnowledgeIcon,
     KeyboardIcon,
     PromptsIcon,
     RefreshIcon,
+    MinusIcon,
 } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -56,43 +58,42 @@ const ShortcutsModal = dynamic(() => import('@/components/ShortcutsModal'), {
 
 const PromptsHub = dynamic(() => import('@/components/PromptsHub'), {
     ssr: false,
-    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Prompts...</p></div>
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Prompts Hub...</p></div>
 });
 
+type ModalType = 'contactsHub' | 'memoryCenter' | 'devCenter' | 'globalSettings' | 'bookmarks' | 'addKnowledge' | 'shortcuts' | 'promptsHub' | null;
 
 const App = () => {
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const [isLogPanelOpen, setLogPanelOpen] = useState(false);
+    const [activeModal, setActiveModal] = useState<ModalType>(null);
+    const [contextMenu, setContextMenu] = useState<{ isOpen: boolean; position: { x: number; y: number } }>({ isOpen: false, position: { x: 0, y: 0 } });
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    
     const { 
         createNewConversation, 
-        currentConversation, 
-        deleteConversation, 
+        currentConversation,
+        deleteConversation,
         generateConversationTitle,
         clearMessages,
         messages,
-        toggleBookmark,
-        setCurrentConversation,
+        isLoading,
+        changeFontSize,
     } = useAppContext();
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
-    const [isMemoryCenterOpen, setMemoryCenterOpen] = useState(false);
-    const [isContactsHubOpen, setContactsHubOpen] = useState(false);
-    const [isPromptsHubOpen, setPromptsHubOpen] = useState(false);
-    const [isDevCenterOpen, setDevCenterOpen] = useState(false);
-    const [isGlobalSettingsOpen, setGlobalSettingsOpen] = useState(false);
-    const [isBookmarksOpen, setBookmarksOpen] = useState(false);
-    const [isLogPanelOpen, setLogPanelOpen] = useState(false);
-    const [isAddKnowledgeOpen, setAddKnowledgeOpen] = useState(false);
-    const [isShortcutsOpen, setShortcutsOpen] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
 
-    const [contextMenu, setContextMenu] = useState<{ isOpen: boolean; position: { x: number; y: number } }>({
-        isOpen: false,
-        position: { x: 0, y: 0 },
-    });
+    const handleContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setContextMenu({ isOpen: true, position: { x: e.clientX, y: e.clientY } });
+    };
 
-    useKeyboardShortcuts({
-        'mod+k': () => setMemoryCenterOpen(prev => !prev),
-        'mod+n': () => createNewConversation(),
-    });
-
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(err => console.error(err));
+        } else {
+            document.exitFullscreen().then(() => setIsFullscreen(false));
+        }
+    };
+    
     useEffect(() => {
         const handleFullscreenChange = () => {
             setIsFullscreen(!!document.fullscreenElement);
@@ -101,142 +102,99 @@ const App = () => {
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
-    const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-        } else {
-            document.exitFullscreen();
+    useKeyboardShortcuts({
+        'mod+n': createNewConversation,
+        'mod+k': () => setActiveModal('memoryCenter'),
+        'escape': () => {
+            if (activeModal) setActiveModal(null);
+            if (contextMenu.isOpen) setContextMenu(prev => ({ ...prev, isOpen: false }));
         }
-    };
-    
-    const runMemoryPipeline = () => {
-        if (!currentConversation || messages.length < 2) {
-            alert("Need at least one user/model exchange to run memory pipeline.");
-            return;
-        }
-        const lastTwoMessages = messages.slice(-2);
-        const textToAnalyze = lastTwoMessages.map(m => m.content).join('\n');
-        
-        fetch('/api/memory/pipeline', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ textToAnalyze })
-        })
-        .then(res => res.json())
-        .then(data => alert(`Memory pipeline run successfully! New knowledge upserted: ${data.newKnowledgeUpserted}`))
-        .catch(err => alert(`Memory pipeline trigger failed: ${err.message}`));
-    };
-    
-    const handleContextMenu = (e: React.MouseEvent) => {
-        e.preventDefault();
-        setContextMenu({
-            isOpen: true,
-            position: { x: e.clientX, y: e.clientY },
-        });
-    };
+    });
 
-    const closeAllModals = () => {
-        setMemoryCenterOpen(false);
-        setContactsHubOpen(false);
-        setPromptsHubOpen(false);
-        setDevCenterOpen(false);
-        setGlobalSettingsOpen(false);
-        setBookmarksOpen(false);
-        setAddKnowledgeOpen(false);
-        setShortcutsOpen(false);
-    };
-    const anyModalOpen = isMemoryCenterOpen || isContactsHubOpen || isPromptsHubOpen || isDevCenterOpen || isGlobalSettingsOpen || isBookmarksOpen || isAddKnowledgeOpen || isShortcutsOpen;
-
-    const lastModelMessage = messages.filter(m => m.role === 'model').pop();
-
-    const menuItems: MenuItem[] = [
-        { label: 'Application', isSeparator: true },
-        { label: 'New Conversation', icon: PlusIcon, action: createNewConversation },
-        { label: 'Toggle Sidebar', icon: SidebarLeftIcon, action: () => setSidebarOpen(p => !p) },
-        { label: 'Toggle Log Panel', icon: LogIcon, action: () => setLogPanelOpen(p => !p) },
-        { label: isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen', icon: isFullscreen ? ExitFullscreenIcon : FullscreenIcon, action: toggleFullscreen },
-        { label: 'Refresh Application', icon: RefreshIcon, action: () => window.location.reload() },
-        { label: 'Close Modal', icon: XIcon, action: closeAllModals, disabled: !anyModalOpen },
-        { label: 'Conversation', isSeparator: true },
-        { label: 'Generate Title', icon: SparklesIcon, action: () => currentConversation && generateConversationTitle(currentConversation.id), disabled: !currentConversation },
-        { label: 'Clear Messages', icon: ClearIcon, action: () => currentConversation && clearMessages(currentConversation.id), disabled: !currentConversation },
-        { label: 'Close Conversation', icon: XIcon, action: () => setCurrentConversation(null), disabled: !currentConversation },
-        { label: 'Delete Conversation', icon: TrashIcon, action: () => currentConversation && deleteConversation(currentConversation.id), disabled: !currentConversation },
-        { label: 'Message Actions', isSeparator: true },
-        { label: 'Copy Last Response', icon: CopyIcon, action: () => lastModelMessage && navigator.clipboard.writeText(lastModelMessage.content), disabled: !lastModelMessage },
-        { label: 'Bookmark Last Response', icon: BookmarkListIcon, action: () => lastModelMessage && toggleBookmark(lastModelMessage.id), disabled: !lastModelMessage },
-        { label: 'Memory & Knowledge', isSeparator: true },
-        { label: 'Run Memory Pipeline', icon: MemoryIcon, action: runMemoryPipeline, disabled: !currentConversation || messages.length < 2 },
-        { label: 'Add Knowledge Snippet', icon: KnowledgeIcon, action: () => setAddKnowledgeOpen(true) },
-        { label: 'Quick Access', isSeparator: true },
-        { label: 'Open Memory Center', icon: MemoryIcon, action: () => setMemoryCenterOpen(true) },
-        { label: 'Open Contacts Hub', icon: UsersIcon, action: () => setContactsHubOpen(true) },
-        { label: 'Open Prompts Hub', icon: PromptsIcon, action: () => setPromptsHubOpen(true) },
-        { label: 'Open Dev Center', icon: CodeIcon, action: () => setDevCenterOpen(true) },
-        { label: 'Open Bookmarks', icon: BookmarkListIcon, action: () => setBookmarksOpen(true) },
-        { label: 'Help', isSeparator: true },
-        { label: 'Keyboard Shortcuts', icon: KeyboardIcon, action: () => setShortcutsOpen(true) },
-        { label: 'Global Settings', icon: SettingsIcon, action: () => setGlobalSettingsOpen(true) },
+    const contextMenuItems: MenuItem[] = [
+        { label: 'New Chat', action: createNewConversation, icon: PlusIcon, disabled: isLoading },
+        { label: 'Refresh Application', action: () => window.location.reload(), icon: RefreshIcon },
+        { label: 'Toggle Fullscreen', action: toggleFullscreen, icon: isFullscreen ? ExitFullscreenIcon : FullscreenIcon },
+        { label: 'Close Modal', action: () => setActiveModal(null), icon: XIcon, disabled: !activeModal },
+        { isSeparator: true },
+        { label: 'Generate Title', action: () => currentConversation && generateConversationTitle(currentConversation.id), icon: SparklesIcon, disabled: !currentConversation || messages.length < 2 },
+        { label: 'Clear Messages', action: () => currentConversation && window.confirm('Are you sure you want to clear all messages in this conversation?') && clearMessages(currentConversation.id), icon: ClearIcon, disabled: !currentConversation || messages.length === 0 },
+        { label: 'Delete Conversation', action: () => currentConversation && window.confirm('Are you sure you want to delete this conversation?') && deleteConversation(currentConversation.id), icon: TrashIcon, disabled: !currentConversation },
+        { isSeparator: true },
+        { label: 'Add Knowledge Snippet', action: () => setActiveModal('addKnowledge'), icon: KnowledgeIcon },
+        { label: 'Open Memory Center', action: () => setActiveModal('memoryCenter'), icon: MemoryIcon },
+        { label: 'Open Contacts Hub', action: () => setActiveModal('contactsHub'), icon: UsersIcon },
+        { label: 'Open Prompts Hub', action: () => setActiveModal('promptsHub'), icon: PromptsIcon },
+        { isSeparator: true },
+        { label: 'View Bookmarks', action: () => setActiveModal('bookmarks'), icon: BookmarkListIcon },
+        { label: 'Keyboard Shortcuts', action: () => setActiveModal('shortcuts'), icon: KeyboardIcon },
+        { label: 'Global Settings', action: () => setActiveModal('globalSettings'), icon: SettingsIcon },
+        { label: 'SoulyDev Center', action: () => setActiveModal('devCenter'), icon: CodeIcon },
     ];
 
     return (
-        <>
-            <MorningBriefing />
-            <div className="flex h-screen bg-gray-900 text-gray-200 font-sans overflow-hidden" onContextMenu={handleContextMenu}>
-                <AnimatePresence>
-                    {isSidebarOpen && (
-                         <motion.div
-                            initial={{ x: '-100%', width: 0 }}
-                            animate={{ x: 0, width: '16rem' }} // 16rem is w-64
-                            exit={{ x: '-100%', width: 0 }}
-                            transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="fixed inset-y-0 left-0 z-30 bg-gray-800 md:relative md:flex-shrink-0"
-                        >
-                           <Sidebar 
-                                setMemoryCenterOpen={setMemoryCenterOpen}
-                                setContactsHubOpen={setContactsHubOpen} 
-                                setPromptsHubOpen={setPromptsHubOpen}
-                                setDevCenterOpen={setDevCenterOpen}
-                                setGlobalSettingsOpen={setGlobalSettingsOpen}
-                                setBookmarksOpen={setBookmarksOpen}
-                                setLogPanelOpen={setLogPanelOpen}
-                                isSidebarOpen={isSidebarOpen}
-                                setSidebarOpen={setSidebarOpen}
-                           />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-                
-                <div className={`fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)}></div>
-
-                <div className="flex-1 flex flex-col relative">
-                    <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="absolute top-4 left-4 z-40 md:hidden p-2 rounded-md bg-gray-700 hover:bg-gray-600">
-                        {isSidebarOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
-                    </button>
-                    
-                    <ChatWindow />
-                    <LogOutputPanel isOpen={isLogPanelOpen} />
-                </div>
-                
-                <AnimatePresence>
-                    {isMemoryCenterOpen && <MemoryCenter setIsOpen={setMemoryCenterOpen} />}
-                    {isContactsHubOpen && <ContactsHub setIsOpen={setContactsHubOpen} />}
-                    {isPromptsHubOpen && <PromptsHub setIsOpen={setPromptsHubOpen} />}
-                    {isDevCenterOpen && <DevCenter setIsOpen={setDevCenterOpen} />}
-                    {isGlobalSettingsOpen && <GlobalSettingsModal setIsOpen={setGlobalSettingsOpen} />}
-                    {isBookmarksOpen && <BookmarksModal isOpen={isBookmarksOpen} setIsOpen={setBookmarksOpen} />}
-                    {isAddKnowledgeOpen && <AddKnowledgeModal isOpen={isAddKnowledgeOpen} onClose={() => setAddKnowledgeOpen(false)} />}
-                    {isShortcutsOpen && <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setShortcutsOpen(false)} />}
-                </AnimatePresence>
-                
-                <ContextMenu 
-                    items={menuItems} 
-                    isOpen={contextMenu.isOpen} 
-                    position={contextMenu.position} 
-                    onClose={() => setContextMenu({ ...contextMenu, isOpen: false })} 
-                />
+        <main onContextMenu={handleContextMenu} className="flex h-screen w-screen bg-gray-900 overflow-hidden">
+            <AnimatePresence>
+                {isSidebarOpen && (
+                    <motion.div
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 288, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="flex-shrink-0 h-full"
+                    >
+                        <Sidebar 
+                            setMemoryCenterOpen={() => setActiveModal('memoryCenter')}
+                            setContactsHubOpen={() => setActiveModal('contactsHub')}
+                            setDevCenterOpen={() => setActiveModal('devCenter')}
+                            setGlobalSettingsOpen={() => setActiveModal('globalSettings')}
+                            setBookmarksOpen={() => setActiveModal('bookmarks')}
+                            setPromptsHubOpen={() => setActiveModal('promptsHub')}
+                            setLogPanelOpen={setLogPanelOpen}
+                            isSidebarOpen={isSidebarOpen}
+                            setSidebarOpen={setSidebarOpen}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            
+            <div className="flex-1 flex flex-col min-w-0">
+                <ChatWindow />
+                <LogOutputPanel isOpen={isLogPanelOpen} />
             </div>
-        </>
+
+            <MorningBriefing />
+
+            {activeModal === 'contactsHub' && <ContactsHub setIsOpen={() => setActiveModal(null)} />}
+            {activeModal === 'memoryCenter' && <MemoryCenter setIsOpen={() => setActiveModal(null)} />}
+            {activeModal === 'devCenter' && <DevCenter setIsOpen={() => setActiveModal(null)} />}
+            {activeModal === 'globalSettings' && <GlobalSettingsModal setIsOpen={() => setActiveModal(null)} />}
+            {activeModal === 'bookmarks' && <BookmarksModal isOpen={activeModal === 'bookmarks'} setIsOpen={() => setActiveModal(null)} />}
+            {activeModal === 'addKnowledge' && <AddKnowledgeModal isOpen={activeModal === 'addKnowledge'} onClose={() => setActiveModal(null)} />}
+            {activeModal === 'shortcuts' && <ShortcutsModal isOpen={activeModal === 'shortcuts'} onClose={() => setActiveModal(null)} />}
+            {activeModal === 'promptsHub' && <PromptsHub setIsOpen={() => setActiveModal(null)} />}
+            
+            <ContextMenu items={contextMenuItems} position={contextMenu.position} isOpen={contextMenu.isOpen} onClose={() => setContextMenu(prev => ({ ...prev, isOpen: false }))} />
+            
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+                <div className="flex items-center gap-2">
+                    <button onClick={() => changeFontSize('decrease')} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title="Decrease font size">
+                        <MinusIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => changeFontSize('increase')} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title="Increase font size">
+                        <PlusIcon className="w-5 h-5" />
+                    </button>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setSidebarOpen(prev => !prev)} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}>
+                        <SidebarLeftIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setLogPanelOpen(prev => !prev)} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title={isLogPanelOpen ? "Hide Log Panel" : "Show Log Panel"}>
+                        <LogIcon className="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
+        </main>
     );
 };
 

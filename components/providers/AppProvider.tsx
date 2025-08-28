@@ -37,9 +37,12 @@ interface AppContextType {
     regenerateUserPromptAndGetResponse: (messageId: string) => Promise<void>;
     unreadConversations: Set<string>;
     clearMessages: (conversationId: string) => Promise<void>;
+    changeFontSize: (direction: 'increase' | 'decrease') => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const fontSizeSteps = ['sm', 'base', 'lg', 'xl'];
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -50,9 +53,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const { log, setLoggingEnabled } = useLog();
 
-    // State for unread conversation indicators
     const [unreadConversations, setUnreadConversations] = useState(new Set<string>());
     const isVisibleRef = useRef(true);
+    const [fontSize, setFontSize] = useState('base');
+
+    useEffect(() => {
+        const savedFontSize = localStorage.getItem('app-font-size');
+        if (savedFontSize && fontSizeSteps.includes(savedFontSize)) {
+            setFontSize(savedFontSize);
+        }
+    }, []);
+
+    useEffect(() => {
+        fontSizeSteps.forEach(step => {
+            document.documentElement.classList.remove(`font-size-${step}`);
+        });
+        document.documentElement.classList.add(`font-size-${fontSize}`);
+        localStorage.setItem('app-font-size', fontSize);
+    }, [fontSize]);
+
+    const changeFontSize = useCallback((direction: 'increase' | 'decrease') => {
+        const currentIndex = fontSizeSteps.indexOf(fontSize);
+        if (direction === 'increase' && currentIndex < fontSizeSteps.length - 1) {
+            setFontSize(fontSizeSteps[currentIndex + 1]);
+        } else if (direction === 'decrease' && currentIndex > 0) {
+            setFontSize(fontSizeSteps[currentIndex - 1]);
+        }
+    }, [fontSize]);
+
 
     // Effect to track if the browser tab is active
     useEffect(() => {
@@ -631,6 +659,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             regenerateUserPromptAndGetResponse,
             unreadConversations,
             clearMessages,
+            changeFontSize,
         }}>
             {children}
         </AppContext.Provider>

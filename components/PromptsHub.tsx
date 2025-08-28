@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -283,7 +284,7 @@ const WorkflowBuilder = ({ chainDefinition, onChainChange, singlePrompts }: { ch
     };
 
     return (
-        <div className="bg-gray-800 p-3 rounded-lg space-y-3">
+        <div className="bg-gray-800 p-3 rounded-lg space-y-3 max-h-64 overflow-y-auto">
             <h4 className="text-sm font-semibold">Workflow Steps</h4>
             {chainDefinition.map((step, index) => (
                 <div key={index} className="bg-gray-700/50 p-3 rounded-md">
