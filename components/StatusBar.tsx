@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { CogIcon, UserCircleIcon, BookmarkIcon, CpuChipIcon } from './Icons';
+import { CogIcon, UserCircleIcon, BookmarkIcon, CpuChipIcon, ClockIcon, DocumentTextIcon } from './Icons';
 import { ChatBubbleLeftRightIcon } from './Icons';
 
 interface StatusBarProps {
@@ -15,13 +15,18 @@ const StatusBar = ({ onSettingsClick, onAgentConfigClick }: StatusBarProps) => {
     const model = currentConversation?.model || 'gemini-2.5-flash';
 
     const conversationStats = useMemo(() => {
-        if (!currentConversation) return null;
+        if (!currentConversation || messages.length === 0) return null;
         
         const messageCount = messages.length;
         const totalTokens = messages.reduce((acc, msg) => acc + (msg.tokenCount || 0), 0);
         const bookmarkedCount = messages.filter(msg => msg.isBookmarked).length;
+        const wordCount = messages.reduce((acc, msg) => acc + (msg.content.split(/\s+/).filter(Boolean).length || 0), 0);
+
+        const modelMessages = messages.filter(m => m.role === 'model' && m.responseTime);
+        const totalResponseTime = modelMessages.reduce((acc, msg) => acc + (msg.responseTime || 0), 0);
+        const avgResponseTime = modelMessages.length > 0 ? Math.round(totalResponseTime / modelMessages.length) : 0;
         
-        return { messageCount, totalTokens, bookmarkedCount };
+        return { messageCount, totalTokens, bookmarkedCount, wordCount, avgResponseTime };
     }, [currentConversation, messages]);
 
     return (
@@ -36,6 +41,10 @@ const StatusBar = ({ onSettingsClick, onAgentConfigClick }: StatusBarProps) => {
                         <ChatBubbleLeftRightIcon className="w-4 h-4" />
                         <span>{conversationStats.messageCount}</span>
                     </div>
+                     <div className="flex items-center gap-1.5" title="Total words in this conversation">
+                        <DocumentTextIcon className="w-4 h-4" />
+                        <span>{conversationStats.wordCount}</span>
+                    </div>
                     <div className="flex items-center gap-1.5" title="Total tokens used in this conversation">
                         <CpuChipIcon className="w-4 h-4" />
                         <span>{conversationStats.totalTokens}</span>
@@ -43,6 +52,10 @@ const StatusBar = ({ onSettingsClick, onAgentConfigClick }: StatusBarProps) => {
                     <div className="flex items-center gap-1.5" title="Bookmarked messages in this conversation">
                         <BookmarkIcon className="w-4 h-4" />
                         <span>{conversationStats.bookmarkedCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5" title="Average AI response time">
+                        <ClockIcon className="w-4 h-4" />
+                        <span>{conversationStats.avgResponseTime} ms</span>
                     </div>
                 </div>
             )}

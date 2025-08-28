@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
 import type { Conversation, Message, Contact, AppSettings } from '@/lib/types';
 import { useLog } from './LogProvider';
 import { Content } from '@google/genai';
@@ -642,40 +642,50 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [messages, currentConversation, log, setStatus]);
 
 
+    const contextValue = useMemo(() => ({
+        conversations,
+        currentConversation,
+        messages,
+        setCurrentConversation: setCurrentConversationById,
+        updateCurrentConversation,
+        createNewConversation,
+        addMessage,
+        toggleBookmark,
+        loadConversations,
+        isLoading,
+        setIsLoading,
+        status,
+        setStatus,
+        clearError,
+        settings,
+        loadSettings,
+        setSettings,
+        deleteConversation,
+        updateConversationTitle,
+        generateConversationTitle,
+        deleteMessage,
+        updateMessage,
+        regenerateAiResponse,
+        regenerateUserPromptAndGetResponse,
+        unreadConversations,
+        clearMessages,
+        changeFontSize,
+        isSidebarOpen,
+        setSidebarOpen,
+        isLogPanelOpen,
+        setLogPanelOpen,
+    }), [
+        conversations, currentConversation, messages, setCurrentConversationById,
+        updateCurrentConversation, createNewConversation, addMessage, toggleBookmark,
+        loadConversations, isLoading, setIsLoading, status, setStatus, clearError,
+        settings, loadSettings, setSettings, deleteConversation, updateConversationTitle,
+        generateConversationTitle, deleteMessage, updateMessage, regenerateAiResponse,
+        regenerateUserPromptAndGetResponse, unreadConversations, clearMessages,
+        changeFontSize, isSidebarOpen, setSidebarOpen, isLogPanelOpen, setLogPanelOpen
+    ]);
+
     return (
-        <AppContext.Provider value={{
-            conversations,
-            currentConversation,
-            messages,
-            setCurrentConversation: setCurrentConversationById,
-            updateCurrentConversation,
-            createNewConversation,
-            addMessage,
-            toggleBookmark,
-            loadConversations,
-            isLoading,
-            setIsLoading,
-            status,
-            setStatus,
-            clearError,
-            settings,
-            loadSettings,
-            setSettings,
-            deleteConversation,
-            updateConversationTitle,
-            generateConversationTitle,
-            deleteMessage,
-            updateMessage,
-            regenerateAiResponse,
-            regenerateUserPromptAndGetResponse,
-            unreadConversations,
-            clearMessages,
-            changeFontSize,
-            isSidebarOpen,
-            setSidebarOpen,
-            isLogPanelOpen,
-            setLogPanelOpen,
-        }}>
+        <AppContext.Provider value={contextValue}>
             {children}
         </AppContext.Provider>
     );
