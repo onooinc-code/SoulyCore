@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -12,6 +11,7 @@ interface ConversationSettingsModalProps {
     onClose: () => void;
 }
 
+// Per Gemini SDK guidelines, only this model should be used for this task.
 const geminiModels = [
     'gemini-2.5-flash',
 ];

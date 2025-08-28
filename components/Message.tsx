@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -13,15 +12,34 @@ interface MessageProps {
     message: MessageType;
     onSummarize: (content: string) => void;
     onToggleBookmark: (messageId: string) => void;
+    onDelete: (messageId: string) => void;
+    onUpdate: (messageId: string, newContent: string) => void;
+    onRegenerate: (messageId: string) => void;
 }
 
-// FIX: Removed React.FC to fix framer-motion type inference issue.
-const Message = ({ message, onSummarize, onToggleBookmark }: MessageProps) => {
+type TextAlign = 'left' | 'right';
+
+const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate }: MessageProps) => {
     const isUser = message.role === 'user';
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [textAlign, setTextAlign] = useState<TextAlign>('left');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedContent, setEditedContent] = useState(message.content);
     
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
+    };
+
+    const handleSaveEdit = () => {
+        if (editedContent.trim() !== message.content) {
+            onUpdate(message.id, editedContent.trim());
+        }
+        setIsEditing(false);
+    };
+
+    const handleCancelEdit = () => {
+        setEditedContent(message.content);
+        setIsEditing(false);
     };
 
     return (
@@ -29,7 +47,7 @@ const Message = ({ message, onSummarize, onToggleBookmark }: MessageProps) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`flex items-start gap-4 ${isUser ? 'justify-end' : ''}`}
+            className={`group flex items-start gap-4 ${isUser ? 'justify-end' : ''}`}
         >
             {!isUser && (
                 <div className="w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0 flex items-center justify-center font-bold text-sm">
@@ -41,19 +59,39 @@ const Message = ({ message, onSummarize, onToggleBookmark }: MessageProps) => {
                     <MessageToolbar 
                         isBookmarked={message.isBookmarked || false}
                         isCollapsed={isCollapsed}
+                        isUser={isUser}
                         onCopy={handleCopy}
                         onBookmark={() => onToggleBookmark(message.id)}
                         onSummarize={() => onSummarize(message.content)}
                         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+                        onSetAlign={setTextAlign}
+                        onDelete={() => onDelete(message.id)}
+                        onEdit={() => setIsEditing(true)}
+                        onRegenerate={() => onRegenerate(message.id)}
                     />
                 </div>
-                <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`}>
-                    {!isCollapsed && (
+                <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`} style={{ textAlign: textAlign }}>
+                    {isEditing ? (
+                        <div className="not-prose">
+                            <textarea
+                                value={editedContent}
+                                onChange={(e) => setEditedContent(e.target.value)}
+                                className="w-full p-2 bg-gray-800/50 rounded-md text-white resize-y border border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                rows={Math.max(3, editedContent.split('\n').length)}
+                                autoFocus
+                            />
+                            <div className="flex gap-2 mt-2">
+                                <button onClick={handleSaveEdit} className="px-3 py-1 text-xs bg-green-600 rounded hover:bg-green-500">Save</button>
+                                <button onClick={handleCancelEdit} className="px-3 py-1 text-xs bg-gray-600 rounded hover:bg-gray-500">Cancel</button>
+                            </div>
+                        </div>
+                    ) : !isCollapsed ? (
                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {message.content}
                         </ReactMarkdown>
+                    ) : (
+                        <p className="italic text-gray-400">Message content collapsed...</p>
                     )}
-                    {isCollapsed && <p className="italic text-gray-400">Message content collapsed...</p>}
                 </div>
                  <div className={`flex items-center mt-1 ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <MessageFooter message={message} />

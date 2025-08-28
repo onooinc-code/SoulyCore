@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -23,7 +22,8 @@ const BookmarksModal = ({ isOpen, setIsOpen }: BookmarksModalProps) => {
         setIsLoading(true);
         clearError();
         try {
-            const res = await fetch('/api/bookmarks');
+            // FIX: Added cache: 'no-store' to ensure fresh data is always fetched.
+            const res = await fetch('/api/bookmarks', { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to fetch bookmarks');
             const data = await res.json();
             setBookmarks(data);

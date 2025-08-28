@@ -1,8 +1,3 @@
-
-
-
-
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -16,6 +11,7 @@ import AgentConfigModal from './AgentConfigModal';
 import SummaryModal from './SummaryModal';
 import { motion } from 'framer-motion';
 import { useLog } from './providers/LogProvider';
+import Header from './Header'; // Import the new Header component
 
 // FIX: Removed React.FC to fix framer-motion type inference issue.
 const ChatWindow = () => {
@@ -27,6 +23,9 @@ const ChatWindow = () => {
         isLoading,
         status,
         clearError,
+        deleteMessage,
+        updateMessage,
+        regenerateAiResponse
     } = useAppContext();
     const { log } = useLog();
     
@@ -70,18 +69,6 @@ const ChatWindow = () => {
 
         if (aiResponse) {
             setProactiveSuggestion(suggestion);
-            // After getting a successful response, trigger the memory pipeline in the background
-            const textToAnalyze = `${content}\n${aiResponse}`;
-            log('Triggering background memory pipeline.', { textLength: textToAnalyze.length });
-            fetch('/api/memory/pipeline', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ textToAnalyze })
-            }).catch(err => {
-                const errorMessage = "Memory pipeline trigger failed.";
-                log(errorMessage, { error: { message: (err as Error).message, stack: (err as Error).stack } }, 'error');
-                console.error(errorMessage, err)
-            }); // Fire-and-forget
         }
     };
     
@@ -96,8 +83,9 @@ const ChatWindow = () => {
     const isDbError = status.error && /database|vercel|table|relation.+does not exist/i.test(status.error);
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex flex-col h-full relative">
+            <Header />
+            <div className="flex-1 p-6 overflow-y-auto pt-20"> {/* Added padding-top */}
                 <div className="max-w-4xl mx-auto">
                     {messages.length > 0 ? (
                         <div className="space-y-4">
@@ -107,6 +95,9 @@ const ChatWindow = () => {
                                     message={msg}
                                     onSummarize={handleSummarizeMessage}
                                     onToggleBookmark={toggleBookmark}
+                                    onDelete={() => deleteMessage(msg.id)}
+                                    onUpdate={updateMessage}
+                                    onRegenerate={regenerateAiResponse}
                                 />
                             ))}
                              <div ref={messagesEndRef} />

@@ -148,3 +148,29 @@ export const generateProactiveSuggestion = async (history: Content[]): Promise<s
         return null;
     }
 }
+
+export const generateTitleFromHistory = async (history: Content[]): Promise<string | null> => {
+    if (history.length === 0) return null;
+
+    try {
+        const ai = getAiClient();
+        const conversationHistoryText = history
+            .filter((m): m is { role: string; parts: { text: string }[] } =>
+                typeof m === 'object' && m !== null && Array.isArray(m.parts) && m.parts.length > 0
+            )
+            .map(m => `${m.role}: ${m.parts[0].text}`)
+            .join('\n');
+        
+        const prompt = `Based on the following conversation, create a short and concise title (5 words or less). Do not add quotes or any other formatting.\n\n---\n\n${conversationHistoryText}`;
+
+        const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+        if (!result || !result.text) {
+            return null;
+        }
+        return result.text.trim().replace(/["']/g, ""); // Remove quotes
+
+    } catch(e) {
+        console.error("Title generation failed:", e);
+        return null;
+    }
+};

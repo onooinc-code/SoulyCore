@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { Conversation, Message, Contact, AppSettings } from '@/lib/types';
 import { useLog } from './LogProvider';
+import { Content } from '@google/genai';
 
 export interface IStatus {
   currentAction: string;
@@ -16,7 +17,7 @@ interface AppContextType {
     setCurrentConversation: (conversationId: string | null) => void;
     updateCurrentConversation: (updatedData: Partial<Conversation>) => void;
     createNewConversation: () => Promise<void>;
-    addMessage: (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[]) => Promise<{aiResponse: string | null, suggestion: string | null}>;
+    addMessage: (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[], history?: Message[]) => Promise<{aiResponse: string | null, suggestion: string | null}>;
     toggleBookmark: (messageId: string) => Promise<void>;
     loadConversations: () => Promise<void>;
     isLoading: boolean;
@@ -27,6 +28,12 @@ interface AppContextType {
     settings: AppSettings | null;
     loadSettings: () => Promise<void>;
     setSettings: React.Dispatch<React.SetStateAction<AppSettings | null>>;
+    deleteConversation: (conversationId: string) => Promise<void>;
+    updateConversationTitle: (conversationId: string, newTitle: string) => Promise<void>;
+    generateConversationTitle: (conversationId: string) => Promise<void>;
+    deleteMessage: (messageId: string) => Promise<void>;
+    updateMessage: (messageId: string, newContent: string) => Promise<void>;
+    regenerateAiResponse: (messageId: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -151,10 +158,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setMessages([]);
     }, [log]);
 
-    const addMessage = useCallback(async (message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, mentionedContacts?: Contact[]) => {
+    const addMessage = useCallback(async (
+        message: Omit<Message, 'id' | 'createdAt' | 'conversationId'>, 
+        mentionedContacts?: Contact[],
+        historyOverride?: Message[],
+    ) => {
         setIsLoading(true);
         setStatus({ currentAction: "Processing...", error: null });
-        log('Starting addMessage process.', { message, mentionedContacts });
+        log('Starting addMessage process.', { message, mentionedContacts, historyOverride });
 
         const optimisticUserMessage: Message = { 
             ...message, 
@@ -162,8 +173,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             createdAt: new Date(), 
             conversationId: currentConversation?.id || 'temp'
         };
-        setMessages(prev => [...prev, optimisticUserMessage]);
-        log('Optimistically added user message to UI.', optimisticUserMessage);
+        // Only add user message to UI if it's a new message, not a regeneration
+        if (!historyOverride) {
+            setMessages(prev => [...prev, optimisticUserMessage]);
+            log('Optimistically added user message to UI.', optimisticUserMessage);
+        }
 
         try {
             let conversationToUpdate = currentConversation;
@@ -187,19 +201,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             const finalUserMessage: Message = { ...optimisticUserMessage, conversationId: conversationToUpdate.id };
             
-            log('Saving user message to DB...');
-            const userMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ message: finalUserMessage }),
-            });
-            if (!userMsgRes.ok) throw new Error("Failed to save your message.");
-            const savedUserMessage = await userMsgRes.json();
-            log('User message saved successfully.', savedUserMessage);
+            if (!historyOverride) {
+                log('Saving user message to DB...');
+                const userMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ message: finalUserMessage }),
+                });
+                if (!userMsgRes.ok) throw new Error("Failed to save your message.");
+                const savedUserMessage = await userMsgRes.json();
+                log('User message saved successfully.', savedUserMessage);
+                
+                setMessages(prev => prev.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m));
+            }
             
-            setMessages(prev => prev.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m));
-            
-            const updatedMessagesHistory = [...messages.filter(m => m.id !== optimisticUserMessage.id), savedUserMessage];
+            const messageHistory = historyOverride || messages;
+            const updatedMessagesHistory = [...messageHistory.filter(m => m.id !== optimisticUserMessage.id), finalUserMessage];
 
             const chatApiPayload = { 
                 messages: updatedMessagesHistory, 
@@ -235,6 +252,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 const savedAiMessage = await aiMsgRes.json();
                 log('AI message saved successfully.', savedAiMessage);
                 setMessages(prev => [...prev, savedAiMessage!]);
+                 // Trigger background memory pipeline
+                const textToAnalyze = `${message.content}\n${aiResponse}`;
+                log('Triggering background memory pipeline.', { textLength: textToAnalyze.length });
+                fetch('/api/memory/pipeline', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ textToAnalyze })
+                }).catch(err => {
+                    const errorMessage = "Memory pipeline trigger failed.";
+                    log(errorMessage, { error: { message: (err as Error).message, stack: (err as Error).stack } }, 'error');
+                    console.error(errorMessage, err)
+                });
             }
             
             return { aiResponse, suggestion };
@@ -244,7 +273,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setStatus({ error: errorMessage, currentAction: "Error" });
             log('Error in addMessage process.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
-            setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
+            if (!historyOverride) {
+                setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
+            }
             return { aiResponse: null, suggestion: null };
         } finally {
             setIsLoading(false);
@@ -272,6 +303,141 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, [setStatus, log]);
 
+    const deleteConversation = useCallback(async (conversationId: string) => {
+        log(`Deleting conversation: ${conversationId}`);
+        try {
+            const res = await fetch(`/api/conversations/${conversationId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete conversation.');
+            
+            log('Conversation deleted successfully from DB.');
+            setConversations(prev => prev.filter(c => c.id !== conversationId));
+            if (currentConversation?.id === conversationId) {
+                setCurrentConversation(null);
+                setMessages([]);
+            }
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to delete conversation.', { conversationId, error: { message: errorMessage } }, 'error');
+        }
+    }, [currentConversation, log, setStatus]);
+
+    const updateConversationTitle = useCallback(async (conversationId: string, newTitle: string) => {
+        log(`Updating title for conversation: ${conversationId}`, { newTitle });
+        setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, title: newTitle } : c));
+        if (currentConversation?.id === conversationId) {
+            setCurrentConversation(prev => prev ? { ...prev, title: newTitle } : null);
+        }
+
+        try {
+            await fetch(`/api/conversations/${conversationId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: newTitle }),
+            });
+        } catch (error) {
+            log('Failed to save updated title to DB.', { error }, 'error');
+            // Note: No error is shown to the user for this background save failure.
+            // Could add error handling to revert the title if needed.
+            loadConversations(); // Re-sync with DB on failure
+        }
+    }, [currentConversation, log, loadConversations]);
+
+    const generateConversationTitle = useCallback(async (conversationId: string) => {
+        log(`Generating title for conversation: ${conversationId}`);
+        setStatus({ currentAction: 'Generating title...' });
+        try {
+            const res = await fetch(`/api/conversations/${conversationId}/generate-title`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to generate title.');
+            const updatedConversation = await res.json();
+            
+            setConversations(prev => prev.map(c => c.id === conversationId ? updatedConversation : c));
+            if (currentConversation?.id === conversationId) {
+                setCurrentConversation(updatedConversation);
+            }
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to generate title.', { conversationId, error }, 'error');
+        } finally {
+            setStatus({ currentAction: '' });
+        }
+    }, [currentConversation, log, setStatus]);
+
+    const deleteMessage = useCallback(async (messageId: string) => {
+        log(`Deleting message: ${messageId}`);
+        const originalMessages = messages;
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+        try {
+            const res = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete message from server.');
+        } catch (error) {
+            setMessages(originalMessages);
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to delete message.', { messageId, error }, 'error');
+        }
+    }, [messages, log, setStatus]);
+
+    const updateMessage = useCallback(async (messageId: string, newContent: string) => {
+        log(`Updating message: ${messageId}`);
+        const originalMessages = messages;
+        setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: newContent } : m));
+        try {
+            const res = await fetch(`/api/messages/${messageId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent }),
+            });
+            if (!res.ok) throw new Error('Failed to update message on server.');
+            const updatedMessage = await res.json();
+            setMessages(prev => prev.map(m => m.id === messageId ? updatedMessage : m));
+        } catch (error) {
+            setMessages(originalMessages);
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to update message.', { messageId, error }, 'error');
+        }
+    }, [messages, log, setStatus]);
+
+     const regenerateAiResponse = useCallback(async (messageId: string) => {
+        log(`Regenerating AI response for message: ${messageId}`);
+        const messageIndex = messages.findIndex(m => m.id === messageId);
+        if (messageIndex === -1 || messageIndex === 0) return;
+
+        const historyToResend = messages.slice(0, messageIndex);
+        const userPromptMessage = historyToResend[historyToResend.length - 1];
+
+        if (userPromptMessage.role !== 'user') return;
+
+        // Optimistically remove the old AI response
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+
+        const { aiResponse, suggestion } = await addMessage(userPromptMessage, [], historyToResend);
+
+        if (aiResponse) {
+             // The addMessage function will have added the new AI response to the state.
+             setMessages(prev => {
+                const finalMessages = [...prev];
+                // Remove the original user message from the history used for the call
+                // because addMessage adds it back optimistically.
+                const userMessageIndex = finalMessages.findIndex(m => m.id === userPromptMessage.id);
+                if (userMessageIndex > -1) {
+                  // This is tricky. Let's just reload messages for simplicity.
+                  fetchMessages(currentConversation!.id);
+                }
+                return prev;
+             });
+             fetchMessages(currentConversation!.id);
+
+        } else {
+            // If it fails, reload the messages to restore the old state
+            fetchMessages(currentConversation!.id);
+        }
+
+    }, [messages, addMessage, fetchMessages, currentConversation, log]);
+
+
     return (
         <AppContext.Provider value={{
             conversations,
@@ -291,6 +457,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             settings,
             loadSettings,
             setSettings,
+            deleteConversation,
+            updateConversationTitle,
+            generateConversationTitle,
+            deleteMessage,
+            updateMessage,
+            regenerateAiResponse,
         }}>
             {children}
         </AppContext.Provider>

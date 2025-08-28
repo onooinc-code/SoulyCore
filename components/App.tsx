@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -40,7 +38,7 @@ const BookmarksModal = dynamic(() => import('@/components/BookmarksModal'), {
 
 // FIX: Removed React.FC to fix framer-motion type inference issue.
 const App = () => {
-    const { createNewConversation, settings } = useAppContext();
+    const { createNewConversation } = useAppContext();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isMemoryCenterOpen, setMemoryCenterOpen] = useState(false);
     const [isContactsHubOpen, setContactsHubOpen] = useState(false);
@@ -60,12 +58,12 @@ const App = () => {
             <div className="flex h-screen bg-gray-900 text-gray-200 font-sans overflow-hidden">
                 <AnimatePresence>
                     {isSidebarOpen && (
-                        <motion.div
-                            initial={{ x: '-100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '-100%' }}
+                         <motion.div
+                            initial={{ x: '-100%', width: 0 }}
+                            animate={{ x: 0, width: '16rem' }} // 16rem is w-64
+                            exit={{ x: '-100%', width: 0 }}
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 md:relative md:translate-x-0"
+                            className="fixed inset-y-0 left-0 z-30 bg-gray-800 md:relative md:flex-shrink-0"
                         >
                            <Sidebar 
                                 setMemoryCenterOpen={setMemoryCenterOpen}
@@ -74,6 +72,8 @@ const App = () => {
                                 setGlobalSettingsOpen={setGlobalSettingsOpen}
                                 setBookmarksOpen={setBookmarksOpen}
                                 setLogPanelOpen={setLogPanelOpen}
+                                isSidebarOpen={isSidebarOpen}
+                                setSidebarOpen={setSidebarOpen}
                            />
                         </motion.div>
                     )}
@@ -82,11 +82,9 @@ const App = () => {
                 <div className={`fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden ${isSidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)}></div>
 
                 <div className="flex-1 flex flex-col relative">
-                    <div className="absolute top-4 left-4 z-40 md:hidden">
-                        <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 rounded-md bg-gray-700 hover:bg-gray-600">
-                            {isSidebarOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
-                        </button>
-                    </div>
+                    <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="absolute top-4 left-4 z-40 md:hidden p-2 rounded-md bg-gray-700 hover:bg-gray-600">
+                        {isSidebarOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+                    </button>
                     
                     <main className="flex-1 flex flex-col overflow-y-auto">
                         <ChatWindow />
@@ -99,7 +97,6 @@ const App = () => {
                     {isContactsHubOpen && <ContactsHub setIsOpen={setContactsHubOpen} />}
                     {isDevCenterOpen && <DevCenter setIsOpen={setDevCenterOpen} />}
                     {isGlobalSettingsOpen && <GlobalSettingsModal setIsOpen={setGlobalSettingsOpen} />}
-                    {/* FIX: Added missing isOpen prop to BookmarksModal to match its prop types. */}
                     {isBookmarksOpen && <BookmarksModal isOpen={isBookmarksOpen} setIsOpen={setBookmarksOpen} />}
                 </AnimatePresence>
             </div>

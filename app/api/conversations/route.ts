@@ -19,10 +19,8 @@ export async function GET() {
 // POST a new conversation
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json().catch(() => {
-            // Gracefully handle empty or malformed JSON body
-            return { title: null };
-        });
+        // FIX: Gracefully handle cases where the request body might be empty or not valid JSON.
+        const body = await req.json().catch(() => ({ title: null }));
         const title = body?.title;
         const newTitle = title || 'New Chat';
 
@@ -41,7 +39,7 @@ export async function POST(req: NextRequest) {
             INSERT INTO conversations (
                 title, "systemPrompt", "useSemanticMemory", "useStructuredMemory", model, temperature, "topP"
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, a$2, $3, $4, $5, $6, $7)
             RETURNING *;
         `;
         const values = [

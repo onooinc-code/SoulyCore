@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, sql } from '@/lib/db';
 import { Conversation } from '@/lib/types';
 
 // PUT (update) a conversation
@@ -63,6 +63,26 @@ export async function PUT(req: NextRequest, { params }: { params: { conversation
         return NextResponse.json(rows[0] as Conversation);
     } catch (error) {
         console.error(`Failed to update conversation ${params.conversationId}:`, error);
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
+    }
+}
+
+// DELETE a conversation
+export async function DELETE(req: NextRequest, { params }: { params: { conversationId: string } }) {
+    try {
+        const { conversationId } = params;
+        
+        // The ON DELETE CASCADE in the messages table schema handles deleting associated messages
+        const { rowCount } = await sql`DELETE FROM conversations WHERE id = ${conversationId};`;
+
+        if (rowCount === 0) {
+            return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+        }
+        
+        return NextResponse.json({ message: 'Conversation deleted successfully' });
+    } catch (error) {
+        console.error(`Failed to delete conversation ${params.conversationId}:`, error);
         const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
         return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
