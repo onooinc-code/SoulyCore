@@ -102,6 +102,27 @@ const featuresData = [
         notes: 'The suggestion logic is currently broad. This could be evolved into a more structured tool-use or function-calling system for more complex and reliable actions.'
     },
     {
+        name: 'Prompts Hub & Dynamic Variables',
+        overview: 'A comprehensive system for creating, managing, and using reusable prompt templates. It supports advanced organization with folders and tags, and includes a powerful dynamic variable system to turn static prompts into interactive templates.',
+        status: '✅ Completed',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'Prompts Hub Modal', description: 'A two-panel CRUD interface for managing all saved prompts.', status: '✅ Completed' },
+            { subFeature: 'Filter Sidebar', description: 'A dedicated panel within the hub to filter prompts by folder or tag.', status: '✅ Completed' },
+            { subFeature: 'Prompt Form', description: 'Form for creating/editing prompts, including fields for name, content, folder, and tags.', status: '✅ Completed' },
+            { subFeature: 'Chat Input Launcher', description: 'A quick-access, searchable popup list of prompts available directly in the chat input.', status: '✅ Completed' },
+            { subFeature: 'Dynamic Variable Modal', description: 'A modal that appears when selecting a prompt with {{variable}} placeholders, allowing the user to fill them in before use.', status: '✅ Completed' }
+        ]),
+        logic_flow: 'Management: User interacts with PromptsHub UI, triggering API calls to `/api/prompts/[...].ts` which perform CRUD operations on the `prompts` table in Vercel Postgres. Usage: User clicks the launcher icon in `ChatInput.tsx`, which fetches prompts. On selection, `ChatInput.tsx` checks the prompt content for `{{variable}}` syntax. If variables are found, the `FillPromptVariablesModal` is displayed. After the user fills the form, the final, interpolated string is passed back to the `ChatInput` component\'s state. If no variables are found, the content is set directly.',
+        key_files_json: JSON.stringify([
+            'components/PromptsHub.tsx',
+            'components/ChatInput.tsx',
+            'components/FillPromptVariablesModal.tsx',
+            'app/api/prompts/[...].ts',
+            'scripts/create-tables.js'
+        ]),
+        notes: 'Could be enhanced in the future with features like prompt sharing, versioning, or a more advanced folder management system.'
+    },
+    {
         name: 'SoulyDev Center',
         overview: 'An integrated control panel for developers to monitor, manage, and extend the application\'s functionality. It centralizes project documentation, feature management, and other developer tools.',
         status: '🟡 Needs Improvement',

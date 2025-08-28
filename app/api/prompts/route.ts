@@ -21,15 +21,22 @@ export async function GET() {
 // POST a new prompt
 export async function POST(req: NextRequest) {
     try {
-        const { name, content, folder, tags } = await req.json() as Partial<Prompt>;
+        const { name, content, folder, tags, type, chain_definition } = await req.json() as Partial<Prompt>;
 
         if (!name || !content) {
             return NextResponse.json({ error: 'Name and content are required' }, { status: 400 });
         }
 
         const { rows } = await sql`
-            INSERT INTO prompts (name, content, folder, tags)
-            VALUES (${name}, ${content}, ${folder}, ${tags ? (tags as any) : null})
+            INSERT INTO prompts (name, content, folder, tags, type, chain_definition)
+            VALUES (
+                ${name}, 
+                ${content}, 
+                ${folder}, 
+                ${tags ? (tags as any) : null}, 
+                ${type || 'single'}, 
+                ${chain_definition ? JSON.stringify(chain_definition) : null}
+            )
             RETURNING *;
         `;
         

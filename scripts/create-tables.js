@@ -132,10 +132,25 @@ async function createTables() {
                 folder VARCHAR(255),
                 tags TEXT[],
                 "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                type VARCHAR(50) DEFAULT 'single' NOT NULL,
+                chain_definition JSONB
             );
         `;
         console.log("Table 'prompts' created or already exists.", promptsTable.command);
+
+        // Ensure new columns exist for existing deployments
+        try {
+            await sql`ALTER TABLE prompts ADD COLUMN IF NOT EXISTS type VARCHAR(50) DEFAULT 'single' NOT NULL;`;
+        } catch (e) {
+            if (!e.message.includes('column "type" already exists')) throw e;
+        }
+        try {
+            await sql`ALTER TABLE prompts ADD COLUMN IF NOT EXISTS chain_definition JSONB;`;
+        } catch (e) {
+            if (!e.message.includes('column "chain_definition" already exists')) throw e;
+        }
+        console.log("Prompts table columns checked.");
 
 
         // Insert default settings if they don't exist

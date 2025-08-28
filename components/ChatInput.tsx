@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -21,7 +20,7 @@ interface ChatInputProps {
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
-    const { setStatus } = useAppContext();
+    const { setStatus, setIsLoading } = useAppContext();
     const { log } = useLog();
     const [content, setContent] = useState('');
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -39,7 +38,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         prompt: Prompt | null;
         variables: string[];
     }>({ isOpen: false, prompt: null, variables: [] });
-
+    
+    const [pendingPrompt, setPendingPrompt] = useState<Prompt | null>(null);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,24 +49,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         try {
             log('Fetching contacts for @mentions...');
             const res = await fetch('/api/contacts');
-            if (!res.ok) {
-                let errorMsg = 'An unknown error occurred while fetching contacts.';
-                try {
-                    const errorData = await res.json();
-                    errorMsg = errorData.error || `Server responded with status: ${res.status}`;
-                } catch (e) { 
-                    errorMsg = `Server responded with status: ${res.status} ${res.statusText}`;
-                }
-                throw new Error(errorMsg);
-            }
+            if (!res.ok) throw new Error('Failed to fetch contacts');
             const { contacts } = await res.json();
             setContacts(contacts);
-            log(`Successfully fetched ${contacts.length} contacts for @mentions.`);
         } catch (error) {
-            const errorMessage = (error as Error).message;
-            log('Failed to fetch contacts for @mentions.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
-            setStatus({ error: 'Contacts for @mentions could not be loaded. Please check logs for details.' });
-            console.error("Fetch contacts error:", error);
+            setStatus({ error: 'Contacts for @mentions could not be loaded.' });
         }
     }, [setStatus, log]);
     
@@ -80,8 +67,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             setPrompts(data);
             log(`Fetched ${data.length} prompts for launcher.`);
         } catch(error) {
-             const errorMessage = (error as Error).message;
-             log('Failed to fetch prompts for launcher.', { error: { message: errorMessage } }, 'error');
+             log('Failed to fetch prompts for launcher.', { error: { message: (error as Error).message } }, 'error');
         }
     }, [isPromptsListOpen, prompts.length, log]);
 
@@ -96,13 +82,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             }
         };
 
-        if (isPromptsListOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        if (isPromptsListOpen) document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isPromptsListOpen]);
 
     
@@ -145,33 +126,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.type.startsWith('image/')) {
-            log('Image file selected by user.', { name: file.name, type: file.type, size: file.size });
             const reader = new FileReader();
-            reader.onload = (loadEvent) => {
-                setImageDataUrl(loadEvent.target?.result as string);
-                log('Image file loaded as data URL.');
-            };
+            reader.onload = (loadEvent) => setImageDataUrl(loadEvent.target?.result as string);
             reader.readAsDataURL(file);
         }
         if (e.target) e.target.value = '';
     };
 
     const removeImage = () => {
-        log('User removed attached image.');
         setImageDataUrl(null);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!content.trim() && !imageDataUrl) return;
-
-        let messageContent = content;
-        if (imageDataUrl) {
-            // Using markdown format to embed the image data URL
-            messageContent = `![user image](${imageDataUrl})\n\n${content}`;
-        }
-        
-        log('User submitted message form.', { contentLength: content.length, mentionedContactsCount: mentionedContacts.length, hasImage: !!imageDataUrl });
+        let messageContent = imageDataUrl ? `![user image](${imageDataUrl})\n\n${content}` : content;
         onSendMessage(messageContent, mentionedContacts);
         setContent('');
         setImageDataUrl(null);
@@ -179,33 +148,93 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         setShowMentions(false);
     };
 
-    const handlePromptSelect = (prompt: Prompt) => {
-        const variableRegex = /{{\s*(\w+)\s*}}/g;
-        const matches = [...prompt.content.matchAll(variableRegex)];
-        const uniqueVariables = [...new Set(matches.map(match => match[1]))];
-
-        if (uniqueVariables.length > 0) {
-            log('User selected a prompt with dynamic variables.', { promptName: prompt.name, variables: uniqueVariables });
-            setVariableModalState({ isOpen: true, prompt: prompt, variables: uniqueVariables });
-            setIsPromptsListOpen(false);
-        } else {
-            log('User selected a simple prompt.', { promptName: prompt.name });
-            setContent(prompt.content);
-            setIsPromptsListOpen(false);
+    const executeChain = async (promptId: string, userInputs: Record<string, string>) => {
+        setIsLoading(true);
+        setStatus({ currentAction: "Executing workflow...", error: null });
+        log('Executing prompt chain.', { promptId, userInputs });
+        try {
+            const res = await fetch('/api/prompts/execute-chain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ promptId, userInputs }),
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to execute prompt chain.');
+            }
+            const { finalResponse } = await res.json();
+            log('Prompt chain executed successfully.', { finalResponse });
+            setContent(finalResponse);
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Error executing prompt chain.', { error: { message: errorMessage } }, 'error');
+        } finally {
+            setIsLoading(false);
+            setStatus({ currentAction: "" });
         }
+    };
+
+    const handlePromptSelect = (prompt: Prompt) => {
+        setIsPromptsListOpen(false);
         setPromptSearchTerm('');
+        setPendingPrompt(prompt);
+
+        if (prompt.type === 'chain') {
+            const userInputVariables = new Set<string>();
+            prompt.chain_definition?.forEach(step => {
+                for (const key in step.inputMapping) {
+                    if (step.inputMapping[key].source === 'userInput') {
+                        userInputVariables.add(key);
+                    }
+                }
+            });
+            if (userInputVariables.size > 0) {
+                log('User selected a chained prompt with user inputs.', { promptName: prompt.name, variables: [...userInputVariables] });
+                setVariableModalState({ isOpen: true, prompt, variables: [...userInputVariables] });
+            } else {
+                log('User selected a chained prompt with no user inputs.', { promptName: prompt.name });
+                executeChain(prompt.id, {});
+                setPendingPrompt(null);
+            }
+        } else { // 'single' prompt
+            const variableRegex = /{{\s*(\w+)\s*}}/g;
+            const matches = [...prompt.content.matchAll(variableRegex)];
+            const uniqueVariables = [...new Set(matches.map(match => match[1]))];
+            if (uniqueVariables.length > 0) {
+                log('User selected a single prompt with variables.', { promptName: prompt.name, variables: uniqueVariables });
+                setVariableModalState({ isOpen: true, prompt, variables: uniqueVariables });
+            } else {
+                log('User selected a simple prompt.', { promptName: prompt.name });
+                setContent(prompt.content);
+                setPendingPrompt(null);
+            }
+        }
         textareaRef.current?.focus();
     };
     
-    const handleVariableSubmit = (filledPrompt: string) => {
-        log('User submitted variables and populated chat input.');
-        setContent(filledPrompt);
+    const handleVariableModalSubmit = (values: Record<string, string>) => {
+        if (!pendingPrompt) return;
+        
+        if (pendingPrompt.type === 'chain') {
+            log('User submitted variables for a chained prompt.', { promptName: pendingPrompt.name });
+            executeChain(pendingPrompt.id, values);
+        } else { // single
+            log('User submitted variables for a single prompt.', { promptName: pendingPrompt.name });
+            let finalContent = pendingPrompt.content;
+            for (const [key, value] of Object.entries(values)) {
+                const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+                finalContent = finalContent.replace(regex, value);
+            }
+            setContent(finalContent);
+        }
+        
         setVariableModalState({ isOpen: false, prompt: null, variables: [] });
+        setPendingPrompt(null);
         textareaRef.current?.focus();
     };
 
     const filteredContacts = contacts.filter(c => c.name.toLowerCase().startsWith(mentionQuery));
-
     const filteredPrompts = prompts.filter(p => 
         p.name.toLowerCase().includes(promptSearchTerm.toLowerCase()) ||
         p.content.toLowerCase().includes(promptSearchTerm.toLowerCase())
@@ -236,7 +265,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                     <ul className="flex-1 overflow-y-auto">
                         {filteredPrompts.length > 0 ? filteredPrompts.map(prompt => (
                             <li key={prompt.id}>
-                                <button onClick={() => handlePromptSelect(prompt)} className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                <button onClick={() => handlePromptSelect(prompt)} className={`w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 border-l-4 ${prompt.type === 'chain' ? 'border-indigo-500' : 'border-transparent'}`}>
                                     <strong className="block font-semibold">{prompt.name}</strong>
                                     <p className="text-xs text-gray-400 truncate">{prompt.content}</p>
                                 </button>
@@ -260,9 +289,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                         log('User toggled Prompts Launcher.');
                         const willBeOpen = !isPromptsListOpen;
                         setIsPromptsListOpen(willBeOpen);
-                        if (willBeOpen) {
-                            fetchPrompts();
-                        }
+                        if (willBeOpen) fetchPrompts();
                     }}
                     className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                     disabled={isLoading}
@@ -272,13 +299,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                 </button>
                 <button 
                     type="button" 
-                    onClick={() => {
-                        log('User clicked "Attach file" button.');
-                        fileInputRef.current?.click();
-                    }}
+                    onClick={() => fileInputRef.current?.click()}
                     className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                     disabled={isLoading || !!imageDataUrl}
-                    title="Attach an image to your message. Disabled while an image is already attached or the AI is processing."
+                    title="Attach an image"
                 >
                     <PaperclipIcon className="w-5 h-5" />
                 </button>
@@ -287,12 +311,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                         ref={textareaRef}
                         value={content}
                         onChange={handleContentChange}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSubmit(e);
-                            }
-                        }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); } }}
                         placeholder="Type your message or add an image..."
                         className="w-full p-2 pr-24 bg-gray-700 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                         rows={1}
@@ -308,20 +327,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                     type="submit"
                     className="p-3 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
                     disabled={isLoading || (!content.trim() && !imageDataUrl)}
-                    title="Send your message to the AI. (Enter to send, Shift+Enter for new line)"
+                    title="Send message"
                 >
                     <SendIcon className="w-5 h-5" />
                 </button>
             </form>
         </div>
         {isLoading && <LoadingIndicator />}
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
         
         <FillPromptVariablesModal
             isOpen={variableModalState.isOpen}
             onClose={() => setVariableModalState({ isOpen: false, prompt: null, variables: [] })}
             prompt={variableModalState.prompt}
             variables={variableModalState.variables}
-            onSubmit={handleVariableSubmit}
+            onSubmit={handleVariableModalSubmit}
         />
         </>
     );

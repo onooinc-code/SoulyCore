@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -11,7 +10,7 @@ interface FillPromptVariablesModalProps {
     onClose: () => void;
     prompt: Prompt | null;
     variables: string[];
-    onSubmit: (filledPrompt: string) => void;
+    onSubmit: (values: Record<string, string>) => void;
 }
 
 const FillPromptVariablesModal = ({ isOpen, onClose, prompt, variables, onSubmit }: FillPromptVariablesModalProps) => {
@@ -31,13 +30,8 @@ const FillPromptVariablesModal = ({ isOpen, onClose, prompt, variables, onSubmit
 
     const handleSubmit = () => {
         if (!prompt) return;
-        let finalContent = prompt.content;
-        for (const [key, value] of Object.entries(variableValues)) {
-            const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
-            // FIX: Explicitly cast `value` to a string to resolve a TypeScript overload resolution ambiguity.
-            finalContent = finalContent.replace(regex, String(value));
-        }
-        onSubmit(finalContent);
+        // Pass the raw key-value pairs back to the parent for handling
+        onSubmit(variableValues);
         onClose();
     };
 

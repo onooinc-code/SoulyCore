@@ -78,6 +78,12 @@ export interface Tool {
     schema_json: string;
 }
 
+export interface PromptChainStep {
+    step: number;
+    promptId: string;
+    inputMapping: Record<string, { source: 'userInput' | 'stepOutput'; step?: number }>;
+}
+
 export interface Prompt {
     id: string;
     name: string;
@@ -86,6 +92,8 @@ export interface Prompt {
     tags?: string[] | null;
     createdAt: Date;
     lastUpdatedAt: Date;
+    type: 'single' | 'chain';
+    chain_definition?: PromptChainStep[] | null;
 }
 
 export interface Knowledge {
