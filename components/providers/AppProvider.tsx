@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
@@ -38,6 +36,7 @@ interface AppContextType {
     regenerateAiResponse: (messageId: string) => Promise<void>;
     regenerateUserPromptAndGetResponse: (messageId: string) => Promise<void>;
     unreadConversations: Set<string>;
+    clearMessages: (conversationId: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -582,6 +581,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, [messages, log, setStatus, addMessage]);
 
+    const clearMessages = useCallback(async (conversationId: string) => {
+        log(`Clearing all messages for conversation: ${conversationId}`);
+        const originalMessages = messages;
+        // Optimistic update
+        if (currentConversation?.id === conversationId) {
+            setMessages([]);
+        }
+        try {
+            const res = await fetch(`/api/conversations/${conversationId}/clear-messages`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to clear messages on server.');
+            log('Successfully cleared messages from DB.');
+        } catch (error) {
+            if (currentConversation?.id === conversationId) {
+                setMessages(originalMessages);
+            }
+            const errorMessage = (error as Error).message;
+            setStatus({ error: errorMessage });
+            log('Failed to clear messages.', { conversationId, error }, 'error');
+        }
+    }, [messages, currentConversation, log, setStatus]);
+
 
     return (
         <AppContext.Provider value={{
@@ -610,6 +630,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             regenerateAiResponse,
             regenerateUserPromptAndGetResponse,
             unreadConversations,
+            clearMessages,
         }}>
             {children}
         </AppContext.Provider>

@@ -1,7 +1,3 @@
-
-
-
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -96,8 +92,8 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ feature, onEdit, onDelete }) 
                         {feature.status}
                     </span>
                     <div className="flex gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1 hover:text-blue-400" title="Edit"><EditIcon className="w-5 h-5"/></button>
-                        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 hover:text-red-500" title="Delete"><TrashIcon className="w-5 h-5"/></button>
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1 hover:text-blue-400" title="Edit this feature's documentation."><EditIcon className="w-5 h-5"/></button>
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 hover:text-red-500" title="Permanently delete this feature from the dictionary."><TrashIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </motion.div>
@@ -285,7 +281,11 @@ const FeaturesDictionary = () => {
         <div className="h-full flex flex-col">
             <div className="flex justify-between items-center mb-4 flex-shrink-0">
                  <h3 className="text-2xl font-bold">Features Dictionary</h3>
-                 <button onClick={() => handleOpenForm()} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm">
+                 <button 
+                    onClick={() => handleOpenForm()} 
+                    className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm"
+                    title="Add a new feature to the documentation dictionary."
+                 >
                         <PlusIcon className="w-5 h-5" /> Add Feature
                  </button>
             </div>

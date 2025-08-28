@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -16,13 +15,25 @@ const StatusBar = ({ onSettingsClick, onAgentConfigClick }: StatusBarProps) => {
 
     return (
         <div className="bg-gray-900 text-gray-400 text-xs p-2 border-t border-gray-700 flex justify-between items-center gap-4">
-            <span className="flex-1 italic truncate min-w-0">{status.currentAction || 'Ready'}</span>
+            <div className="flex-1 italic truncate min-w-0">
+                <span>{status.currentAction || 'Ready'}</span>
+            </div>
             <div className="flex items-center gap-3 flex-shrink-0">
-                 <button onClick={onAgentConfigClick} disabled={!currentConversation} className="flex items-center gap-1 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed" title="Configure Agent">
+                 <button 
+                    onClick={onAgentConfigClick} 
+                    disabled={!currentConversation} 
+                    className="flex items-center gap-1 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed" 
+                    title="Configure Agent: Set system instructions and memory preferences for this conversation."
+                >
                     <UserCircleIcon className="w-4 h-4" />
                     <span>Agent</span>
                 </button>
-                <button onClick={onSettingsClick} disabled={!currentConversation} className="flex items-center gap-1 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed" title="Configure Model">
+                <button 
+                    onClick={onSettingsClick} 
+                    disabled={!currentConversation} 
+                    className="flex items-center gap-1 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed" 
+                    title="Configure Model: Adjust model parameters like temperature for this conversation."
+                >
                      <CogIcon className="w-4 h-4" />
                     <span className="truncate max-w-28">{model}</span>
                 </button>

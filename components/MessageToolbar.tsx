@@ -33,31 +33,31 @@ const MessageToolbar: React.FC<MessageToolbarProps> = ({
 
     return (
         <div className="flex items-center gap-1 text-gray-400 bg-gray-800/50 rounded-full px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={handleCopy} className="p-1 hover:text-white" title="Copy">
+            <button onClick={handleCopy} className="p-1 hover:text-white" title="Copy: Copies the raw text content of this message to your clipboard.">
                 {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <CopyIcon className="w-4 h-4" />}
             </button>
-            <button onClick={onBookmark} className={`p-1 hover:text-yellow-400 ${isBookmarked ? 'text-yellow-400' : ''}`} title="Bookmark">
+            <button onClick={onBookmark} className={`p-1 hover:text-yellow-400 ${isBookmarked ? 'text-yellow-400' : ''}`} title="Bookmark: Adds this message to your global list of bookmarks for easy access later.">
                 {isBookmarked ? <BookmarkFilledIcon className="w-4 h-4" /> : <BookmarkIcon className="w-4 h-4" />}
             </button>
-            <button onClick={onSummarize} className="p-1 hover:text-white" title="Summarize">
+            <button onClick={onSummarize} className="p-1 hover:text-white" title="Summarize: Generates a concise summary of this message's content.">
                 <SummarizeIcon className="w-4 h-4" />
             </button>
-            <button onClick={onToggleCollapse} className="p-1 hover:text-white" title={isCollapsed ? "Expand" : "Collapse"}>
+            <button onClick={onToggleCollapse} className="p-1 hover:text-white" title={isCollapsed ? "Expand: Show the full content of the message." : "Collapse: Hide the content of this message."}>
                 {isCollapsed ? <ExpandIcon className="w-4 h-4" /> : <CollapseIcon className="w-4 h-4" />}
             </button>
             
             <div className="w-px h-4 bg-gray-600 mx-1"></div>
 
-            <button onClick={() => onSetAlign('left')} className="p-1 hover:text-white" title="Align Left"><TextAlignLeftIcon className="w-4 h-4"/></button>
-            <button onClick={() => onSetAlign('right')} className="p-1 hover:text-white" title="Align Right"><TextAlignRightIcon className="w-4 h-4"/></button>
+            <button onClick={() => onSetAlign('left')} className="p-1 hover:text-white" title="Align text to the left"><TextAlignLeftIcon className="w-4 h-4"/></button>
+            <button onClick={() => onSetAlign('right')} className="p-1 hover:text-white" title="Align text to the right"><TextAlignRightIcon className="w-4 h-4"/></button>
 
             <div className="w-px h-4 bg-gray-600 mx-1"></div>
             
             {isUser && (
-                 <button onClick={onEdit} className="p-1 hover:text-white" title="Edit Message"><EditIcon className="w-4 h-4"/></button>
+                 <button onClick={onEdit} className="p-1 hover:text-white" title="Edit: Change the content of your message. The conversation will proceed from the edited version."><EditIcon className="w-4 h-4"/></button>
             )}
-            <button onClick={onRegenerate} className="p-1 hover:text-white" title={isUser ? "Get New Response" : "Regenerate Response"}><RefreshIcon className="w-4 h-4"/></button>
-            <button onClick={onDelete} className="p-1 hover:text-red-400" title="Delete Message"><TrashIcon className="w-4 h-4"/></button>
+            <button onClick={onRegenerate} className="p-1 hover:text-white" title={isUser ? "Regenerate: Ask the AI to rewrite your prompt for better clarity and get a new response." : "Regenerate: Request a completely new response from the AI based on the same preceding prompt."}><RefreshIcon className="w-4 h-4"/></button>
+            <button onClick={onDelete} className="p-1 hover:text-red-400" title="Delete: Permanently removes this message from the conversation history."><TrashIcon className="w-4 h-4"/></button>
         </div>
     );
 };

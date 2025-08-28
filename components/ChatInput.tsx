@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -151,7 +148,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             {imageDataUrl && (
                 <div className="relative w-20 h-20 mb-2">
                     <img src={imageDataUrl} alt="Upload preview" className="w-full h-full object-cover rounded-md" />
-                    <button onClick={removeImage} className="absolute -top-2 -right-2 bg-gray-600 rounded-full p-0.5 text-white hover:bg-gray-500 z-10">
+                    <button onClick={removeImage} className="absolute -top-2 -right-2 bg-gray-600 rounded-full p-0.5 text-white hover:bg-gray-500 z-10" title="Remove attached image">
                         <XIcon className="w-4 h-4" />
                     </button>
                 </div>
@@ -172,7 +169,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                     }}
                     className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                     disabled={isLoading || !!imageDataUrl}
-                    title="Attach an image"
+                    title="Attach an image to your message. Disabled while an image is already attached or the AI is processing."
                 >
                     <PaperclipIcon className="w-5 h-5" />
                 </button>
@@ -202,6 +199,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                     type="submit"
                     className="p-3 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
                     disabled={isLoading || (!content.trim() && !imageDataUrl)}
+                    title="Send your message to the AI. (Enter to send, Shift+Enter for new line)"
                 >
                     <SendIcon className="w-5 h-5" />
                 </button>

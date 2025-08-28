@@ -1,8 +1,3 @@
-
-
-
-
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -151,7 +146,7 @@ const ContactsHub = ({ setIsOpen }: ContactsHubProps) => {
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
-                    <button onClick={() => handleOpenForm()} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm">
+                    <button onClick={() => handleOpenForm()} className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm" title="Add a new contact to the AI's memory.">
                         <PlusIcon className="w-5 h-5" /> Add Contact
                     </button>
                     <input type="text" placeholder="Search contacts..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="px-3 py-2 bg-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -211,8 +206,8 @@ const ContactsHub = ({ setIsOpen }: ContactsHubProps) => {
                                     </td>
                                     <td className="p-3">
                                         <div className="flex gap-4">
-                                            <button onClick={() => handleOpenForm(contact)} title="Edit"><EditIcon className="w-5 h-5 text-gray-400 hover:text-blue-400"/></button>
-                                            <button onClick={() => handleDeleteContact(contact.id)} title="Delete"><TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500"/></button>
+                                            <button onClick={() => handleOpenForm(contact)} title="Edit this contact's details."><EditIcon className="w-5 h-5 text-gray-400 hover:text-blue-400"/></button>
+                                            <button onClick={() => handleDeleteContact(contact.id)} title="Permanently delete this contact."><TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500"/></button>
                                         </div>
                                     </td>
                                 </motion.tr>

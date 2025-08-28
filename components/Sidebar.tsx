@@ -80,17 +80,17 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     const menuItems = [
-        { label: 'Memory Center', icon: MemoryIcon, action: () => { log('User opened Memory Center.'); setMemoryCenterOpen(true); } },
-        { label: 'Contacts Hub', icon: UsersIcon, action: () => { log('User opened Contacts Hub.'); setContactsHubOpen(true); } },
-        { label: 'Dev Center', icon: CodeIcon, action: () => { log('User opened Dev Center.'); setDevCenterOpen(true); } },
+        { label: 'Memory Center', icon: MemoryIcon, action: () => { log('User opened Memory Center.'); setMemoryCenterOpen(true); }, tooltip: "Open the Memory Center to view and manage the AI's structured knowledge (entities). (Cmd+K)" },
+        { label: 'Contacts Hub', icon: UsersIcon, action: () => { log('User opened Contacts Hub.'); setContactsHubOpen(true); }, tooltip: "Open the Contacts Hub to add, edit, and manage people and organizations the AI knows about." },
+        { label: 'Dev Center', icon: CodeIcon, action: () => { log('User opened Dev Center.'); setDevCenterOpen(true); }, tooltip: "Open the SoulyDev Center for project documentation, feature tracking, and developer tools." },
     ];
     
     const toolbarItems = [
-        { label: 'Bookmarks', icon: BookmarkListIcon, action: () => { log('User opened Bookmarks modal.'); setBookmarksOpen(true); } },
-        { label: 'Global Settings', icon: SettingsIcon, action: () => { log('User opened Global Settings.'); setGlobalSettingsOpen(true); } },
-        { label: 'Toggle Log Panel', icon: LogIcon, action: () => { log('User toggled the log panel.'); setLogPanelOpen(prev => !prev); } },
-        { label: 'Hide Sidebar', icon: SidebarLeftIcon, action: () => { log('User hid sidebar.'); setSidebarOpen(false); } },
-        { label: 'Suggestions', icon: LightbulbIcon, action: () => alert('Feature coming soon!') },
+        { label: 'Bookmarks', icon: BookmarkListIcon, action: () => { log('User opened Bookmarks modal.'); setBookmarksOpen(true); }, tooltip: "View all your bookmarked messages from all conversations." },
+        { label: 'Global Settings', icon: SettingsIcon, action: () => { log('User opened Global Settings.'); setGlobalSettingsOpen(true); }, tooltip: "Configure application-wide default settings for new conversations and models." },
+        { label: 'Toggle Log Panel', icon: LogIcon, action: () => { log('User toggled the log panel.'); setLogPanelOpen(prev => !prev); }, tooltip: "Show or hide the developer log panel at the bottom of the screen." },
+        { label: 'Hide Sidebar', icon: SidebarLeftIcon, action: () => { log('User hid sidebar.'); setSidebarOpen(false); }, tooltip: "Collapse the sidebar to focus on the conversation." },
+        { label: 'Suggestions', icon: LightbulbIcon, action: () => alert('Feature coming soon!'), tooltip: "View AI-powered suggestions for improving your workflow (Coming Soon)." },
     ];
 
     return (
@@ -98,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
                 onClick={handleNewChat}
                 className="flex items-center justify-center w-full p-2 mb-4 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors flex-shrink-0"
-                title="New Chat (Cmd+N)"
+                title="Create a new, empty conversation with default settings. (Cmd+N)"
             >
                 <PlusIcon className="w-5 h-5 mr-2" />
                 New Chat
@@ -109,6 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         key={item.label}
                         onClick={item.action}
                         className="flex items-center w-full p-2 text-sm font-semibold text-gray-300 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={item.tooltip}
                     >
                         <item.icon className="w-5 h-5 mr-3" />
                         {item.label}
@@ -154,9 +155,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                                     </button>
                                 )}
                                 <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center bg-gray-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={(e) => handleGenerateTitle(e, convo.id)} className="p-1.5 text-gray-300 hover:text-indigo-400" title="Generate Title"><SparklesIcon className="w-4 h-4" /></button>
-                                    <button onClick={(e) => handleEditTitle(e, convo.id, convo.title)} className="p-1.5 text-gray-300 hover:text-blue-400" title="Edit Title"><EditIcon className="w-4 h-4" /></button>
-                                    <button onClick={(e) => handleDelete(e, convo.id)} className="p-1.5 text-gray-300 hover:text-red-400" title="Delete Conversation"><TrashIcon className="w-4 h-4" /></button>
+                                    <button onClick={(e) => handleGenerateTitle(e, convo.id)} className="p-1.5 text-gray-300 hover:text-indigo-400" title="Ask AI to generate a new title"><SparklesIcon className="w-4 h-4" /></button>
+                                    <button onClick={(e) => handleEditTitle(e, convo.id, convo.title)} className="p-1.5 text-gray-300 hover:text-blue-400" title="Rename conversation"><EditIcon className="w-4 h-4" /></button>
+                                    <button onClick={(e) => handleDelete(e, convo.id)} className="p-1.5 text-gray-300 hover:text-red-400" title="Delete conversation"><TrashIcon className="w-4 h-4" /></button>
                                 </div>
                             </li>
                         )
@@ -170,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div className="flex items-center justify-around p-2 bg-gray-900/50 rounded-lg">
                     {toolbarItems.map(item => (
-                        <button key={item.label} onClick={item.action} title={item.label} className="p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors">
+                        <button key={item.label} onClick={item.action} title={item.tooltip} className="p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors">
                             <item.icon className="w-5 h-5" />
                         </button>
                     ))}

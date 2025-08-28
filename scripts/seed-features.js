@@ -14,7 +14,8 @@ const featuresData = [
             { subFeature: 'Chat Input', description: 'Text area for user input, including @mentions and image uploads.', status: '✅ Completed' },
             { subFeature: 'Message Toolbar', description: 'Hover controls on messages for actions like Copy, Bookmark, Summarize.', status: '✅ Completed' },
             { subFeature: 'Conversation List Sidebar', description: 'Allows switching between and creating new conversations.', status: '✅ Completed' },
-            { subFeature: 'Enhanced Sidebar Navigation', description: 'Add visual cues for unread messages or conversation status', status: '🟡 Needs Improvement' }
+            { subFeature: 'Enhanced Sidebar Navigation', description: 'Add visual cues for unread messages or conversation status', status: '✅ Completed' },
+            { subFeature: 'Informative Tooltips', description: 'All interactive buttons and icons have detailed tooltips on hover.', status: '✅ Completed' }
         ]),
         logic_flow: 'User sends a message via ChatInput -> AppProvider optimistically updates the UI -> An API call is made to /api/chat with the message history and context -> The API route constructs the full prompt, including memory and contact info -> A call is made to the Gemini API -> The response is received and sent back to the client -> The UI is updated with the final AI message -> A background, fire-and-forget call is made to /api/memory/pipeline to learn from the exchange.',
         key_files_json: JSON.stringify([
@@ -25,6 +26,26 @@ const featuresData = [
             'components/providers/AppProvider.tsx'
         ]),
         notes: 'The file upload UI is functional but could be enhanced with drag-and-drop support and previews for more file types.'
+    },
+    {
+        name: 'Right-Click Context Menu',
+        overview: 'A global, context-aware right-click menu that provides quick access to over 20 of the most common and useful application functions, reducing clicks and improving user workflow efficiency.',
+        status: '✅ Completed',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'Menu Activation & Positioning', description: 'Right-clicking anywhere in the app opens the menu at the cursor\'s position.', status: '✅ Completed' },
+            { subFeature: 'Dynamic Menu Items', description: 'Menu items are context-aware; some are disabled if no conversation is active.', status: '✅ Completed' },
+            { subFeature: 'Logical Grouping', description: 'Actions are grouped into logical sections like Application, Conversation, Memory, and Quick Access.', status: '✅ Completed' },
+            { subFeature: 'Modal Triggers', description: 'Actions can trigger modals, such as "Add Knowledge Snippet" or "Keyboard Shortcuts".', status: '✅ Completed' }
+        ]),
+        logic_flow: 'The main App component has a top-level `onContextMenu` event handler. This handler prevents the default browser menu and sets the state for the custom ContextMenu component, including its open status and X/Y position. The menu items are defined as an array of objects in App.tsx, with each object containing a label, icon, action function, and a disabled condition. The ContextMenu component handles its own dismissal logic (on Escape key or outside click).',
+        key_files_json: JSON.stringify([
+            'components/App.tsx',
+            'components/ContextMenu.tsx',
+            'components/Icons.tsx',
+            'components/AddKnowledgeModal.tsx',
+            'components/ShortcutsModal.tsx'
+        ]),
+        notes: 'The context menu could be made even more specific in the future, for example, by showing different options when right-clicking on a specific message versus an empty area.'
     },
     {
         name: 'Multi-Layered Memory System',
@@ -103,13 +124,10 @@ const featuresData = [
 async function seedFeatures() {
     console.log("Starting to seed features data...");
     try {
-        // Check if the table is already seeded to prevent duplicate entries
-        const { rows: existingFeatures } = await sql`SELECT COUNT(*) FROM features;`;
-        if (parseInt(existingFeatures[0].count, 10) > 0) {
-            console.log("Features table already contains data. Skipping seeding.");
-            return;
-        }
-
+        // This script now deletes all existing features and re-inserts them to ensure the data is always up-to-date with the source code.
+        console.log("Clearing existing features...");
+        await sql`TRUNCATE TABLE features RESTART IDENTITY;`;
+        
         console.log("Inserting feature data...");
         for (const feature of featuresData) {
             await sql`

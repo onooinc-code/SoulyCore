@@ -88,13 +88,13 @@ const Header = () => {
 
                 {currentConversation && (
                     <div className="flex items-center gap-2">
-                        <button onClick={handleGenerateTitle} className="p-2 text-gray-400 hover:text-indigo-400 rounded-full hover:bg-gray-700" title="Generate Title">
+                        <button onClick={handleGenerateTitle} className="p-2 text-gray-400 hover:text-indigo-400 rounded-full hover:bg-gray-700" title="Ask the AI to generate a new, concise title for this conversation based on its content.">
                             <SparklesIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={handleEdit} className="p-2 text-gray-400 hover:text-blue-400 rounded-full hover:bg-gray-700" title="Edit Title">
+                        <button onClick={handleEdit} className="p-2 text-gray-400 hover:text-blue-400 rounded-full hover:bg-gray-700" title="Manually edit the title of this conversation.">
                             <EditIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={handleDelete} className="p-2 text-gray-400 hover:text-red-400 rounded-full hover:bg-gray-700" title="Delete Conversation">
+                        <button onClick={handleDelete} className="p-2 text-gray-400 hover:text-red-400 rounded-full hover:bg-gray-700" title="Permanently delete this entire conversation and all its messages.">
                             <TrashIcon className="w-5 h-5" />
                         </button>
                     </div>
