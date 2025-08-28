@@ -42,14 +42,13 @@ const Header = () => {
 
     return (
         <motion.header 
-            initial={{ y: -100, opacity: 0 }}
+            initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            className="fixed top-0 left-0 right-0 md:left-auto md:right-0 bg-gray-800/80 backdrop-blur-sm z-10 p-3 border-b border-gray-700"
-            style={{ width: 'inherit' }} // Inherits width from parent .flex-1
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            className="relative w-full bg-gray-800/80 backdrop-blur-sm z-10 p-3 border-b border-gray-700 flex-shrink-0"
         >
             <div 
-                className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
+                className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
                 style={{
                     animation: 'move-glow 4s linear infinite'
                 }}

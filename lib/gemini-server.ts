@@ -174,3 +174,15 @@ export const generateTitleFromHistory = async (history: Content[]): Promise<stri
         return null;
     }
 };
+
+export const generateSummary = async (text: string): Promise<string | null> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `Provide a concise summary of the following text:\n\n---\n\n${text}`;
+        const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+        return result?.text?.trim() || null;
+    } catch (e) {
+        console.error("Summary generation failed:", e);
+        return null;
+    }
+};

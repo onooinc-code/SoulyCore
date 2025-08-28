@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
             INSERT INTO conversations (
                 title, "systemPrompt", "useSemanticMemory", "useStructuredMemory", model, temperature, "topP"
             )
-            VALUES ($1, a$2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *;
         `;
         const values = [

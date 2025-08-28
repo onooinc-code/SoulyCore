@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { CopyIcon, BookmarkIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon } from './Icons';
+import { CopyIcon, BookmarkIcon, BookmarkFilledIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon } from './Icons';
 import { useLog } from './providers/LogProvider';
 
 interface MessageToolbarProps {
@@ -36,8 +36,8 @@ const MessageToolbar: React.FC<MessageToolbarProps> = ({
             <button onClick={handleCopy} className="p-1 hover:text-white" title="Copy">
                 {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <CopyIcon className="w-4 h-4" />}
             </button>
-            <button onClick={onBookmark} className={`p-1 hover:text-white ${isBookmarked ? 'text-yellow-400' : ''}`} title="Bookmark">
-                <BookmarkIcon className="w-4 h-4" />
+            <button onClick={onBookmark} className={`p-1 hover:text-yellow-400 ${isBookmarked ? 'text-yellow-400' : ''}`} title="Bookmark">
+                {isBookmarked ? <BookmarkFilledIcon className="w-4 h-4" /> : <BookmarkIcon className="w-4 h-4" />}
             </button>
             <button onClick={onSummarize} className="p-1 hover:text-white" title="Summarize">
                 <SummarizeIcon className="w-4 h-4" />
@@ -56,9 +56,7 @@ const MessageToolbar: React.FC<MessageToolbarProps> = ({
             {isUser && (
                  <button onClick={onEdit} className="p-1 hover:text-white" title="Edit Message"><EditIcon className="w-4 h-4"/></button>
             )}
-             {!isUser && (
-                <button onClick={onRegenerate} className="p-1 hover:text-white" title="Regenerate Response"><RefreshIcon className="w-4 h-4"/></button>
-            )}
+            <button onClick={onRegenerate} className="p-1 hover:text-white" title={isUser ? "Get New Response" : "Regenerate Response"}><RefreshIcon className="w-4 h-4"/></button>
             <button onClick={onDelete} className="p-1 hover:text-red-400" title="Delete Message"><TrashIcon className="w-4 h-4"/></button>
         </div>
     );

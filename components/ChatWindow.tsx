@@ -22,6 +22,7 @@ const ChatWindow = () => {
         toggleBookmark,
         isLoading,
         status,
+        setStatus,
         clearError,
         deleteMessage,
         updateMessage,
@@ -51,9 +52,21 @@ const ChatWindow = () => {
     const handleSummarizeMessage = async (content: string) => {
         log('User requested message summary.');
         setSummaryModalState({ isOpen: true, text: '', isLoading: true });
-        // This would be an API call in the new architecture
-        const summary = "Summary generation is now a server-side capability.";
-        setSummaryModalState({ isOpen: true, text: summary, isLoading: false });
+        try {
+            const res = await fetch('/api/summarize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: content }),
+            });
+            if (!res.ok) throw new Error('Failed to fetch summary from the server.');
+            const data = await res.json();
+            setSummaryModalState({ isOpen: true, text: data.summary, isLoading: false });
+        } catch (error) {
+            const errorText = 'Sorry, the summary could not be generated at this time.';
+            log('Error fetching message summary.', { error: (error as Error).message }, 'error');
+            setSummaryModalState({ isOpen: true, text: errorText, isLoading: false });
+            setStatus({ error: (error as Error).message });
+        }
     };
 
     const handleSendMessage = async (content: string, mentionedContacts: Contact[]) => {
@@ -71,6 +84,26 @@ const ChatWindow = () => {
             setProactiveSuggestion(suggestion);
         }
     };
+
+    const handleRegenerate = (messageId: string) => {
+        const messageIndex = messages.findIndex(m => m.id === messageId);
+        if (messageIndex === -1) return;
+        
+        const message = messages[messageIndex];
+
+        if (message.role === 'model') {
+            // If it's an AI message, regenerate it directly.
+            regenerateAiResponse(messageId);
+        } else if (message.role === 'user') {
+            // If it's a user message, find the *next* message. If it's an AI response, regenerate that.
+            if (messageIndex < messages.length - 1) {
+                const nextMessage = messages[messageIndex + 1];
+                if (nextMessage.role === 'model') {
+                    regenerateAiResponse(nextMessage.id);
+                }
+            }
+        }
+    };
     
     const handleSuggestionClick = () => {
         if (!proactiveSuggestion) return;
@@ -85,7 +118,7 @@ const ChatWindow = () => {
     return (
         <div className="flex flex-col h-full relative">
             <Header />
-            <div className="flex-1 p-6 overflow-y-auto pt-20"> {/* Added padding-top */}
+            <div className="flex-1 p-6 overflow-y-auto"> {/* Removed padding-top */}
                 <div className="max-w-4xl mx-auto">
                     {messages.length > 0 ? (
                         <div className="space-y-4">
@@ -97,7 +130,7 @@ const ChatWindow = () => {
                                     onToggleBookmark={toggleBookmark}
                                     onDelete={() => deleteMessage(msg.id)}
                                     onUpdate={updateMessage}
-                                    onRegenerate={regenerateAiResponse}
+                                    onRegenerate={() => handleRegenerate(msg.id)}
                                 />
                             ))}
                              <div ref={messagesEndRef} />

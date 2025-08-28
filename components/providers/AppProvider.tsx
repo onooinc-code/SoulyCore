@@ -403,39 +403,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
      const regenerateAiResponse = useCallback(async (messageId: string) => {
         log(`Regenerating AI response for message: ${messageId}`);
         const messageIndex = messages.findIndex(m => m.id === messageId);
-        if (messageIndex === -1 || messageIndex === 0) return;
+        
+        // Ensure the message exists and is not the very first message
+        if (messageIndex < 1) return;
+
+        const aiMessageToDelete = messages[messageIndex];
+        // Ensure we are regenerating a 'model' response
+        if (aiMessageToDelete.role !== 'model') return;
 
         const historyToResend = messages.slice(0, messageIndex);
         const userPromptMessage = historyToResend[historyToResend.length - 1];
 
+        // Ensure the preceding message is from the user
         if (userPromptMessage.role !== 'user') return;
-
-        // Optimistically remove the old AI response
-        setMessages(prev => prev.filter(m => m.id !== messageId));
-
-        const { aiResponse, suggestion } = await addMessage(userPromptMessage, [], historyToResend);
-
-        if (aiResponse) {
-             // The addMessage function will have added the new AI response to the state.
-             setMessages(prev => {
-                const finalMessages = [...prev];
-                // Remove the original user message from the history used for the call
-                // because addMessage adds it back optimistically.
-                const userMessageIndex = finalMessages.findIndex(m => m.id === userPromptMessage.id);
-                if (userMessageIndex > -1) {
-                  // This is tricky. Let's just reload messages for simplicity.
-                  fetchMessages(currentConversation!.id);
-                }
-                return prev;
-             });
-             fetchMessages(currentConversation!.id);
-
-        } else {
-            // If it fails, reload the messages to restore the old state
-            fetchMessages(currentConversation!.id);
+        
+        // Delete the old AI response from the database and UI
+        try {
+            const res = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete the previous AI response.');
+            log('Successfully deleted old AI response from DB.', { messageId });
+            // Update UI state after successful deletion
+            setMessages(prev => prev.filter(m => m.id !== messageId));
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: `Failed to remove the previous response. Please try again. Error: ${errorMessage}` });
+            log('Error deleting old AI response during regeneration.', { messageId, error }, 'error');
+            return; // Stop the process if deletion fails
         }
 
-    }, [messages, addMessage, fetchMessages, currentConversation, log]);
+        // Call addMessage with the history *before* the deleted AI message
+        // It will handle the API call and add the new AI response to the UI
+        await addMessage(userPromptMessage, [], historyToResend);
+
+    }, [messages, addMessage, log, setStatus]);
 
 
     return (
