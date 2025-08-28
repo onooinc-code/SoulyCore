@@ -6,9 +6,12 @@ export async function PUT(req: NextRequest, { params }: { params: { messageId: s
     try {
         const { messageId } = params;
         
+        // FIX: Use COALESCE to handle potential NULL values in the isBookmarked column,
+        // ensuring the toggle works reliably even for older records created before the
+        // column had a default value.
         const { rows } = await sql`
             UPDATE messages
-            SET "isBookmarked" = NOT "isBookmarked"
+            SET "isBookmarked" = NOT COALESCE("isBookmarked", false)
             WHERE id = ${messageId}
             RETURNING *;
         `;
