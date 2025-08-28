@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
@@ -34,6 +35,7 @@ interface AppContextType {
     deleteMessage: (messageId: string) => Promise<void>;
     updateMessage: (messageId: string, newContent: string) => Promise<void>;
     regenerateAiResponse: (messageId: string) => Promise<void>;
+    regenerateUserPromptAndGetResponse: (messageId: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -201,25 +203,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             const finalUserMessage: Message = { ...optimisticUserMessage, conversationId: conversationToUpdate.id };
             
-            if (!historyOverride) {
-                log('Saving user message to DB...');
-                const userMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ message: finalUserMessage }),
-                });
-                if (!userMsgRes.ok) throw new Error("Failed to save your message.");
-                const savedUserMessage = await userMsgRes.json();
-                log('User message saved successfully.', savedUserMessage);
-                
-                setMessages(prev => prev.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m));
+            // For a normal message send, add the optimistic message before sending.
+            // For a regeneration, the history is provided and already correct.
+            let messageHistory = historyOverride ? [...historyOverride] : [...messages.filter(m => m.id !== optimisticUserMessage.id)];
+
+            log('Saving user message to DB...');
+            const userMsgRes = await fetch(`/api/conversations/${conversationToUpdate.id}/messages`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ message: finalUserMessage }),
+            });
+            if (!userMsgRes.ok) throw new Error("Failed to save your message.");
+            const savedUserMessage = await userMsgRes.json();
+            log('User message saved successfully.', savedUserMessage);
+            
+            // Add the saved user message to the UI/history
+            if (historyOverride) {
+                 messageHistory.push(savedUserMessage);
+                 setMessages(prev => [...prev, savedUserMessage]);
+            } else {
+                 setMessages(prev => prev.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m));
+                 messageHistory.push(savedUserMessage);
             }
             
-            const messageHistory = historyOverride || messages;
-            const updatedMessagesHistory = [...messageHistory.filter(m => m.id !== optimisticUserMessage.id), finalUserMessage];
-
             const chatApiPayload = { 
-                messages: updatedMessagesHistory, 
+                messages: messageHistory, 
                 conversation: conversationToUpdate,
                 mentionedContacts,
             };
@@ -437,6 +445,83 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     }, [messages, addMessage, log, setStatus]);
 
+    const regenerateUserPromptAndGetResponse = useCallback(async (messageId: string) => {
+        log(`Regenerating user prompt and getting new response for message: ${messageId}`);
+        setStatus({ currentAction: "Rewriting your prompt...", error: null });
+        setIsLoading(true);
+
+        const messageIndex = messages.findIndex(m => m.id === messageId);
+        if (messageIndex === -1) {
+            const errorMsg = "Original message not found for regeneration.";
+            setStatus({ error: errorMsg });
+            log(errorMsg, { messageId }, 'error');
+            setIsLoading(false);
+            return;
+        }
+
+        const userMessage = messages[messageIndex];
+        if (userMessage.role !== 'user') {
+            log('Attempted to regenerate prompt for a non-user message.', { messageId }, 'warn');
+            setIsLoading(false);
+            return;
+        }
+        
+        let aiMessageToDelete: Message | null = null;
+        if (messageIndex + 1 < messages.length && messages[messageIndex + 1].role === 'model') {
+            aiMessageToDelete = messages[messageIndex + 1];
+        }
+
+        const historyForContext = messages.slice(0, messageIndex);
+        
+        try {
+            const regenRes = await fetch('/api/prompt/regenerate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    promptToRewrite: userMessage.content,
+                    history: historyForContext.map(m => ({ role: m.role, parts: [{ text: m.content }] }))
+                }),
+            });
+            if (!regenRes.ok) throw new Error('Failed to get rewritten prompt from server.');
+            const { rewrittenPrompt } = await regenRes.json();
+            log('Received rewritten prompt from AI.', { rewrittenPrompt });
+
+            setStatus({ currentAction: "Prompt rewritten. Getting new response..." });
+
+            const deleteUserMsgRes = await fetch(`/api/messages/${userMessage.id}`, { method: 'DELETE' });
+            if (!deleteUserMsgRes.ok) throw new Error('Failed to delete original user message.');
+            log('Deleted old user message from DB.', { messageId: userMessage.id });
+
+            if (aiMessageToDelete) {
+                const deleteAiMsgRes = await fetch(`/api/messages/${aiMessageToDelete.id}`, { method: 'DELETE' });
+                if (!deleteAiMsgRes.ok) throw new Error('Failed to delete original AI response.');
+                log('Deleted old AI response from DB.', { messageId: aiMessageToDelete.id });
+            }
+
+            setMessages(prev => prev.filter(m => {
+                if (m.id === userMessage.id) return false;
+                if (aiMessageToDelete && m.id === aiMessageToDelete.id) return false;
+                return true;
+            }));
+
+            const newPromptMessage: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
+                role: 'user',
+                content: rewrittenPrompt,
+                tokenCount: Math.ceil(rewrittenPrompt.length / 4),
+            };
+            
+            await addMessage(newPromptMessage, [], historyForContext);
+
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: `Failed during prompt regeneration process: ${errorMessage}` });
+            log('Error regenerating user prompt.', { messageId, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
+        } finally {
+            setIsLoading(false);
+            setStatus({ currentAction: "" });
+        }
+    }, [messages, log, setStatus, addMessage]);
+
 
     return (
         <AppContext.Provider value={{
@@ -463,6 +548,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             deleteMessage,
             updateMessage,
             regenerateAiResponse,
+            regenerateUserPromptAndGetResponse,
         }}>
             {children}
         </AppContext.Provider>

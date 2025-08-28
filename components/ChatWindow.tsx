@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -26,7 +27,8 @@ const ChatWindow = () => {
         clearError,
         deleteMessage,
         updateMessage,
-        regenerateAiResponse
+        regenerateAiResponse,
+        regenerateUserPromptAndGetResponse
     } = useAppContext();
     const { log } = useLog();
     
@@ -86,22 +88,13 @@ const ChatWindow = () => {
     };
 
     const handleRegenerate = (messageId: string) => {
-        const messageIndex = messages.findIndex(m => m.id === messageId);
-        if (messageIndex === -1) return;
-        
-        const message = messages[messageIndex];
-
+        const message = messages.find(m => m.id === messageId);
+        if (!message) return;
+    
         if (message.role === 'model') {
-            // If it's an AI message, regenerate it directly.
             regenerateAiResponse(messageId);
         } else if (message.role === 'user') {
-            // If it's a user message, find the *next* message. If it's an AI response, regenerate that.
-            if (messageIndex < messages.length - 1) {
-                const nextMessage = messages[messageIndex + 1];
-                if (nextMessage.role === 'model') {
-                    regenerateAiResponse(nextMessage.id);
-                }
-            }
+            regenerateUserPromptAndGetResponse(messageId);
         }
     };
     

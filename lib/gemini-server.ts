@@ -186,3 +186,41 @@ export const generateSummary = async (text: string): Promise<string | null> => {
         return null;
     }
 };
+
+export const regenerateUserPrompt = async (
+    promptToRewrite: string,
+    history: Content[]
+): Promise<string | null> => {
+    try {
+        const ai = getAiClient();
+        const conversationHistoryText = history
+            .filter((m): m is { role: string; parts: { text: string }[] } =>
+                typeof m === 'object' && m !== null && Array.isArray(m.parts) && m.parts.length > 0
+            )
+            .map(m => `${m.role}: ${m.parts[0].text}`)
+            .join('\n');
+        
+        const prompt = `
+            Based on the following conversation history, professionally rewrite the user's final message.
+            The rewritten message should be clearer, more effective, and maintain the original intent.
+            Return ONLY the rewritten message text, without any additional explanation, formatting, or quotation marks.
+
+            Conversation History:
+            ---
+            ${conversationHistoryText}
+            ---
+
+            User's message to rewrite: "${promptToRewrite}"
+        `;
+
+        const result = await ai.models.generateContent({ model: modelName, contents: prompt });
+        if (!result || !result.text) {
+            return null;
+        }
+        return result.text.trim();
+
+    } catch (e) {
+        console.error("User prompt regeneration failed:", e);
+        return null;
+    }
+};
