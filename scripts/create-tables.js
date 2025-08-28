@@ -124,6 +124,19 @@ async function createTables() {
         `;
         console.log("Table 'logs' created or already exists.", logsTable.command);
 
+        const promptsTable = await sql`
+            CREATE TABLE IF NOT EXISTS prompts (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                name VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                folder VARCHAR(255),
+                tags TEXT[],
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'prompts' created or already exists.", promptsTable.command);
+
 
         // Insert default settings if they don't exist
         await sql`

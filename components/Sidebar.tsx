@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon, SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LightbulbIcon } from '@/components/Icons';
+import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon, SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LightbulbIcon, PromptsIcon } from '@/components/Icons';
 import { useLog } from './providers/LogProvider';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -12,6 +12,7 @@ interface SidebarProps {
     setDevCenterOpen: (isOpen: boolean) => void;
     setGlobalSettingsOpen: (isOpen: boolean) => void;
     setBookmarksOpen: (isOpen: boolean) => void;
+    setPromptsHubOpen: (isOpen: boolean) => void;
     setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isSidebarOpen: boolean;
     setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -23,6 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     setDevCenterOpen,
     setGlobalSettingsOpen,
     setBookmarksOpen,
+    setPromptsHubOpen,
     setLogPanelOpen,
     isSidebarOpen,
     setSidebarOpen,
@@ -82,6 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const menuItems = [
         { label: 'Memory Center', icon: MemoryIcon, action: () => { log('User opened Memory Center.'); setMemoryCenterOpen(true); }, tooltip: "Open the Memory Center to view and manage the AI's structured knowledge (entities). (Cmd+K)" },
         { label: 'Contacts Hub', icon: UsersIcon, action: () => { log('User opened Contacts Hub.'); setContactsHubOpen(true); }, tooltip: "Open the Contacts Hub to add, edit, and manage people and organizations the AI knows about." },
+        { label: 'Prompts Hub', icon: PromptsIcon, action: () => { log('User opened Prompts Hub.'); setPromptsHubOpen(true); }, tooltip: "Open the Prompts Hub to create, manage, and reuse powerful prompt templates." },
         { label: 'Dev Center', icon: CodeIcon, action: () => { log('User opened Dev Center.'); setDevCenterOpen(true); }, tooltip: "Open the SoulyDev Center for project documentation, feature tracking, and developer tools." },
     ];
     

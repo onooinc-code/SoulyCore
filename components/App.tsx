@@ -9,6 +9,7 @@ import {
     SidebarLeftIcon, LogIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon,
     CopyIcon, FullscreenIcon, ExitFullscreenIcon, ClearIcon, KnowledgeIcon,
     KeyboardIcon,
+    PromptsIcon,
 } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -52,6 +53,11 @@ const ShortcutsModal = dynamic(() => import('@/components/ShortcutsModal'), {
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading...</p></div>
 });
 
+const PromptsHub = dynamic(() => import('@/components/PromptsHub'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Prompts...</p></div>
+});
+
 
 const App = () => {
     const { 
@@ -67,6 +73,7 @@ const App = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isMemoryCenterOpen, setMemoryCenterOpen] = useState(false);
     const [isContactsHubOpen, setContactsHubOpen] = useState(false);
+    const [isPromptsHubOpen, setPromptsHubOpen] = useState(false);
     const [isDevCenterOpen, setDevCenterOpen] = useState(false);
     const [isGlobalSettingsOpen, setGlobalSettingsOpen] = useState(false);
     const [isBookmarksOpen, setBookmarksOpen] = useState(false);
@@ -149,6 +156,7 @@ const App = () => {
         { label: 'Quick Access', isSeparator: true },
         { label: 'Open Memory Center', icon: MemoryIcon, action: () => setMemoryCenterOpen(true) },
         { label: 'Open Contacts Hub', icon: UsersIcon, action: () => setContactsHubOpen(true) },
+        { label: 'Open Prompts Hub', icon: PromptsIcon, action: () => setPromptsHubOpen(true) },
         { label: 'Open Dev Center', icon: CodeIcon, action: () => setDevCenterOpen(true) },
         { label: 'Open Bookmarks', icon: BookmarkListIcon, action: () => setBookmarksOpen(true) },
         { label: 'Help', isSeparator: true },
@@ -172,6 +180,7 @@ const App = () => {
                            <Sidebar 
                                 setMemoryCenterOpen={setMemoryCenterOpen}
                                 setContactsHubOpen={setContactsHubOpen} 
+                                setPromptsHubOpen={setPromptsHubOpen}
                                 setDevCenterOpen={setDevCenterOpen}
                                 setGlobalSettingsOpen={setGlobalSettingsOpen}
                                 setBookmarksOpen={setBookmarksOpen}
@@ -197,6 +206,7 @@ const App = () => {
                 <AnimatePresence>
                     {isMemoryCenterOpen && <MemoryCenter setIsOpen={setMemoryCenterOpen} />}
                     {isContactsHubOpen && <ContactsHub setIsOpen={setContactsHubOpen} />}
+                    {isPromptsHubOpen && <PromptsHub setIsOpen={setPromptsHubOpen} />}
                     {isDevCenterOpen && <DevCenter setIsOpen={setDevCenterOpen} />}
                     {isGlobalSettingsOpen && <GlobalSettingsModal setIsOpen={setGlobalSettingsOpen} />}
                     {isBookmarksOpen && <BookmarksModal isOpen={isBookmarksOpen} setIsOpen={setBookmarksOpen} />}

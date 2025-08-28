@@ -1,11 +1,19 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { SendIcon, PaperclipIcon, XIcon } from './Icons';
+import { SendIcon, PaperclipIcon, XIcon, PromptsIcon } from './Icons';
 import LoadingIndicator from './LoadingIndicator';
-import type { Contact } from '@/lib/types';
+import type { Contact, Prompt } from '@/lib/types';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { useLog } from './providers/LogProvider';
+import dynamic from 'next/dynamic';
+
+const FillPromptVariablesModal = dynamic(() => import('@/components/FillPromptVariablesModal'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading...</p></div>
+});
+
 
 interface ChatInputProps {
     onSendMessage: (content: string, mentionedContacts: Contact[]) => void;
@@ -22,8 +30,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     const [mentionedContacts, setMentionedContacts] = useState<Contact[]>([]);
     const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
     
+    const [isPromptsListOpen, setIsPromptsListOpen] = useState(false);
+    const [prompts, setPrompts] = useState<Prompt[]>([]);
+    const [promptSearchTerm, setPromptSearchTerm] = useState('');
+
+    const [variableModalState, setVariableModalState] = useState<{
+        isOpen: boolean;
+        prompt: Prompt | null;
+        variables: string[];
+    }>({ isOpen: false, prompt: null, variables: [] });
+
+
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const promptsListRef = useRef<HTMLDivElement>(null);
 
     const fetchContacts = useCallback(async () => {
         try {
@@ -49,10 +69,42 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             console.error("Fetch contacts error:", error);
         }
     }, [setStatus, log]);
+    
+    const fetchPrompts = useCallback(async () => {
+        if (prompts.length > 0 && isPromptsListOpen) return;
+        try {
+            log('Fetching prompts for launcher...');
+            const res = await fetch('/api/prompts');
+            if (!res.ok) throw new Error('Failed to fetch prompts');
+            const data = await res.json();
+            setPrompts(data);
+            log(`Fetched ${data.length} prompts for launcher.`);
+        } catch(error) {
+             const errorMessage = (error as Error).message;
+             log('Failed to fetch prompts for launcher.', { error: { message: errorMessage } }, 'error');
+        }
+    }, [isPromptsListOpen, prompts.length, log]);
 
     useEffect(() => {
         fetchContacts();
     }, [fetchContacts]);
+    
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (promptsListRef.current && !promptsListRef.current.contains(event.target as Node)) {
+                setIsPromptsListOpen(false);
+            }
+        };
+
+        if (isPromptsListOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isPromptsListOpen]);
+
     
     const updateMentionedContacts = (text: string) => {
         const mentionRegex = /@(\w+)/g;
@@ -127,22 +179,70 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
         setShowMentions(false);
     };
 
+    const handlePromptSelect = (prompt: Prompt) => {
+        const variableRegex = /{{\s*(\w+)\s*}}/g;
+        const matches = [...prompt.content.matchAll(variableRegex)];
+        const uniqueVariables = [...new Set(matches.map(match => match[1]))];
+
+        if (uniqueVariables.length > 0) {
+            log('User selected a prompt with dynamic variables.', { promptName: prompt.name, variables: uniqueVariables });
+            setVariableModalState({ isOpen: true, prompt: prompt, variables: uniqueVariables });
+            setIsPromptsListOpen(false);
+        } else {
+            log('User selected a simple prompt.', { promptName: prompt.name });
+            setContent(prompt.content);
+            setIsPromptsListOpen(false);
+        }
+        setPromptSearchTerm('');
+        textareaRef.current?.focus();
+    };
+    
+    const handleVariableSubmit = (filledPrompt: string) => {
+        log('User submitted variables and populated chat input.');
+        setContent(filledPrompt);
+        setVariableModalState({ isOpen: false, prompt: null, variables: [] });
+        textareaRef.current?.focus();
+    };
+
     const filteredContacts = contacts.filter(c => c.name.toLowerCase().startsWith(mentionQuery));
+
+    const filteredPrompts = prompts.filter(p => 
+        p.name.toLowerCase().includes(promptSearchTerm.toLowerCase()) ||
+        p.content.toLowerCase().includes(promptSearchTerm.toLowerCase())
+    );
 
     return (
         <>
         <div className="p-4 bg-gray-800 border-t border-gray-700 relative">
-            {showMentions && filteredContacts.length > 0 && (
+             {showMentions && filteredContacts.length > 0 && (
                 <div className="absolute bottom-full left-4 right-4 mb-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
                     {filteredContacts.map(contact => (
-                        <button
-                            key={contact.id}
-                            onClick={() => handleMentionSelect(contact.name)}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                        >
+                        <button key={contact.id} onClick={() => handleMentionSelect(contact.name)} className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
                             {contact.name} <span className="text-gray-500">- {contact.company || contact.email}</span>
                         </button>
                     ))}
+                </div>
+            )}
+             {isPromptsListOpen && (
+                <div ref={promptsListRef} className="absolute bottom-full left-4 right-4 mb-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20 flex flex-col">
+                    <input 
+                        type="text"
+                        placeholder="Search prompts..."
+                        value={promptSearchTerm}
+                        onChange={e => setPromptSearchTerm(e.target.value)}
+                        className="sticky top-0 p-2 bg-gray-800 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        autoFocus
+                    />
+                    <ul className="flex-1 overflow-y-auto">
+                        {filteredPrompts.length > 0 ? filteredPrompts.map(prompt => (
+                            <li key={prompt.id}>
+                                <button onClick={() => handlePromptSelect(prompt)} className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                                    <strong className="block font-semibold">{prompt.name}</strong>
+                                    <p className="text-xs text-gray-400 truncate">{prompt.content}</p>
+                                </button>
+                            </li>
+                        )) : <li className="px-4 py-3 text-sm text-gray-500 text-center">No prompts found.</li>}
+                    </ul>
                 </div>
             )}
             {imageDataUrl && (
@@ -154,13 +254,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
                 </div>
             )}
             <form onSubmit={handleSubmit} className="flex items-start space-x-4">
-                <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden" 
-                />
+                <button
+                    type="button"
+                    onClick={() => {
+                        log('User toggled Prompts Launcher.');
+                        const willBeOpen = !isPromptsListOpen;
+                        setIsPromptsListOpen(willBeOpen);
+                        if (willBeOpen) {
+                            fetchPrompts();
+                        }
+                    }}
+                    className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                    disabled={isLoading}
+                    title="Use a saved prompt"
+                >
+                    <PromptsIcon className="w-5 h-5" />
+                </button>
                 <button 
                     type="button" 
                     onClick={() => {
@@ -206,6 +315,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
             </form>
         </div>
         {isLoading && <LoadingIndicator />}
+        
+        <FillPromptVariablesModal
+            isOpen={variableModalState.isOpen}
+            onClose={() => setVariableModalState({ isOpen: false, prompt: null, variables: [] })}
+            prompt={variableModalState.prompt}
+            variables={variableModalState.variables}
+            onSubmit={handleVariableSubmit}
+        />
         </>
     );
 };

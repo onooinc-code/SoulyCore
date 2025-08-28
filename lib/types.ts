@@ -78,6 +78,16 @@ export interface Tool {
     schema_json: string;
 }
 
+export interface Prompt {
+    id: string;
+    name: string;
+    content: string;
+    folder?: string | null;
+    tags?: string[] | null;
+    createdAt: Date;
+    lastUpdatedAt: Date;
+}
+
 export interface Knowledge {
     id: string;
     content: string;
