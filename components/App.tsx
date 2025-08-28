@@ -87,10 +87,8 @@ const App = () => {
                         {isSidebarOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
                     </button>
                     
-                    <main className="flex-1 flex flex-col overflow-hidden">
-                        <ChatWindow />
-                        <LogOutputPanel isOpen={isLogPanelOpen} />
-                    </main>
+                    <ChatWindow />
+                    <LogOutputPanel isOpen={isLogPanelOpen} />
                 </div>
                 
                 <AnimatePresence>

@@ -35,6 +35,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         deleteConversation,
         updateConversationTitle,
         generateConversationTitle,
+        isLoading,
+        unreadConversations,
     } = useAppContext();
     const { log } = useLog();
     const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
@@ -117,33 +119,48 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex-1 overflow-y-auto pr-1 min-h-0">
                 <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Recent</h2>
                 <ul className="space-y-1">
-                    {conversations.map(convo => (
-                        <li key={convo.id} className="relative group">
-                            {editingConversationId === convo.id ? (
-                                <input
-                                    type="text"
-                                    value={editingTitle}
-                                    onChange={(e) => setEditingTitle(e.target.value)}
-                                    onBlur={() => handleSaveTitle(convo.id)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle(convo.id)}
-                                    className="w-full p-2 rounded-md text-sm bg-gray-600 text-white outline-none ring-2 ring-indigo-500"
-                                    autoFocus
-                                />
-                            ) : (
-                                <button
-                                    onClick={() => handleSetConversation(convo.id)}
-                                    className={`w-full text-left p-2 rounded-md text-sm truncate ${currentConversation?.id === convo.id ? 'bg-gray-700' : 'hover:bg-gray-700/50'}`}
-                                >
-                                    {convo.title}
-                                </button>
-                            )}
-                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center bg-gray-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={(e) => handleGenerateTitle(e, convo.id)} className="p-1.5 text-gray-300 hover:text-indigo-400" title="Generate Title"><SparklesIcon className="w-4 h-4" /></button>
-                                <button onClick={(e) => handleEditTitle(e, convo.id, convo.title)} className="p-1.5 text-gray-300 hover:text-blue-400" title="Edit Title"><EditIcon className="w-4 h-4" /></button>
-                                <button onClick={(e) => handleDelete(e, convo.id)} className="p-1.5 text-gray-300 hover:text-red-400" title="Delete Conversation"><TrashIcon className="w-4 h-4" /></button>
-                            </div>
-                        </li>
-                    ))}
+                    {conversations.map(convo => {
+                        const isUnread = unreadConversations.has(convo.id);
+                        const isProcessing = isLoading && currentConversation?.id === convo.id;
+
+                        return (
+                            <li key={convo.id} className="relative group">
+                                {editingConversationId === convo.id ? (
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-2 flex-shrink-0"></span>
+                                        <input
+                                            type="text"
+                                            value={editingTitle}
+                                            onChange={(e) => setEditingTitle(e.target.value)}
+                                            onBlur={() => handleSaveTitle(convo.id)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle(convo.id)}
+                                            className="w-full p-2 rounded-md text-sm bg-gray-600 text-white outline-none ring-2 ring-indigo-500"
+                                            autoFocus
+                                        />
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => handleSetConversation(convo.id)}
+                                        className={`w-full text-left p-2 rounded-md text-sm flex items-center gap-3 ${currentConversation?.id === convo.id ? 'bg-gray-700' : 'hover:bg-gray-700/50'}`}
+                                    >
+                                        <span className="w-2 flex-shrink-0 self-center">
+                                            {isProcessing ? (
+                                                <span className="block w-2 h-2 bg-indigo-400 rounded-full animate-pulse" title="Processing..."></span>
+                                            ) : isUnread ? (
+                                                <span className="block w-2 h-2 bg-indigo-400 rounded-full" title="Unread message"></span>
+                                            ) : null}
+                                        </span>
+                                        <span className="truncate flex-1">{convo.title}</span>
+                                    </button>
+                                )}
+                                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center bg-gray-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={(e) => handleGenerateTitle(e, convo.id)} className="p-1.5 text-gray-300 hover:text-indigo-400" title="Generate Title"><SparklesIcon className="w-4 h-4" /></button>
+                                    <button onClick={(e) => handleEditTitle(e, convo.id, convo.title)} className="p-1.5 text-gray-300 hover:text-blue-400" title="Edit Title"><EditIcon className="w-4 h-4" /></button>
+                                    <button onClick={(e) => handleDelete(e, convo.id)} className="p-1.5 text-gray-300 hover:text-red-400" title="Delete Conversation"><TrashIcon className="w-4 h-4" /></button>
+                                </div>
+                            </li>
+                        )
+                    })}
                 </ul>
             </div>
             <div className="pt-2 border-t border-gray-700 flex-shrink-0">

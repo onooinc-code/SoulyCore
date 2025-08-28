@@ -10,15 +10,13 @@ interface StatusBarProps {
     onAgentConfigClick: () => void;
 }
 
-const StatusBar: React.FC<StatusBarProps> = ({ onSettingsClick, onAgentConfigClick }) => {
+const StatusBar = ({ onSettingsClick, onAgentConfigClick }: StatusBarProps) => {
     const { status, currentConversation } = useAppContext();
     const model = currentConversation?.model || 'gemini-2.5-flash';
 
     return (
         <div className="bg-gray-900 text-gray-400 text-xs p-2 border-t border-gray-700 flex justify-between items-center gap-4">
-            <div className="flex items-center gap-x-3 truncate min-w-0">
-               <span className="italic truncate">{status.currentAction || 'Ready'}</span>
-            </div>
+            <span className="flex-1 italic truncate min-w-0">{status.currentAction || 'Ready'}</span>
             <div className="flex items-center gap-3 flex-shrink-0">
                  <button onClick={onAgentConfigClick} disabled={!currentConversation} className="flex items-center gap-1 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed" title="Configure Agent">
                     <UserCircleIcon className="w-4 h-4" />

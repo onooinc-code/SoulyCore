@@ -26,17 +26,18 @@ async function createTables() {
         // Add columns introduced in later versions to support existing databases
         console.log("Ensuring conversation model columns exist...");
         try {
-            await sql`ALTER TABLE conversations ADD COLUMN model VARCHAR(255);`;
+            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS model VARCHAR(255);`;
         } catch (e) {
+            // Some very old Postgres versions might not support IF NOT EXISTS, so we still catch.
             if (!e.message.includes('column "model" already exists')) throw e;
         }
         try {
-            await sql`ALTER TABLE conversations ADD COLUMN temperature REAL;`;
+            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS temperature REAL;`;
         } catch (e) {
             if (!e.message.includes('column "temperature" already exists')) throw e;
         }
         try {
-            await sql`ALTER TABLE conversations ADD COLUMN "topP" REAL;`;
+            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "topP" REAL;`;
         } catch (e) {
             if (!e.message.includes('column "topP" already exists')) throw e;
         }

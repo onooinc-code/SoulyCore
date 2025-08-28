@@ -1,7 +1,8 @@
 
+
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import type { Conversation, Message, Contact, AppSettings } from '@/lib/types';
 import { useLog } from './LogProvider';
 import { Content } from '@google/genai';
@@ -36,6 +37,7 @@ interface AppContextType {
     updateMessage: (messageId: string, newContent: string) => Promise<void>;
     regenerateAiResponse: (messageId: string) => Promise<void>;
     regenerateUserPromptAndGetResponse: (messageId: string) => Promise<void>;
+    unreadConversations: Set<string>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -48,6 +50,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [status, setBaseStatus] = useState<IStatus>({ currentAction: '', error: null });
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const { log, setLoggingEnabled } = useLog();
+
+    // State for unread conversation indicators
+    const [unreadConversations, setUnreadConversations] = useState(new Set<string>());
+    const isVisibleRef = useRef(true);
+
+    // Effect to track if the browser tab is active
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            isVisibleRef.current = document.visibilityState === 'visible';
+            // If the tab becomes visible and there's an active conversation, mark it as read.
+            if (isVisibleRef.current && currentConversation) {
+                setUnreadConversations(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.delete(currentConversation.id)) {
+                        return newSet;
+                    }
+                    return prev;
+                });
+            }
+        };
+        handleVisibilityChange();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [currentConversation]);
+
 
     // Effect to update the LogProvider's setting whenever the app's settings are loaded or changed.
     useEffect(() => {
@@ -117,6 +144,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [setStatus, log]);
 
     const setCurrentConversationById = useCallback(async (conversationId: string | null) => {
+        // Mark the selected conversation as read by removing it from the unread set.
+        if (conversationId) {
+            setUnreadConversations(prev => {
+                const newSet = new Set(prev);
+                if (newSet.delete(conversationId)) {
+                    return newSet;
+                }
+                return prev;
+            });
+        }
+        
         if (!conversationId) {
             log('Clearing current conversation.');
             setCurrentConversation(null);
@@ -275,6 +313,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 const savedAiMessage = await aiMsgRes.json();
                 log('AI message saved successfully.', savedAiMessage);
                 setMessages(prev => [...prev, savedAiMessage!]);
+
+                // If tab is not visible, mark the conversation as having unread messages.
+                if (!isVisibleRef.current) {
+                    log('Marking conversation as unread due to tab inactivity.', { conversationId: currentConversation.id });
+                    setUnreadConversations(prev => new Set(prev).add(currentConversation.id));
+                }
+
                  // Trigger background memory pipeline
                 const textToAnalyze = `${message.content}\n${aiResponse}`;
                 log('Triggering background memory pipeline.', { textLength: textToAnalyze.length });
@@ -564,6 +609,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             updateMessage,
             regenerateAiResponse,
             regenerateUserPromptAndGetResponse,
+            unreadConversations,
         }}>
             {children}
         </AppContext.Provider>

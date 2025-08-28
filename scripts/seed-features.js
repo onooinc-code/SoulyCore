@@ -14,6 +14,7 @@ const featuresData = [
             { subFeature: 'Chat Input', description: 'Text area for user input, including @mentions and image uploads.', status: '✅ Completed' },
             { subFeature: 'Message Toolbar', description: 'Hover controls on messages for actions like Copy, Bookmark, Summarize.', status: '✅ Completed' },
             { subFeature: 'Conversation List Sidebar', description: 'Allows switching between and creating new conversations.', status: '✅ Completed' },
+            { subFeature: 'Enhanced Sidebar Navigation', description: 'Add visual cues for unread messages or conversation status', status: '🟡 Needs Improvement' }
         ]),
         logic_flow: 'User sends a message via ChatInput -> AppProvider optimistically updates the UI -> An API call is made to /api/chat with the message history and context -> The API route constructs the full prompt, including memory and contact info -> A call is made to the Gemini API -> The response is received and sent back to the client -> The UI is updated with the final AI message -> A background, fire-and-forget call is made to /api/memory/pipeline to learn from the exchange.',
         key_files_json: JSON.stringify([
