@@ -19,7 +19,11 @@ export async function GET() {
 // POST a new conversation
 export async function POST(req: NextRequest) {
     try {
-        const { title } = await req.json();
+        const body = await req.json().catch(() => {
+            // Gracefully handle empty or malformed JSON body
+            return { title: null };
+        });
+        const title = body?.title;
         const newTitle = title || 'New Chat';
 
         // Fetch default settings from the database
@@ -30,7 +34,6 @@ export async function POST(req: NextRequest) {
             return acc;
         }, {} as Record<string, any>);
 
-        // FIX: Provide robust fallbacks to prevent crash if settings are missing from DB
         const modelConfig = settings.defaultModelConfig || { model: 'gemini-2.5-flash', temperature: 0.7, topP: 0.95 };
         const agentConfig = settings.defaultAgentConfig || { systemPrompt: 'You are a helpful AI assistant.', useSemanticMemory: true, useStructuredMemory: true };
 

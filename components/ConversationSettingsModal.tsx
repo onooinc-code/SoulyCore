@@ -12,21 +12,24 @@ interface ConversationSettingsModalProps {
     onClose: () => void;
 }
 
-// FIX: Removed React.FC to fix framer-motion type inference issue.
+const geminiModels = [
+    'gemini-2.5-flash',
+];
+
 const ConversationSettingsModal = ({ isOpen, onClose }: ConversationSettingsModalProps) => {
     const { currentConversation, updateCurrentConversation, setStatus, clearError } = useAppContext();
     const { log } = useLog();
-    const [model, setModel] = useState('');
+    const [model, setModel] = useState(geminiModels[0]);
     const [temperature, setTemperature] = useState(0.7);
     const [topP, setTopP] = useState(0.95);
 
     useEffect(() => {
         if (isOpen && currentConversation) {
-            setModel(currentConversation.model || 'gemini-2.5-flash');
+            setModel(currentConversation.model || geminiModels[0]);
             setTemperature(currentConversation.temperature ?? 0.7);
             setTopP(currentConversation.topP ?? 0.95);
         }
-    }, [isOpen, currentConversation, log]);
+    }, [isOpen, currentConversation]);
 
     const handleSave = async () => {
         if (!currentConversation) return;
@@ -85,7 +88,16 @@ const ConversationSettingsModal = ({ isOpen, onClose }: ConversationSettingsModa
                         </div>
                         <div>
                             <label htmlFor="modelName" className="block text-sm font-medium text-gray-400 mb-1">Model Name</label>
-                            <input id="modelName" type="text" value={model} onChange={e => setModel(e.target.value)} className="w-full p-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                            <select 
+                                id="modelName" 
+                                value={model} 
+                                onChange={e => setModel(e.target.value)} 
+                                className="w-full p-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                            >
+                                {geminiModels.map(m => (
+                                    <option key={m} value={m}>{m}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="space-y-2">
                             <label htmlFor="temperature" className="block text-sm font-medium text-gray-400">Temperature: {temperature.toFixed(2)}</label>

@@ -10,11 +10,11 @@ import remarkGfm from 'remark-gfm';
 import { useAppContext } from './providers/AppProvider';
 
 interface BookmarksModalProps {
+    isOpen: boolean;
     setIsOpen: (isOpen: boolean) => void;
 }
 
-// FIX: Removed React.FC to fix framer-motion type inference issue.
-const BookmarksModal = ({ setIsOpen }: BookmarksModalProps) => {
+const BookmarksModal = ({ isOpen, setIsOpen }: BookmarksModalProps) => {
     const { setStatus, clearError } = useAppContext();
     const [bookmarks, setBookmarks] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -36,8 +36,10 @@ const BookmarksModal = ({ setIsOpen }: BookmarksModalProps) => {
     }, [clearError, setStatus]);
 
     useEffect(() => {
-        fetchBookmarks();
-    }, [fetchBookmarks]);
+        if (isOpen) {
+            fetchBookmarks();
+        }
+    }, [isOpen, fetchBookmarks]);
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">

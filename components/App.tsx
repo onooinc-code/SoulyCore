@@ -99,7 +99,8 @@ const App = () => {
                     {isContactsHubOpen && <ContactsHub setIsOpen={setContactsHubOpen} />}
                     {isDevCenterOpen && <DevCenter setIsOpen={setDevCenterOpen} />}
                     {isGlobalSettingsOpen && <GlobalSettingsModal setIsOpen={setGlobalSettingsOpen} />}
-                    {isBookmarksOpen && <BookmarksModal setIsOpen={setBookmarksOpen} />}
+                    {/* FIX: Added missing isOpen prop to BookmarksModal to match its prop types. */}
+                    {isBookmarksOpen && <BookmarksModal isOpen={isBookmarksOpen} setIsOpen={setBookmarksOpen} />}
                 </AnimatePresence>
             </div>
         </>
