@@ -237,3 +237,15 @@ export const KeyboardIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 13.5v-3.75m0 3.75a3.75 3.75 0 110-7.5 3.75 3.75 0 010 7.5zM12 13.5v2.25M6 13.5v2.25m6-12v2.25m6 0v2.25m-6 6v3.75m-3.75-3.75v3.75m-3.75-3.75v3.75m11.25-3.75v3.75M4.5 16.5v.75a3 3 0 003 3h9a3 3 0 003-3v-.75M4.5 16.5h15M16.5 12h.75a3 3 0 013 3v.75" />
     </svg>
 );
+
+export const ChatBubbleLeftRightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72.15c.58.55.93.133.93 2.151v.043c0 .814-.622 1.48-1.42 1.58a17.931 17.931 0 01-5.744 0c-.798-.1-1.42-.766-1.42-1.58v-.043c0-1.018.35-1.601.93-2.151l-3.72-.15c-1.133-.093-1.98-1.057-1.98-2.193v-4.286c0-.97.616-1.813 1.5-2.097M16.5 9.75c0 .621-.504 1.125-1.125 1.125H8.625c-.621 0-1.125-.504-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h6.75c.621 0 1.125.504 1.125 1.125v1.5z" />
+    </svg>
+);
+
+export const CpuChipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V8.25a2.25 2.25 0 00-2.25-2.25H8.25a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25z" />
+    </svg>
+);

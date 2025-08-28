@@ -64,8 +64,6 @@ const PromptsHub = dynamic(() => import('@/components/PromptsHub'), {
 type ModalType = 'contactsHub' | 'memoryCenter' | 'devCenter' | 'globalSettings' | 'bookmarks' | 'addKnowledge' | 'shortcuts' | 'promptsHub' | null;
 
 const App = () => {
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
-    const [isLogPanelOpen, setLogPanelOpen] = useState(false);
     const [activeModal, setActiveModal] = useState<ModalType>(null);
     const [contextMenu, setContextMenu] = useState<{ isOpen: boolean; position: { x: number; y: number } }>({ isOpen: false, position: { x: 0, y: 0 } });
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -78,7 +76,10 @@ const App = () => {
         clearMessages,
         messages,
         isLoading,
-        changeFontSize,
+        isSidebarOpen,
+        setSidebarOpen,
+        isLogPanelOpen,
+        setLogPanelOpen,
     } = useAppContext();
 
     const handleContextMenu = (e: React.MouseEvent) => {
@@ -175,25 +176,6 @@ const App = () => {
             {activeModal === 'promptsHub' && <PromptsHub setIsOpen={() => setActiveModal(null)} />}
             
             <ContextMenu items={contextMenuItems} position={contextMenu.position} isOpen={contextMenu.isOpen} onClose={() => setContextMenu(prev => ({ ...prev, isOpen: false }))} />
-            
-            <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
-                <div className="flex items-center gap-2">
-                    <button onClick={() => changeFontSize('decrease')} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title="Decrease font size">
-                        <MinusIcon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => changeFontSize('increase')} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title="Increase font size">
-                        <PlusIcon className="w-5 h-5" />
-                    </button>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setSidebarOpen(prev => !prev)} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}>
-                        <SidebarLeftIcon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => setLogPanelOpen(prev => !prev)} className="p-2 bg-gray-700/80 backdrop-blur-sm rounded-full text-gray-300 hover:bg-gray-600 hover:text-white transition-all" title={isLogPanelOpen ? "Hide Log Panel" : "Show Log Panel"}>
-                        <LogIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
         </main>
     );
 };

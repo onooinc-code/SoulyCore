@@ -38,6 +38,10 @@ interface AppContextType {
     unreadConversations: Set<string>;
     clearMessages: (conversationId: string) => Promise<void>;
     changeFontSize: (direction: 'increase' | 'decrease') => void;
+    isSidebarOpen: boolean;
+    setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    isLogPanelOpen: boolean;
+    setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -52,6 +56,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [status, setBaseStatus] = useState<IStatus>({ currentAction: '', error: null });
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const { log, setLoggingEnabled } = useLog();
+
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const [isLogPanelOpen, setLogPanelOpen] = useState(false);
 
     const [unreadConversations, setUnreadConversations] = useState(new Set<string>());
     const isVisibleRef = useRef(true);
@@ -73,13 +80,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [fontSize]);
 
     const changeFontSize = useCallback((direction: 'increase' | 'decrease') => {
-        const currentIndex = fontSizeSteps.indexOf(fontSize);
-        if (direction === 'increase' && currentIndex < fontSizeSteps.length - 1) {
-            setFontSize(fontSizeSteps[currentIndex + 1]);
-        } else if (direction === 'decrease' && currentIndex > 0) {
-            setFontSize(fontSizeSteps[currentIndex - 1]);
-        }
-    }, [fontSize]);
+        setFontSize(currentSize => {
+            const currentIndex = fontSizeSteps.indexOf(currentSize);
+            if (direction === 'increase' && currentIndex < fontSizeSteps.length - 1) {
+                return fontSizeSteps[currentIndex + 1];
+            }
+            if (direction === 'decrease' && currentIndex > 0) {
+                return fontSizeSteps[currentIndex - 1];
+            }
+            return currentSize;
+        });
+    }, []);
 
 
     // Effect to track if the browser tab is active
@@ -660,6 +671,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             unreadConversations,
             clearMessages,
             changeFontSize,
+            isSidebarOpen,
+            setSidebarOpen,
+            isLogPanelOpen,
+            setLogPanelOpen,
         }}>
             {children}
         </AppContext.Provider>
