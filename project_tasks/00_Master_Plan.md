@@ -16,7 +16,7 @@ This document provides a high-level overview of all planned tasks for the v2.0 r
 | **3: Pipeline Orchestration**| 3-1 | Implement Context Assembly Pipeline | `V2 [Core] - Context Assembly Pipeline` | `✅ Completed` |
 | | 3-2 | Implement Memory Extraction Pipeline | `V2 [Core] - Memory Extraction Pipeline` | `✅ Completed` |
 | **4: API Layer Refactor** | 4-1 | Refactor Chat Endpoint | `V2 [API] - Refactor /api/chat Endpoint` | `✅ Completed` |
-| | 4-2 | Refactor Memory Pipeline Endpoint | `V2 [API] - Refactor /api/memory/pipeline Endpoint` | `Pending` |
+| | 4-2 | Refactor Memory Pipeline Endpoint | `V2 [API] - Refactor /api/memory/pipeline Endpoint` | `✅ Completed` |
 | | 4-3 | Create Brain Management API | `V2 [API] - Brain Management Endpoints` | `Pending` |
 | | 4-4 | Create Memory Viewer API | `V2 [API] - Memory Viewer Endpoints` | `Pending` |
 | | 4-5 | Create Test Case Registry API | `V2 [QA] - Test Case Registry Backend` | `Pending` |

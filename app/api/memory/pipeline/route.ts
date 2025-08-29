@@ -1,9 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { extractDataFromText, generateEmbedding } from '@/lib/gemini-server';
-import { sql } from '@/lib/db';
-import { knowledgeBaseIndex } from '@/lib/pinecone';
-import { v4 as uuidv4 } from 'uuid';
 
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { MemoryExtractionPipeline } from '@/core/pipelines/memory_extraction';
 
 async function serverLog(message: string, payload?: any, level: 'info' | 'warn' | 'error' = 'info') {
     try {
@@ -23,68 +21,34 @@ export async function POST(req: NextRequest) {
         const { textToAnalyze } = await req.json();
 
         if (!textToAnalyze) {
-            await serverLog('Memory pipeline called with no text.', null, 'warn');
+            await serverLog('V2 Memory pipeline called with no text.', null, 'warn');
             return NextResponse.json({ error: 'No text provided for analysis' }, { status: 400 });
         }
 
-        await serverLog('Memory pipeline started.', { textLength: textToAnalyze.length });
-        const { entities, knowledge } = await extractDataFromText(textToAnalyze);
-        await serverLog('Data extraction from text completed.', { entitiesFound: entities.length, knowledgeChunks: knowledge.length });
+        await serverLog('V2 Memory pipeline started.', { textLength: textToAnalyze.length });
 
-        // Process Entities
-        if (entities && entities.length > 0) {
-            await serverLog('Upserting entities into database...');
-            for (const entity of entities) {
-                try {
-                    await sql`
-                        INSERT INTO entities (name, type, details_json)
-                        VALUES (${entity.name}, ${entity.type}, ${entity.details})
-                        ON CONFLICT (name, type) DO UPDATE SET details_json = EXCLUDED.details_json, "createdAt" = CURRENT_TIMESTAMP;
-                    `;
-                } catch (e) {
-                    const errorDetails = { message: (e as Error).message, stack: (e as Error).stack };
-                    await serverLog(`Failed to insert/update entity: ${entity.name}`, { error: errorDetails }, 'error');
-                }
-            }
-        }
+        // --- Start of V2 Architecture Integration ---
+        
+        // 1. Instantiate the new Memory Extraction Pipeline
+        const extractionPipeline = new MemoryExtractionPipeline();
 
-        // Process Knowledge Chunks
-        let newKnowledgeCount = 0;
-        if (knowledge && knowledge.length > 0) {
-            await serverLog('Processing and upserting knowledge chunks to Pinecone...');
-            const vectorsToUpsert = [];
+        // 2. Execute the pipeline (fire-and-forget, no need to await for UI response)
+        extractionPipeline.extractAndStore({ textToAnalyze }).then(() => {
+             serverLog('V2 Memory pipeline processing completed in background.', { textLength: textToAnalyze.length });
+        }).catch(pipelineError => {
+             const errorDetails = {
+                message: (pipelineError as Error).message,
+                stack: (pipelineError as Error).stack,
+            };
+            console.error('Error in background memory pipeline execution:', pipelineError);
+            serverLog('Critical error in V2 memory pipeline background execution.', { error: errorDetails }, 'error');
+        });
 
-            for (const chunk of knowledge) {
-                if (chunk.split(' ').length < 5) continue; 
-
-                const embedding = await generateEmbedding(chunk);
-                
-                const queryResponse = await knowledgeBaseIndex.query({
-                    vector: embedding,
-                    topK: 1,
-                    filter: { "text": { "$eq": chunk } }
-                });
-
-                if (queryResponse.matches.length === 0) {
-                    vectorsToUpsert.push({
-                        id: uuidv4(),
-                        values: embedding,
-                        metadata: { text: chunk },
-                    });
-                    newKnowledgeCount++;
-                }
-            }
-            if (vectorsToUpsert.length > 0) {
-                await knowledgeBaseIndex.upsert(vectorsToUpsert);
-            }
-            await serverLog('Knowledge chunk processing complete.', { newChunksUpserted: newKnowledgeCount });
-        }
-
+        // --- End of V2 Architecture Integration ---
+        
+        // Respond to the client immediately without waiting for the pipeline to finish.
         return NextResponse.json({
-            message: 'Memory pipeline executed successfully.',
-            processedEntities: entities.length,
-            processedKnowledge: knowledge.length,
-            newKnowledgeUpserted: newKnowledgeCount,
+            message: 'Memory pipeline execution initiated successfully in the background.',
         });
 
     } catch (error) {
@@ -92,8 +56,8 @@ export async function POST(req: NextRequest) {
             message: (error as Error).message,
             stack: (error as Error).stack,
         };
-        console.error('Error in memory pipeline:', error);
-        await serverLog('Critical error in memory pipeline.', { error: errorDetails }, 'error');
+        console.error('Error in memory pipeline API route:', error);
+        await serverLog('Critical error in memory pipeline API route.', { error: errorDetails }, 'error');
         return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }
