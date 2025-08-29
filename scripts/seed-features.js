@@ -247,7 +247,9 @@ async function seedFeatures() {
     try {
         // This script now deletes all existing features and re-inserts them to ensure the data is always up-to-date with the source code.
         console.log("Clearing existing features...");
-        await sql`TRUNCATE TABLE features RESTART IDENTITY;`;
+        // FIX: Added CASCADE to the TRUNCATE command to resolve the foreign key constraint error.
+        // This will also truncate the dependent `feature_tests` table, which is the desired behavior for a full seed reset.
+        await sql`TRUNCATE TABLE features RESTART IDENTITY CASCADE;`;
         
         console.log("Inserting original feature data...");
         for (const feature of featuresData) {
