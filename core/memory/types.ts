@@ -31,10 +31,10 @@ export interface ISingleMemoryModule {
 
     /**
      * Stores or updates information in the memory module.
-     * @param data - The data to be stored.
+     * @param params - A flexible object containing the data to be stored.
      * @returns A promise that resolves when the store operation is complete.
      */
-    store(data: any): Promise<void>;
+    store(params: Record<string, any>): Promise<void>;
 }
 
 /**

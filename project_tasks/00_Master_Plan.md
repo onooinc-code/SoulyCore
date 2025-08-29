@@ -10,7 +10,7 @@ This document provides a high-level overview of all planned tasks for the v2.0 r
 | **2: Core Module Impl.** | 2-1 | Implement LLM Provider Abstraction | `V2 [Core] - LLM Provider Abstraction Layer` | `✅ Completed` |
 | | 2-2 | Implement Working Memory Module | `V2 [Core] - Working Memory Module` | `✅ Completed` |
 | | 2-3 | Implement Episodic Memory Module | `V2 [Core] - Episodic Memory Module` | `✅ Completed` |
-| | 2-4 | Implement Semantic Memory Module | `V2 [Core] - Semantic Memory Module` | `Pending` |
+| | 2-4 | Implement Semantic Memory Module | `V2 [Core] - Semantic Memory Module` | `✅ Completed` |
 | | 2-5 | Implement Structured Memory Module | `V2 [Core] - Structured Memory Module` | `Pending` |
 | **3: Pipeline Orchestration**| 3-1 | Implement Context Assembly Pipeline | `V2 [Core] - Context Assembly Pipeline` | `Pending` |
 | | 3-2 | Implement Memory Extraction Pipeline | `V2 [Core] - Memory Extraction Pipeline` | `Pending` |
