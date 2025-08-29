@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -20,6 +21,7 @@ import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import dynamic from 'next/dynamic';
 import LogOutputPanel from './LogOutputPanel';
 import ContextMenu, { MenuItem } from './ContextMenu';
+import UniversalProgressIndicator from './UniversalProgressIndicator';
 
 const ContactsHub = dynamic(() => import('@/components/ContactsHub'), {
   ssr: false,
@@ -142,6 +144,7 @@ const App = () => {
 
     return (
         <main onContextMenu={handleContextMenu} className="flex h-screen w-screen bg-gray-900 overflow-hidden">
+            <UniversalProgressIndicator />
             <AnimatePresence>
                 {isSidebarOpen && (
                     <motion.div

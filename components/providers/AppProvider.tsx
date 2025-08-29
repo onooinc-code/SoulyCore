@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
@@ -42,6 +43,9 @@ interface AppContextType {
     setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isLogPanelOpen: boolean;
     setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    backgroundTaskCount: number;
+    startBackgroundTask: () => void;
+    endBackgroundTask: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -63,6 +67,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [unreadConversations, setUnreadConversations] = useState(new Set<string>());
     const isVisibleRef = useRef(true);
     const [fontSize, setFontSize] = useState('base');
+    const [backgroundTaskCount, setBackgroundTaskCount] = useState(0);
+
+    const startBackgroundTask = useCallback(() => {
+        setBackgroundTaskCount(prev => prev + 1);
+    }, []);
+
+    const endBackgroundTask = useCallback(() => {
+        setBackgroundTaskCount(prev => (prev > 0 ? prev - 1 : 0));
+    }, []);
 
     useEffect(() => {
         const savedFontSize = localStorage.getItem('app-font-size');
@@ -361,6 +374,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                  // Trigger background memory pipeline
                 const textToAnalyze = `${message.content}\n${aiResponse}`;
                 log('Triggering background memory pipeline.', { textLength: textToAnalyze.length });
+                startBackgroundTask();
                 fetch('/api/memory/pipeline', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -369,6 +383,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     const errorMessage = "Memory pipeline trigger failed.";
                     log(errorMessage, { error: { message: (err as Error).message, stack: (err as Error).stack } }, 'error');
                     console.error(errorMessage, err)
+                }).finally(() => {
+                    endBackgroundTask();
                 });
             }
             
@@ -387,7 +403,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setIsLoading(false);
             setStatus({ currentAction: "" });
         }
-    }, [currentConversation, messages, setStatus, log]);
+    }, [currentConversation, messages, setStatus, log, startBackgroundTask, endBackgroundTask]);
 
     const toggleBookmark = useCallback(async (messageId: string) => {
         setStatus({ currentAction: "Updating bookmark..." });
@@ -709,6 +725,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setSidebarOpen,
         isLogPanelOpen,
         setLogPanelOpen,
+        backgroundTaskCount,
+        startBackgroundTask,
+        endBackgroundTask,
     }), [
         conversations, currentConversation, messages, setCurrentConversationById,
         updateCurrentConversation, createNewConversation, addMessage, toggleBookmark,
@@ -716,7 +735,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         settings, loadSettings, setSettings, deleteConversation, updateConversationTitle,
         generateConversationTitle, deleteMessage, updateMessage, regenerateAiResponse,
         regenerateUserPromptAndGetResponse, unreadConversations, clearMessages,
-        changeFontSize, isSidebarOpen, setSidebarOpen, isLogPanelOpen, setLogPanelOpen
+        changeFontSize, isSidebarOpen, setSidebarOpen, isLogPanelOpen, setLogPanelOpen,
+        backgroundTaskCount, startBackgroundTask, endBackgroundTask
     ]);
 
     return (

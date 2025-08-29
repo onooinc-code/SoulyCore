@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+// FIX: Changed `import type` to a regular `import` to resolve potential module resolution issues with the Metadata type.
+import { Metadata } from 'next';
 import './globals.css';
 import React from 'react';
 
