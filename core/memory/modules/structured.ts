@@ -10,10 +10,12 @@ import type { Entity, Contact } from '@/lib/types';
 
 type StructuredDataType = 'entity' | 'contact';
 
-interface IStructuredMemoryStoreParams {
-    type: StructuredDataType;
-    data: Partial<Entity & Contact>; // A union of partials
-}
+// FIX: Changed from an interface with a problematic intersection type to a discriminated union.
+// This correctly models that 'data' will be either a Partial<Entity> or a Partial<Contact>,
+// resolving the type conflict on the 'details_json' property.
+type IStructuredMemoryStoreParams =
+    | { type: 'entity'; data: Partial<Entity> }
+    | { type: 'contact'; data: Partial<Contact> };
 
 interface IStructuredMemoryQueryParams {
     type: StructuredDataType;
@@ -32,10 +34,11 @@ export class StructuredMemoryModule implements ISingleMemoryModule {
      * @param params - An object containing the type of data and the data itself.
      */
     async store(params: IStructuredMemoryStoreParams): Promise<void> {
-        const { type, data } = params;
-
-        switch (type) {
-            case 'entity':
+        // FIX: Updated logic to work with the new discriminated union type for params.
+        // This allows TypeScript to correctly infer the type of 'data' within each case.
+        switch (params.type) {
+            case 'entity': {
+                const { data } = params;
                 if (!data.name || !data.type) {
                     throw new Error('StructuredMemoryModule.store (entity) requires name and type.');
                 }
@@ -45,8 +48,9 @@ export class StructuredMemoryModule implements ISingleMemoryModule {
                     ON CONFLICT (name, type) DO UPDATE SET details_json = EXCLUDED.details_json, "createdAt" = CURRENT_TIMESTAMP;
                 `;
                 break;
-
-            case 'contact':
+            }
+            case 'contact': {
+                const { data } = params;
                  if (!data.name) {
                     throw new Error('StructuredMemoryModule.store (contact) requires a name.');
                 }
@@ -60,9 +64,9 @@ export class StructuredMemoryModule implements ISingleMemoryModule {
                         tags = EXCLUDED.tags;
                 `;
                 break;
-            
+            }
             default:
-                throw new Error(`Unsupported data type for structured memory: ${type}`);
+                throw new Error(`Unsupported data type for structured memory.`);
         }
     }
 
