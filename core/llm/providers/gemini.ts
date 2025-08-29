@@ -1,7 +1,7 @@
 /**
  * @fileoverview Concrete implementation of the ILLMProvider for Google's Gemini API.
  */
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { ILLMProvider, HistoryContent, IModelConfig } from '../types';
 
 const modelName = 'gemini-2.5-flash';
