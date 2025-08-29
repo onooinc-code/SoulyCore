@@ -1,0 +1,13 @@
+# Feature Registry: User Interface
+
+This document lists the planned new user interface components and features required to manage and interact with the v2 Cognitive Architecture.
+
+| Feature                                | Description                                                                                                                             | Key UI/UX Considerations                                                              |
+| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| **The "Brain Center" Hub**             | A new, top-level modal or dedicated view serving as the central management hub for all cognitive components.                              | Must be intuitive and provide a clear overview of the AI's cognitive state.           |
+| **Brain Management Tab**               | A UI panel within the Brain Center for creating, viewing, and configuring Agent Brains and their memory namespaces.                       | Simple forms and clear diagrams to show Brain-to-Module connections.                |
+| **Memory Module Viewer Tab**           | A UI panel providing a direct view into each memory module, allowing for manual CRUD operations on stored data.                          | Read-only views with clear "edit" and "delete" actions. Confirmation dialogues are critical. |
+| **Cognitive Inspector**                | An "Inspect" button on every chat message that shows the exact context sent to the LLM and the data extracted from that turn.             | A clear, side-by-side view of "Pre-LLM Context" and "Post-LLM Extraction".            |
+| **Universal Progress Indicator**       | A non-intrusive, system-wide progress indicator (e.g., a top-loading bar) that visualizes all background memory operations.            | Should be subtle but noticeable, providing reassurance that the system is working.      |
+| **Long Message Collapse Feature**      | An automatic, content-aware summarization and collapse feature for long messages in the chat view.                                      | Users must always be able to expand to see the original, full content.                |
+| **Manual Context Injection**           | Tooling to allow a user to manually select and inject a piece of memory (e.g., an entity, a knowledge snippet) into the current conversation turn. | Could be a new button in the `ChatInput` or an action in the `Memory Module Viewer`. |
