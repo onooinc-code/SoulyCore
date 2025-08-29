@@ -1,9 +1,8 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon, SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LightbulbIcon, PromptsIcon, SearchIcon } from '@/components/Icons';
+import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon, SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LightbulbIcon, PromptsIcon, SearchIcon, BrainIcon } from '@/components/Icons';
 import { useLog } from './providers/LogProvider';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Conversation } from '@/lib/types';
@@ -48,6 +47,7 @@ interface SidebarProps {
     setMemoryCenterOpen: (isOpen: boolean) => void;
     setContactsHubOpen: (isOpen: boolean) => void;
     setDevCenterOpen: (isOpen: boolean) => void;
+    setBrainCenterOpen: (isOpen: boolean) => void;
     setGlobalSettingsOpen: (isOpen: boolean) => void;
     setBookmarksOpen: (isOpen: boolean) => void;
     setPromptsHubOpen: (isOpen: boolean) => void;
@@ -61,6 +61,7 @@ const Sidebar = ({
     setMemoryCenterOpen, 
     setContactsHubOpen, 
     setDevCenterOpen,
+    setBrainCenterOpen,
     setGlobalSettingsOpen,
     setBookmarksOpen,
     setPromptsHubOpen,
@@ -140,6 +141,7 @@ const Sidebar = ({
 
 
     const menuItems = [
+        { label: 'Brain Center', icon: BrainIcon, action: () => { log('User opened Brain Center.'); setBrainCenterOpen(true); }, tooltip: "Open the Brain Center to manage the AI's core cognitive functions." },
         { label: 'Memory Center', icon: MemoryIcon, action: () => { log('User opened Memory Center.'); setMemoryCenterOpen(true); }, tooltip: "Open the Memory Center to view and manage the AI's structured knowledge (entities). (Cmd+K)" },
         { label: 'Contacts Hub', icon: UsersIcon, action: () => { log('User opened Contacts Hub.'); setContactsHubOpen(true); }, tooltip: "Open the Contacts Hub to add, edit, and manage people and organizations the AI knows about." },
         { label: 'Prompts Hub', icon: PromptsIcon, action: () => { log('User opened Prompts Hub.'); setPromptsHubOpen(true); }, tooltip: "Open the Prompts Hub to create, manage, and reuse powerful prompt templates." },

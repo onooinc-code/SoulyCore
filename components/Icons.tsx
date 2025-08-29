@@ -38,6 +38,13 @@ export const TrashIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+export const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.43 2.43h-.36a2.25 2.25 0 01-2.43-2.43v-.36c0-.983.62-1.813 1.5-2.122a3 3 0 001.128-5.78 3 3 0 012.122-1.5 3 3 0 005.78-1.128 2.25 2.25 0 012.43-2.43h.36a2.25 2.25 0 012.43 2.43v.36c0 .983-.62 1.813-1.5 2.122a3 3 0 00-1.128 5.78 3 3 0 01-2.122 1.5 3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.43 2.43h-.36a2.25 2.25 0 01-2.43-2.43v-.36c0-.983.62-1.813 1.5-2.122" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+    </svg>
+);
+
 export const MemoryIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" />

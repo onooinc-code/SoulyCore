@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -14,6 +12,7 @@ import {
     PromptsIcon,
     RefreshIcon,
     MinusIcon,
+    BrainIcon,
 } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -35,6 +34,11 @@ const MemoryCenter = dynamic(() => import('@/components/MemoryCenter'), {
 const DevCenter = dynamic(() => import('@/components/dev_center/DevCenter'), {
     ssr: false,
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Dev Center...</p></div>
+});
+
+const BrainCenter = dynamic(() => import('@/components/brain_center/BrainCenter'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Brain Center...</p></div>
 });
 
 const GlobalSettingsModal = dynamic(() => import('@/components/GlobalSettingsModal'), {
@@ -62,7 +66,7 @@ const PromptsHub = dynamic(() => import('@/components/PromptsHub'), {
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Prompts Hub...</p></div>
 });
 
-type ModalType = 'contactsHub' | 'memoryCenter' | 'devCenter' | 'globalSettings' | 'bookmarks' | 'addKnowledge' | 'shortcuts' | 'promptsHub' | null;
+type ModalType = 'contactsHub' | 'memoryCenter' | 'devCenter' | 'globalSettings' | 'bookmarks' | 'addKnowledge' | 'shortcuts' | 'promptsHub' | 'brainCenter' | null;
 
 // FIX: Removed `React.FC` to fix framer-motion type inference issue.
 const App = () => {
@@ -125,6 +129,7 @@ const App = () => {
         { label: 'Delete Conversation', action: () => currentConversation && window.confirm('Are you sure you want to delete this conversation?') && deleteConversation(currentConversation.id), icon: TrashIcon, disabled: !currentConversation },
         { isSeparator: true },
         { label: 'Add Knowledge Snippet', action: () => setActiveModal('addKnowledge'), icon: KnowledgeIcon },
+        { label: 'Open Brain Center', action: () => setActiveModal('brainCenter'), icon: BrainIcon },
         { label: 'Open Memory Center', action: () => setActiveModal('memoryCenter'), icon: MemoryIcon },
         { label: 'Open Contacts Hub', action: () => setActiveModal('contactsHub'), icon: UsersIcon },
         { label: 'Open Prompts Hub', action: () => setActiveModal('promptsHub'), icon: PromptsIcon },
@@ -150,6 +155,7 @@ const App = () => {
                             setMemoryCenterOpen={() => setActiveModal('memoryCenter')}
                             setContactsHubOpen={() => setActiveModal('contactsHub')}
                             setDevCenterOpen={() => setActiveModal('devCenter')}
+                            setBrainCenterOpen={() => setActiveModal('brainCenter')}
                             setGlobalSettingsOpen={() => setActiveModal('globalSettings')}
                             setBookmarksOpen={() => setActiveModal('bookmarks')}
                             setPromptsHubOpen={() => setActiveModal('promptsHub')}
@@ -171,6 +177,7 @@ const App = () => {
             {activeModal === 'contactsHub' && <ContactsHub setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'memoryCenter' && <MemoryCenter setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'devCenter' && <DevCenter setIsOpen={() => setActiveModal(null)} />}
+            {activeModal === 'brainCenter' && <BrainCenter setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'globalSettings' && <GlobalSettingsModal setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'bookmarks' && <BookmarksModal isOpen={activeModal === 'bookmarks'} setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'addKnowledge' && <AddKnowledgeModal isOpen={activeModal === 'addKnowledge'} onClose={() => setActiveModal(null)} />}
