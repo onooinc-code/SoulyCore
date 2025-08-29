@@ -18,13 +18,22 @@ const statusColorMap: Record<FeatureStatus, string> = {
     '⚪ Planned': 'bg-gray-600 text-gray-100',
 };
 
-// A component to safely render JSON content from a string
-// FIX: Removed React.FC to fix framer-motion type inference issue.
-const SafeJsonRenderer = ({ jsonString, type }: { jsonString: string; type: 'files' | 'ux' }) => {
+// A component to safely render JSON content from a string or an object
+// FIX: Rewritten to handle both string and object data types to fix parsing errors from JSONB columns.
+const SafeJsonRenderer = ({ jsonData, type }: { jsonData: string | object | null; type: 'files' | 'ux' }) => {
     try {
-        const data = JSON.parse(jsonString);
+        if (!jsonData) {
+            return <div className="text-xs text-gray-500">Not specified.</div>;
+        }
+
+        const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+
+        if (data === null) {
+            return <div className="text-xs text-gray-500">Not specified.</div>;
+        }
 
         if (type === 'files' && Array.isArray(data)) {
+            if (data.length === 0) return <div className="text-xs text-gray-500">No files listed.</div>;
             return (
                 <div className="flex flex-wrap gap-2">
                     {data.map((file, index) => (
@@ -35,6 +44,7 @@ const SafeJsonRenderer = ({ jsonString, type }: { jsonString: string; type: 'fil
         }
 
         if (type === 'ux' && Array.isArray(data)) {
+            if (data.length === 0) return <div className="text-xs text-gray-500">No breakdown provided.</div>;
             return (
                 <table className="w-full text-left text-xs table-fixed">
                     <thead className="text-gray-400">
@@ -111,11 +121,11 @@ const FeatureItem = ({ feature, onEdit, onDelete }: FeatureItemProps) => {
                             <div><strong className="text-gray-400 block mb-1">Logic & Data Flow:</strong><p className="whitespace-pre-wrap">{feature.logic_flow}</p></div>
                              <div>
                                 <strong className="text-gray-400 block mb-2">UI/UX Breakdown:</strong>
-                                <SafeJsonRenderer jsonString={feature.ui_ux_breakdown_json} type="ux" />
+                                <SafeJsonRenderer jsonData={feature.ui_ux_breakdown_json} type="ux" />
                             </div>
                             <div>
                                 <strong className="text-gray-400 block mb-2">Key Files:</strong>
-                                <SafeJsonRenderer jsonString={feature.key_files_json} type="files" />
+                                <SafeJsonRenderer jsonData={feature.key_files_json} type="files" />
                             </div>
                             {feature.notes && <div><strong className="text-gray-400 block mb-1">Notes:</strong><p className="whitespace-pre-wrap">{feature.notes}</p></div>}
                         </div>
@@ -163,22 +173,35 @@ const FeaturesDictionary = () => {
     const handleOpenForm = (feature: Partial<Feature> | null = null) => {
         const action = feature ? 'edit' : 'new';
         log(`User opened feature form for ${action} feature.`, { featureId: feature?.id });
-        setCurrentFeature(feature || {
-            name: '',
-            overview: '',
-            status: '⚪ Planned',
-            ui_ux_breakdown_json: '[]',
-            logic_flow: '',
-            key_files_json: '[]',
-            notes: '',
-        });
+
+        let featureForForm: Partial<Feature>;
+        if (feature) {
+            featureForForm = { ...feature };
+            // FIX: Ensure JSON fields are stringified for textarea display to prevent '[object Object]' bug.
+            if (typeof featureForForm.ui_ux_breakdown_json === 'object' && featureForForm.ui_ux_breakdown_json !== null) {
+                featureForForm.ui_ux_breakdown_json = JSON.stringify(featureForForm.ui_ux_breakdown_json, null, 2);
+            }
+            if (typeof featureForForm.key_files_json === 'object' && featureForForm.key_files_json !== null) {
+                featureForForm.key_files_json = JSON.stringify(featureForForm.key_files_json, null, 2);
+            }
+        } else {
+            featureForForm = {
+                name: '',
+                overview: '',
+                status: '⚪ Planned',
+                ui_ux_breakdown_json: '[\n  {\n    "subFeature": "",\n    "description": "",\n    "status": "⚪ Planned"\n  }\n]',
+                logic_flow: '',
+                key_files_json: '[\n  ""\n]',
+                notes: '',
+            };
+        }
+        setCurrentFeature(featureForForm);
         setIsFormOpen(true);
     };
     
     const handleSaveFeature = async () => {
         if (!currentFeature || !currentFeature.name) return;
         
-        // Basic JSON validation before sending
         try {
             if (currentFeature.ui_ux_breakdown_json) JSON.parse(currentFeature.ui_ux_breakdown_json);
             if (currentFeature.key_files_json) JSON.parse(currentFeature.key_files_json);
