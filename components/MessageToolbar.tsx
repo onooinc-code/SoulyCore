@@ -1,8 +1,9 @@
 
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CopyIcon, BookmarkIcon, BookmarkFilledIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon, DotsHorizontalIcon } from './Icons';
+import { CopyIcon, BookmarkIcon, BookmarkFilledIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon, DotsHorizontalIcon, BeakerIcon } from './Icons';
 import { useLog } from './providers/LogProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,11 +19,12 @@ interface MessageToolbarProps {
     onEdit: () => void;
     onDelete: () => void;
     onRegenerate: () => void;
+    onInspect: () => void;
 }
 
 // FIX: Removed React.FC to allow for proper type inference with framer-motion props.
 const MessageToolbar = ({
-    isBookmarked, isCollapsed, isUser, onCopy, onBookmark, onSummarize, onToggleCollapse, onSetAlign, onEdit, onDelete, onRegenerate
+    isBookmarked, isCollapsed, isUser, onCopy, onBookmark, onSummarize, onToggleCollapse, onSetAlign, onEdit, onDelete, onRegenerate, onInspect
 }: MessageToolbarProps) => {
     const [copied, setCopied] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,6 +56,7 @@ const MessageToolbar = ({
 
     const menuActions = [
         { id: 'summarize', icon: SummarizeIcon, action: onSummarize, title: 'Summarize message' },
+        ...(!isUser ? [{ id: 'inspect', icon: BeakerIcon, action: onInspect, title: 'Inspect cognitive process' }] : []),
         { id: 'collapse', icon: isCollapsed ? ExpandIcon : CollapseIcon, action: onToggleCollapse, title: isCollapsed ? 'Expand message' : 'Collapse message' },
         { id: 'align-left', icon: TextAlignLeftIcon, action: () => onSetAlign('left'), title: 'Align text left' },
         { id: 'align-right', icon: TextAlignRightIcon, action: () => onSetAlign('right'), title: 'Align text right' },

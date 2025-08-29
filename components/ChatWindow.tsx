@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -14,6 +15,13 @@ import SummaryModal from './SummaryModal';
 import { motion } from 'framer-motion';
 import { useLog } from './providers/LogProvider';
 import Header from './Header'; // Import the new Header component
+import dynamic from 'next/dynamic';
+
+const CognitiveInspectorModal = dynamic(() => import('./CognitiveInspectorModal'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Inspector...</p></div>
+});
+
 
 // FIX: Removed React.FC to fix framer-motion type inference issue.
 const ChatWindow = () => {
@@ -37,6 +45,7 @@ const ChatWindow = () => {
     const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
     const [isAgentConfigModalOpen, setAgentConfigModalOpen] = useState(false);
     const [summaryModalState, setSummaryModalState] = useState<{isOpen: boolean, text: string, isLoading: boolean}>({isOpen: false, text: '', isLoading: false});
+    const [inspectorModalState, setInspectorModalState] = useState<{ isOpen: boolean; messageId: string | null }>({ isOpen: false, messageId: null });
     const [proactiveSuggestion, setProactiveSuggestion] = useState<string | null>(null);
 
     const scrollToBottom = () => {
@@ -127,6 +136,7 @@ const ChatWindow = () => {
                                         onDelete={() => deleteMessage(msg.id)}
                                         onUpdate={updateMessage}
                                         onRegenerate={() => handleRegenerate(msg.id)}
+                                        onInspect={(messageId) => setInspectorModalState({ isOpen: true, messageId })}
                                     />
                                 </div>
                             ))}
@@ -212,6 +222,11 @@ const ChatWindow = () => {
                 onClose={() => setSummaryModalState({isOpen: false, text: '', isLoading: false})}
                 summaryText={summaryModalState.text}
                 isLoading={summaryModalState.isLoading}
+            />
+            <CognitiveInspectorModal 
+                isOpen={inspectorModalState.isOpen}
+                onClose={() => setInspectorModalState({ isOpen: false, messageId: null })}
+                messageId={inspectorModalState.messageId}
             />
         </div>
     );

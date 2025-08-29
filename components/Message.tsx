@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -16,6 +17,7 @@ interface MessageProps {
     onDelete: (messageId: string) => void;
     onUpdate: (messageId: string, newContent: string) => void;
     onRegenerate: (messageId: string) => void;
+    onInspect: (messageId: string) => void;
 }
 
 type TextAlign = 'left' | 'right';
@@ -25,7 +27,7 @@ interface MessageSettings {
 }
 
 // FIX: Removed React.FC to allow for proper type inference with framer-motion props.
-const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate }: MessageProps) => {
+const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate, onInspect }: MessageProps) => {
     const isUser = message.role === 'user';
     const [isEditing, setIsEditing] = useState(false);
     const [editedContent, setEditedContent] = useState(message.content);
@@ -98,6 +100,7 @@ const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, o
                         onDelete={() => onDelete(message.id)}
                         onEdit={() => setIsEditing(true)}
                         onRegenerate={() => onRegenerate(message.id)}
+                        onInspect={() => onInspect(message.id)}
                     />
                 </div>
                 <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`} style={{ textAlign: settings.align }}>

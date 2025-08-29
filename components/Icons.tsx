@@ -1,3 +1,4 @@
+
 "use client";
 import React from 'react';
 
@@ -272,5 +273,11 @@ export const DocumentTextIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props)
 export const DotsHorizontalIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+    </svg>
+);
+
+export const BeakerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.037-.502.068-.752.098m.752-.098a2.25 2.25 0 013 0m0 0c.251.037.502.068.752.098M3.75 12h16.5m-16.5 0a9 9 0 0116.5 0m0 0c0 4.97-4.03 9-9 9s-9-4.03-9-9m16.5-4.896L19.5 5.25m0 0l-1.543-.867M19.5 5.25v2.25" />
     </svg>
 );
