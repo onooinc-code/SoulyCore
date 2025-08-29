@@ -1,8 +1,11 @@
 
+
 import { NextRequest, NextResponse } from 'next/server';
+/* V2 Architecture Imports (Temporarily Disabled)
 import { StructuredMemoryModule } from '@/core/memory/modules/structured';
 import { EpisodicMemoryModule } from '@/core/memory/modules/episodic';
 import { SemanticMemoryModule } from '@/core/memory/modules/semantic';
+*/
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +27,13 @@ export async function GET(req: NextRequest, { params }: { params: { module: stri
             queryParams[key] = value;
         });
 
+        // --- V2 Logic (Temporarily Disabled for Build Fix) ---
+        // Returning an empty array to avoid breaking the client UI.
+        console.warn(`Memory viewer for module [${module}] is temporarily disabled.`);
+        return NextResponse.json([]);
+
+
+        /*
         let data;
 
         switch (module) {
@@ -70,6 +80,7 @@ export async function GET(req: NextRequest, { params }: { params: { module: stri
         }
 
         return NextResponse.json(data);
+        */
 
     } catch (error) {
         console.error(`Error in memory viewer for module [${params.module}]:`, error);

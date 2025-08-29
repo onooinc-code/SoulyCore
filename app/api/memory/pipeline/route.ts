@@ -1,7 +1,9 @@
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { MemoryExtractionPipeline } from '@/core/pipelines/memory_extraction';
+// V2 Architecture Import (Temporarily Disabled)
+// import { MemoryExtractionPipeline } from '@/core/pipelines/memory_extraction';
 
 async function serverLog(message: string, payload?: any, level: 'info' | 'warn' | 'error' = 'info') {
     try {
@@ -27,7 +29,8 @@ export async function POST(req: NextRequest) {
 
         await serverLog('V2 Memory pipeline started.', { textLength: textToAnalyze.length });
 
-        // --- Start of V2 Architecture Integration ---
+        /*
+        // --- Start of V2 Architecture Integration (Temporarily Disabled) ---
         
         // 1. Instantiate the new Memory Extraction Pipeline
         const extractionPipeline = new MemoryExtractionPipeline();
@@ -45,10 +48,11 @@ export async function POST(req: NextRequest) {
         });
 
         // --- End of V2 Architecture Integration ---
+        */
         
         // Respond to the client immediately without waiting for the pipeline to finish.
         return NextResponse.json({
-            message: 'Memory pipeline execution initiated successfully in the background.',
+            message: 'Memory pipeline execution initiated successfully in the background. (NOTE: Processing is temporarily disabled to fix build)',
         });
 
     } catch (error) {

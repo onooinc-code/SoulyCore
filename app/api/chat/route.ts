@@ -1,13 +1,19 @@
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Content } from "@google/genai";
 import { Message } from '@/lib/types';
+import { generateChatResponse, generateProactiveSuggestion } from '@/lib/gemini-server';
+
+/* V2 Architecture Imports (Temporarily Disabled)
 import { ContextAssemblyPipeline } from '@/core/pipelines/context_assembly';
 import { EpisodicMemoryModule } from '@/core/memory/modules/episodic';
 import llmProvider from '@/core/llm';
+*/
 
-// The old serverLog function can be kept for logging within this route.
+
+// The serverLog function is used in both legacy and V2 paths.
 async function serverLog(message: string, payload?: any, level: 'info' | 'warn' | 'error' = 'info') {
     try {
         await sql`
@@ -25,20 +31,55 @@ export async function POST(req: NextRequest) {
         const { messages, conversation, mentionedContacts } = await req.json();
         
         if (!messages || !conversation) {
-            await serverLog('Chat API v2 called with missing data', { messages, conversation }, 'warn');
+            await serverLog('Chat API called with missing data', { messages, conversation }, 'warn');
             return NextResponse.json({ error: 'Missing messages or conversation data' }, { status: 400 });
         }
         
-        await serverLog('Chat API v2 request received', { conversationId: conversation.id, messageCount: messages.length });
+        await serverLog('Chat API request received', { conversationId: conversation.id, messageCount: messages.length });
 
-        const userMessage = messages[messages.length - 1];
-        let userMessageContent = userMessage.content;
+        // --- Start of Legacy Architecture (Build Fix) ---
 
-        // Note: The logic for image extraction and handling proactive suggestions
-        // is temporarily removed to focus on the core text-based refactor.
-        // This will be re-integrated in a subsequent task.
+        // 1. Prepare message history for the LLM
+        const history: Content[] = messages.map((msg: Message) => ({
+            role: msg.role,
+            parts: [{ text: msg.content }]
+        }));
 
-        // --- Start of V2 Architecture Integration ---
+        const modelConfig = {
+            temperature: conversation.temperature,
+            topP: conversation.topP
+        };
+
+        // 2. Generate AI response using the legacy gemini-server library
+        await serverLog('Generating AI response from gemini-server.ts', { model: 'gemini-2.5-flash', config: modelConfig });
+        
+        const result = await generateChatResponse(
+            history, 
+            conversation.systemPrompt,
+            modelConfig
+        );
+        
+        const responseText = result?.text?.trim() || null;
+        
+        if (!responseText) {
+            await serverLog('Failed to get response from gemini-server.ts.', { history }, 'error');
+            return NextResponse.json({ error: 'Failed to get response from AI.' }, { status: 500 });
+        }
+        await serverLog('Successfully received AI response from gemini-server.ts.');
+
+        // 3. Generate proactive suggestion using the legacy gemini-server library
+        const suggestion = await generateProactiveSuggestion(history);
+        
+        // Note: In the legacy flow, the client-side AppProvider is responsible for
+        // saving the AI's message to the database after receiving this response.
+
+        return NextResponse.json({ response: responseText, suggestion });
+
+        // --- End of Legacy Architecture (Build Fix) ---
+
+
+        /*
+        // --- Start of V2 Architecture Integration (Temporarily Disabled) ---
 
         // 1. Instantiate Core Services
         const contextPipeline = new ContextAssemblyPipeline();
@@ -97,14 +138,15 @@ export async function POST(req: NextRequest) {
         const suggestion = null;
 
         return NextResponse.json({ response: responseText, suggestion });
+        */
 
     } catch (error) {
         const errorDetails = {
             message: (error as Error).message,
             stack: (error as Error).stack,
         };
-        console.error('Error in chat API v2:', error);
-        await serverLog('Critical error in chat API v2', { error: errorDetails }, 'error');
+        console.error('Error in chat API:', error);
+        await serverLog('Critical error in chat API', { error: errorDetails }, 'error');
         return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }
