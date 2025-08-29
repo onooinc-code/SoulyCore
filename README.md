@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" alt="SoulyCore Banner" width="1200"/>
+  <img src="http://github.com/onooinc-code/SoulyCore/blob/main/soulycorebanner.png" alt="SoulyCore Banner" width="1200"/>
   <h1>SoulyCore: The Cognitive AI Companion</h1>
   <p>
     <strong>A next-generation, full-stack AI assistant with a persistent, multi-faceted memory system.</strong>
