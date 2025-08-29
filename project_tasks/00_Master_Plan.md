@@ -8,7 +8,7 @@ This document provides a high-level overview of all planned tasks for the v2.0 r
 | | 1-2 | Define Core Types & Interfaces | `V2 [Core] - Single Memory Module (SMM) Interfaces` | `✅ Completed` |
 | | 1-3 | Update Database Schema | `V2 [Core] - "Brain" Configuration Management` | `✅ Completed` |
 | **2: Core Module Impl.** | 2-1 | Implement LLM Provider Abstraction | `V2 [Core] - LLM Provider Abstraction Layer` | `✅ Completed` |
-| | 2-2 | Implement Working Memory Module | `V2 [Core] - Working Memory Module` | `⚪ Planned` |
+| | 2-2 | Implement Working Memory Module | `V2 [Core] - Working Memory Module` | `✅ Completed` |
 | | 2-3 | Implement Episodic Memory Module | `V2 [Core] - Episodic Memory Module` | `⚪ Planned` |
 | | 2-4 | Implement Semantic Memory Module | `V2 [Core] - Semantic Memory Module` | `⚪ Planned` |
 | | 2-5 | Implement Structured Memory Module | `V2 [Core] - Structured Memory Module` | `⚪ Planned` |
