@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import type { Entity } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const { rows } = await sql`SELECT * FROM entities ORDER BY "createdAt" DESC;`;
+        const { rows } = await sql<Entity>`SELECT * FROM entities ORDER BY "createdAt" DESC;`;
         return NextResponse.json({ entities: rows });
     } catch (error) {
         console.error('Failed to fetch entities:', error);
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
         if (!name || !type || !details_json) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        const { rows } = await sql`
+        const { rows } = await sql<Entity>`
             INSERT INTO entities (name, type, details_json)
             VALUES (${name}, ${type}, ${details_json})
             ON CONFLICT (name, type) DO UPDATE SET details_json = EXCLUDED.details_json, "createdAt" = CURRENT_TIMESTAMP

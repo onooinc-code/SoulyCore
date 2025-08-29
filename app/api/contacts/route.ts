@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // GET all contacts
 export async function GET() {
     try {
-        const { rows } = await sql`SELECT * FROM contacts ORDER BY name ASC;`;
+        const { rows } = await sql<Contact>`SELECT * FROM contacts ORDER BY name ASC;`;
         return NextResponse.json({ contacts: rows });
     } catch (error) {
         console.error('Failed to fetch contacts:', error);
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
         // Use ON CONFLICT to perform an "upsert". This creates a new contact
         // or updates the specified fields if a contact with the same name/email already exists.
-        const { rows } = await sql`
+        const { rows } = await sql<Contact>`
             INSERT INTO contacts (name, email, company, phone, notes, tags)
             VALUES (${name}, ${email}, ${company}, ${phone}, ${notes}, ${tags ? (tags as any) : null})
             ON CONFLICT (name, email) DO UPDATE SET

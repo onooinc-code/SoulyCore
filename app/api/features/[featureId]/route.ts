@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest, { params }: { params: { featureId: s
         }
 
 
-        const { rows } = await sql`
+        const { rows } = await sql<Feature>`
             UPDATE features
             SET 
                 name = ${name}, 

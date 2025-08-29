@@ -10,7 +10,7 @@ export async function PUT(req: NextRequest, { params }: { params: { contactId: s
         if (!name) {
             return NextResponse.json({ error: 'Name is required' }, { status: 400 });
         }
-        const { rows } = await sql`
+        const { rows } = await sql<Contact>`
             UPDATE contacts
             SET name = ${name}, email = ${email}, company = ${company}, phone = ${phone}, notes = ${notes}, tags = ${tags ? (tags as any) : null}
             WHERE id = ${contactId}

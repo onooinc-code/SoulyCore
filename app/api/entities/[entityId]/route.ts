@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import type { Entity } from '@/lib/types';
 
 export async function PUT(req: NextRequest, { params }: { params: { entityId: string } }) {
     try {
@@ -8,7 +9,7 @@ export async function PUT(req: NextRequest, { params }: { params: { entityId: st
         if (!name || !type || !details_json) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        const { rows } = await sql`
+        const { rows } = await sql<Entity>`
             UPDATE entities
             SET name = ${name}, type = ${type}, details_json = ${details_json}
             WHERE id = ${entityId}

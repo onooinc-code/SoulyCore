@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Message and level are required' }, { status: 400 });
         }
         
-        const { rows } = await sql`
+        const { rows } = await sql<Log>`
             INSERT INTO logs (message, payload, level)
             VALUES (${message}, ${payload ? JSON.stringify(payload) : null}, ${level})
             RETURNING *;

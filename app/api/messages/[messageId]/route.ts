@@ -15,7 +15,7 @@ export async function PUT(req: NextRequest, { params }: { params: { messageId: s
         // Estimate new token count
         const tokenCount = Math.ceil(content.length / 4);
         
-        const { rows } = await sql`
+        const { rows } = await sql<Message>`
             UPDATE messages
             SET content = ${content}, "tokenCount" = ${tokenCount}
             WHERE id = ${messageId}

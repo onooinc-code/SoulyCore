@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { generateTitleFromHistory } from '@/lib/gemini-server';
 import { Content } from '@google/genai';
-import { Message } from '@/lib/types';
+import { Message, Conversation } from '@/lib/types';
 
 export async function POST(req: NextRequest, { params }: { params: { conversationId: string } }) {
     try {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { conversatio
         }
 
         // 4. Update conversation in DB
-        const { rows: updatedRows } = await sql`
+        const { rows: updatedRows } = await sql<Conversation>`
             UPDATE conversations
             SET title = ${newTitle}, "lastUpdatedAt" = CURRENT_TIMESTAMP
             WHERE id = ${conversationId}

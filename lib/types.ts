@@ -133,6 +133,19 @@ export interface Log {
     level: 'info' | 'warn' | 'error';
 }
 
+export type TestStatus = 'Passed' | 'Failed' | 'Not Run';
+
+export interface FeatureTest {
+    id: string;
+    featureId: string;
+    description: string;
+    manual_steps: string | null;
+    expected_result: string;
+    last_run_status: TestStatus;
+    last_run_at: Date | null;
+    createdAt: Date;
+}
+
 export interface Brain {
     id: string;
     name: string;

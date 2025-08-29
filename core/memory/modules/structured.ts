@@ -80,24 +80,24 @@ export class StructuredMemoryModule implements ISingleMemoryModule {
         switch (type) {
             case 'entity':
                 if (id) {
-                    const { rows } = await sql`SELECT * FROM entities WHERE id = ${id};`;
+                    const { rows } = await sql<Entity>`SELECT * FROM entities WHERE id = ${id};`;
                     return rows;
                 }
                 // Default to all entities if no specific filter
-                const { rows: allEntityRows } = await sql`SELECT * FROM entities ORDER BY "createdAt" DESC;`;
+                const { rows: allEntityRows } = await sql<Entity>`SELECT * FROM entities ORDER BY "createdAt" DESC;`;
                 return allEntityRows;
 
             case 'contact':
                 if (id) {
-                    const { rows } = await sql`SELECT * FROM contacts WHERE id = ${id};`;
+                    const { rows } = await sql<Contact>`SELECT * FROM contacts WHERE id = ${id};`;
                     return rows;
                 }
                 if (name) {
-                    const { rows } = await sql`SELECT * FROM contacts WHERE name ILIKE ${'%' + name + '%'};`;
+                    const { rows } = await sql<Contact>`SELECT * FROM contacts WHERE name ILIKE ${'%' + name + '%'};`;
                     return rows;
                 }
                 // Default to all contacts if no specific filter
-                const { rows: allContactRows } = await sql`SELECT * FROM contacts ORDER BY name ASC;`;
+                const { rows: allContactRows } = await sql<Contact>`SELECT * FROM contacts ORDER BY name ASC;`;
                 return allContactRows;
             
              default:

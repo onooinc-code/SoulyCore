@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, sql } from '@/lib/db';
+import type { FeatureTest } from '@/lib/types';
 
 /**
  * @handler GET
@@ -9,7 +10,7 @@ import { db, sql } from '@/lib/db';
 export async function GET(req: NextRequest, { params }: { params: { testId: string } }) {
     try {
         const { testId } = params;
-        const { rows } = await sql`SELECT * FROM feature_tests WHERE id = ${testId};`;
+        const { rows } = await sql<FeatureTest>`SELECT * FROM feature_tests WHERE id = ${testId};`;
         if (rows.length === 0) {
             return NextResponse.json({ error: 'Test case not found' }, { status: 404 });
         }

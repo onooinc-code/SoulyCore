@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // GET all conversations
 export async function GET() {
     try {
-        const { rows } = await sql`SELECT * FROM conversations ORDER BY "lastUpdatedAt" DESC;`;
+        const { rows } = await sql<Conversation>`SELECT * FROM conversations ORDER BY "lastUpdatedAt" DESC;`;
         return NextResponse.json(rows);
     } catch (error) {
         console.error('Failed to fetch conversations:', error);

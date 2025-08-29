@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: { promptId: st
             return NextResponse.json({ error: 'Name and content are required' }, { status: 400 });
         }
 
-        const { rows } = await sql`
+        const { rows } = await sql<Prompt>`
             UPDATE prompts
             SET 
                 name = ${name}, 

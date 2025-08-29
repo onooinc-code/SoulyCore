@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import type { Message } from '@/lib/types';
 
 // PUT to toggle the bookmark status of a message
 export async function PUT(req: NextRequest, { params }: { params: { messageId: string } }) {
@@ -9,7 +10,7 @@ export async function PUT(req: NextRequest, { params }: { params: { messageId: s
         // FIX: Use COALESCE to handle potential NULL values in the isBookmarked column,
         // ensuring the toggle works reliably even for older records created before the
         // column had a default value.
-        const { rows } = await sql`
+        const { rows } = await sql<Message>`
             UPDATE messages
             SET "isBookmarked" = NOT COALESCE("isBookmarked", false)
             WHERE id = ${messageId}

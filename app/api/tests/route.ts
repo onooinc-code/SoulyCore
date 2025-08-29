@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import type { FeatureTest } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,13 +16,13 @@ export async function GET(req: NextRequest) {
 
         let rows;
         if (featureId) {
-            ({ rows } = await sql`
+            ({ rows } = await sql<FeatureTest>`
                 SELECT * FROM feature_tests 
                 WHERE "featureId" = ${featureId}
                 ORDER BY "createdAt" ASC;
             `);
         } else {
-            ({ rows } = await sql`SELECT * FROM feature_tests ORDER BY "createdAt" ASC;`);
+            ({ rows } = await sql<FeatureTest>`SELECT * FROM feature_tests ORDER BY "createdAt" ASC;`);
         }
         
         return NextResponse.json(rows);
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'featureId, description, and expected_result are required' }, { status: 400 });
         }
         
-        const { rows } = await sql`
+        const { rows } = await sql<FeatureTest>`
             INSERT INTO feature_tests ("featureId", description, manual_steps, expected_result)
             VALUES (${featureId}, ${description}, ${manual_steps}, ${expected_result})
             RETURNING *;

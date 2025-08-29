@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest, { params }: { params: { conversationId: string } }) {
     try {
         const { conversationId } = params;
-        const { rows } = await sql`
+        const { rows } = await sql<Message>`
             SELECT * FROM messages 
             WHERE "conversationId" = ${conversationId} 
             ORDER BY "createdAt" ASC;
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { conversatio
         // Also update the conversation's lastUpdatedAt timestamp
         await sql`UPDATE conversations SET "lastUpdatedAt" = CURRENT_TIMESTAMP WHERE id = ${conversationId};`;
         
-        const { rows } = await sql`
+        const { rows } = await sql<Message>`
             INSERT INTO messages ("conversationId", role, content, "tokenCount", "responseTime", "isBookmarked")
             VALUES (${conversationId}, ${message.role}, ${message.content}, ${message.tokenCount}, ${message.responseTime}, ${message.isBookmarked})
             RETURNING *;

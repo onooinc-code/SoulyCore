@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // GET all features
 export async function GET() {
     try {
-        const { rows } = await sql`SELECT * FROM features ORDER BY name ASC;`;
+        const { rows } = await sql<Feature>`SELECT * FROM features ORDER BY name ASC;`;
         return NextResponse.json(rows);
     } catch (error) {
         console.error('Failed to fetch features:', error);
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         }
 
 
-        const { rows } = await sql`
+        const { rows } = await sql<Feature>`
             INSERT INTO features (name, overview, status, ui_ux_breakdown_json, logic_flow, key_files_json, notes, "lastUpdatedAt")
             VALUES (
                 ${name}, 
