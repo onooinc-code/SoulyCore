@@ -2,6 +2,7 @@
 
 
 
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -161,7 +162,11 @@ const LogOutputPanel = ({ isOpen }: LogOutputPanelProps) => {
                     <div ref={logContainerRef} className="flex-1 p-2 overflow-y-auto text-xs font-mono">
                         {filteredLogs.length > 0 ? (
                              filteredLogs.map((log, index) => (
-                                <LogEntry key={`${log.id}-${index}`} log={log} />
+                                // FIX: Wrap LogEntry component in a div with the key to resolve TypeScript error.
+                                // The 'key' prop is for React's reconciliation and should be on the wrapping element of a list, not passed to the component's props.
+                                <div key={`${log.id}-${index}`}>
+                                    <LogEntry log={log} />
+                                </div>
                             ))
                         ) : (
                             <p className="text-gray-500 text-center pt-4">No logs to display for this filter.</p>

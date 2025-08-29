@@ -117,15 +117,18 @@ const ChatWindow = () => {
                     {messages.length > 0 ? (
                         <div className="space-y-4">
                             {messages.map((msg) => (
-                                <Message 
-                                    key={msg.id} 
-                                    message={msg}
-                                    onSummarize={handleSummarizeMessage}
-                                    onToggleBookmark={toggleBookmark}
-                                    onDelete={() => deleteMessage(msg.id)}
-                                    onUpdate={updateMessage}
-                                    onRegenerate={() => handleRegenerate(msg.id)}
-                                />
+                                // FIX: Wrap Message component in a div with the key to resolve TypeScript error.
+                                // The 'key' prop is for React's reconciliation and should be on the wrapping element of a list, not passed to the component's props.
+                                <div key={msg.id}>
+                                    <Message 
+                                        message={msg}
+                                        onSummarize={handleSummarizeMessage}
+                                        onToggleBookmark={toggleBookmark}
+                                        onDelete={() => deleteMessage(msg.id)}
+                                        onUpdate={updateMessage}
+                                        onRegenerate={() => handleRegenerate(msg.id)}
+                                    />
+                                </div>
                             ))}
                              <div ref={messagesEndRef} />
                         </div>

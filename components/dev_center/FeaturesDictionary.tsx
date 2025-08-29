@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -296,12 +297,15 @@ const FeaturesDictionary = () => {
                 <div className="flex-1 overflow-y-auto pr-2 space-y-3">
                     {features.length > 0 ? (
                         features.map(feature => (
-                           <FeatureItem 
-                                key={feature.id} 
-                                feature={feature} 
-                                onEdit={() => handleOpenForm(feature)} 
-                                onDelete={() => handleDeleteFeature(feature.id)}
-                            />
+                           // FIX: Wrap FeatureItem component in a div with the key to resolve TypeScript error.
+                           // The 'key' prop is for React's reconciliation and should be on the wrapping element of a list, not passed to the component's props.
+                           <div key={feature.id}>
+                                <FeatureItem 
+                                    feature={feature} 
+                                    onEdit={() => handleOpenForm(feature)} 
+                                    onDelete={() => handleDeleteFeature(feature.id)}
+                                />
+                            </div>
                         ))
                     ) : (
                         <div className="text-center py-8 text-gray-500">
