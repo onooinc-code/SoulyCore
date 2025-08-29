@@ -1,9 +1,7 @@
 
-
-
-
 "use client";
 
+// FIX: Imported 'useState' from React to resolve the 'Cannot find name' error.
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { XIcon } from '../Icons';
@@ -17,18 +15,21 @@ const FeaturesDictionary = dynamic(() => import('./FeaturesDictionary'), {
     loading: () => <div className="flex items-center justify-center h-full"><p className="text-white">Loading Features Dictionary...</p></div>
 });
 
+const FeatureHealthDashboard = dynamic(() => import('./FeatureHealthDashboard'), {
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full"><p className="text-white">Loading Health Dashboard...</p></div>
+});
 
-type Tab = 'dashboard' | 'roadmap' | 'docs' | 'features';
+
+type Tab = 'health' | 'features' | 'dashboard' | 'roadmap' | 'docs';
 
 interface DevCenterProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
-// FIX: Removed React.FC to fix framer-motion type inference issue.
 const DevCenter = ({ setIsOpen }: DevCenterProps) => {
-    const [activeTab, setActiveTab] = useState<Tab>('features');
+    const [activeTab, setActiveTab] = useState<Tab>('health');
 
-    // FIX: Removed React.FC to fix framer-motion type inference issue.
     const TabButton = ({ tabName, label }: { tabName: Tab; label: string }) => (
         <button
             onClick={() => setActiveTab(tabName)}
@@ -42,6 +43,7 @@ const DevCenter = ({ setIsOpen }: DevCenterProps) => {
     
     const renderContent = () => {
         switch (activeTab) {
+            case 'health': return <FeatureHealthDashboard />;
             case 'features': return <FeaturesDictionary />;
             case 'dashboard': return <Dashboard />;
             case 'roadmap': return <Roadmap />;
@@ -72,6 +74,7 @@ const DevCenter = ({ setIsOpen }: DevCenterProps) => {
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
+                    <TabButton tabName="health" label="Feature Health" />
                     <TabButton tabName="features" label="Features Dictionary" />
                     <TabButton tabName="dashboard" label="Dashboard" />
                     <TabButton tabName="roadmap" label="Roadmap & Ideas" />

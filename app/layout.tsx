@@ -1,10 +1,11 @@
 
-// FIX: Changed to `import type` which is the correct way to import Next.js types like Metadata.
-import type { Metadata } from 'next';
+
+// FIX: Removed the explicit Metadata type import and annotation to resolve a potential
+// toolchain/TypeScript error. Next.js can infer the metadata object's type correctly without it.
 import './globals.css';
 import React from 'react';
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'SoulyCore - Final',
   description: "The definitive, full-stack version of SoulyCore with a cloud-native, autonomous memory system.",
   manifest: '/manifest.json',
