@@ -132,3 +132,10 @@ export interface Log {
     payload: Record<string, any> | null;
     level: 'info' | 'warn' | 'error';
 }
+
+export interface Brain {
+    id: string;
+    name: string;
+    config_json: Record<string, any>;
+    createdAt: Date;
+}
