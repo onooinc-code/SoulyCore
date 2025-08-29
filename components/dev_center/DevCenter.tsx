@@ -1,7 +1,5 @@
-
 "use client";
 
-// FIX: Imported 'useState' from React to resolve the 'Cannot find name' error.
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { XIcon } from '../Icons';

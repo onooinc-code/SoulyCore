@@ -5,14 +5,14 @@
 import { sql } from '@/lib/db';
 import { ISingleMemoryModule } from '../types';
 import type { Entity, Contact } from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';
 
 // --- Type definitions for method parameters ---
 
 type StructuredDataType = 'entity' | 'contact';
 
-// FIX: Changed from an interface with a problematic intersection type to a discriminated union.
-// This correctly models that 'data' will be either a Partial<Entity> or a Partial<Contact>,
-// resolving the type conflict on the 'details_json' property.
+// Using a discriminated union to correctly model that 'data' will be either a Partial<Entity>
+// or a Partial<Contact>, resolving potential type conflicts.
 type IStructuredMemoryStoreParams =
     | { type: 'entity'; data: Partial<Entity> }
     | { type: 'contact'; data: Partial<Contact> };
@@ -34,8 +34,6 @@ export class StructuredMemoryModule implements ISingleMemoryModule {
      * @param params - An object containing the type of data and the data itself.
      */
     async store(params: IStructuredMemoryStoreParams): Promise<void> {
-        // FIX: Updated logic to work with the new discriminated union type for params.
-        // This allows TypeScript to correctly infer the type of 'data' within each case.
         switch (params.type) {
             case 'entity': {
                 const { data } = params;
@@ -44,7 +42,7 @@ export class StructuredMemoryModule implements ISingleMemoryModule {
                 }
                 await sql`
                     INSERT INTO entities (id, name, type, details_json)
-                    VALUES (${data.id || crypto.randomUUID()}, ${data.name}, ${data.type as string}, ${data.details_json || '{}'})
+                    VALUES (${data.id || uuidv4()}, ${data.name}, ${data.type as string}, ${data.details_json || '{}'})
                     ON CONFLICT (name, type) DO UPDATE SET details_json = EXCLUDED.details_json, "createdAt" = CURRENT_TIMESTAMP;
                 `;
                 break;
@@ -56,7 +54,7 @@ export class StructuredMemoryModule implements ISingleMemoryModule {
                 }
                 await sql`
                     INSERT INTO contacts (id, name, email, company, phone, notes, tags)
-                    VALUES (${data.id || crypto.randomUUID()}, ${data.name}, ${data.email || null}, ${data.company || null}, ${data.phone || null}, ${data.notes || null}, ${data.tags ? (data.tags as any) : null})
+                    VALUES (${data.id || uuidv4()}, ${data.name}, ${data.email || null}, ${data.company || null}, ${data.phone || null}, ${data.notes || null}, ${data.tags ? (data.tags as any) : null})
                     ON CONFLICT (name, email) DO UPDATE SET
                         company = EXCLUDED.company,
                         phone = EXCLUDED.phone,

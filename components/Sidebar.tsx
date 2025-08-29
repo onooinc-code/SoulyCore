@@ -56,7 +56,6 @@ interface SidebarProps {
     setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-// FIX: Removed `React.FC` to fix framer-motion type inference issue.
 const Sidebar = ({ 
     setMemoryCenterOpen, 
     setContactsHubOpen, 

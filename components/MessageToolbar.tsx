@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -22,7 +20,6 @@ interface MessageToolbarProps {
     onInspect: () => void;
 }
 
-// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
 const MessageToolbar = ({
     isBookmarked, isCollapsed, isUser, onCopy, onBookmark, onSummarize, onToggleCollapse, onSetAlign, onEdit, onDelete, onRegenerate, onInspect
 }: MessageToolbarProps) => {

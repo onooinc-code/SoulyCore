@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
@@ -309,8 +308,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try {
             // For a normal message send, add the optimistic message before sending.
             // For a regeneration, the history is provided and already correct.
-            let messageHistory = historyOverride ? [...historyOverride] : [...messages.filter(m => m.id !== optimisticUserMessage.id)];
-
+            let messageHistory = historyOverride ? [...historyOverride] : [...messages, optimisticUserMessage];
+            
+            // In v2, the server now handles saving BOTH messages. We only need to save the user message before the call.
             log('Saving user message to DB...');
             const userMsgRes = await fetch(`/api/conversations/${currentConversation.id}/messages`, {
                  method: 'POST',
@@ -321,15 +321,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const savedUserMessage = await userMsgRes.json();
             log('User message saved successfully.', savedUserMessage);
             
-            // Add the saved user message to the UI/history
-            if (historyOverride) {
-                 messageHistory.push(savedUserMessage);
-                 setMessages(prev => [...prev, savedUserMessage]);
-            } else {
-                 setMessages(prev => prev.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m));
-                 messageHistory.push(savedUserMessage);
-            }
-            
+             // Replace optimistic message with saved one
+            setMessages(prev => prev.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m));
+            messageHistory = messageHistory.map(m => m.id === optimisticUserMessage.id ? savedUserMessage : m);
+
             const chatApiPayload = { 
                 messages: messageHistory, 
                 conversation: currentConversation,
@@ -349,21 +344,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             log('Received response from /api/chat.', { aiResponse, suggestion });
             
             if (aiResponse) {
-                const aiMessageData: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
-                    role: 'model',
-                    content: aiResponse,
-                    tokenCount: Math.ceil(aiResponse.length / 4), // Estimate token count
-                };
-                log('Saving AI message to DB...');
-                 const aiMsgRes = await fetch(`/api/conversations/${currentConversation.id}/messages`, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ message: aiMessageData }),
-                });
-                if (!aiMsgRes.ok) throw new Error("Failed to save AI's message.");
-                const savedAiMessage = await aiMsgRes.json();
-                log('AI message saved successfully.', savedAiMessage);
-                setMessages(prev => [...prev, savedAiMessage!]);
+                // In v2, the server saves the AI message. We just need to refetch to get it.
+                await fetchMessages(currentConversation.id);
 
                 // If tab is not visible, mark the conversation as having unread messages.
                 if (!isVisibleRef.current) {
@@ -395,15 +377,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setStatus({ error: errorMessage, currentAction: "Error" });
             log('Error in addMessage process.', { error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
             console.error(error);
-            if (!historyOverride) {
-                setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
-            }
+            // Remove optimistic message on failure
+            setMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id));
             return { aiResponse: null, suggestion: null };
         } finally {
             setIsLoading(false);
             setStatus({ currentAction: "" });
         }
-    }, [currentConversation, messages, setStatus, log, startBackgroundTask, endBackgroundTask]);
+    }, [currentConversation, messages, setStatus, log, startBackgroundTask, endBackgroundTask, fetchMessages]);
 
     const toggleBookmark = useCallback(async (messageId: string) => {
         setStatus({ currentAction: "Updating bookmark..." });
@@ -564,29 +545,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                  const errorData = await chatRes.json();
                  throw new Error(errorData.error || 'Failed to get new AI response');
             }
-            const { response: aiResponse } = await chatRes.json();
-            log('Received regenerated response from /api/chat.', { aiResponse });
-            
-            if (aiResponse) {
-                const aiMessageData: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
-                    role: 'model',
-                    content: aiResponse,
-                    tokenCount: Math.ceil(aiResponse.length / 4),
-                };
-                const aiMsgRes = await fetch(`/api/conversations/${currentConversation.id}/messages`, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ message: aiMessageData }),
-                });
-                if (!aiMsgRes.ok) throw new Error("Failed to save new AI's message.");
-                const savedAiMessage = await aiMsgRes.json();
-                setMessages(prev => [...prev, savedAiMessage!]);
-            }
+            // The response from chat API will trigger a refetch in the main addMessage flow
+            // so we don't need to manually add the message here in v2.
+            await fetchMessages(currentConversation.id);
+
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: `Failed during regeneration. ${errorMessage}` });
             log('Error regenerating AI response.', { messageId, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
-            // If something fails after deleting the message, we should probably try to refetch
             fetchMessages(currentConversation.id);
         } finally {
             setIsLoading(false);

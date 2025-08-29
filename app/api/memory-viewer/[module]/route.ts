@@ -1,11 +1,7 @@
-
-
 import { NextRequest, NextResponse } from 'next/server';
-/* V2 Architecture Imports (Temporarily Disabled)
 import { StructuredMemoryModule } from '@/core/memory/modules/structured';
 import { EpisodicMemoryModule } from '@/core/memory/modules/episodic';
 import { SemanticMemoryModule } from '@/core/memory/modules/semantic';
-*/
 
 export const dynamic = 'force-dynamic';
 
@@ -26,21 +22,12 @@ export async function GET(req: NextRequest, { params }: { params: { module: stri
         searchParams.forEach((value, key) => {
             queryParams[key] = value;
         });
-
-        // --- V2 Logic (Temporarily Disabled for Build Fix) ---
-        // Returning an empty array to avoid breaking the client UI.
-        console.warn(`Memory viewer for module [${module}] is temporarily disabled.`);
-        return NextResponse.json([]);
-
-
-        /*
+        
         let data;
 
         switch (module) {
             case 'structured': {
                 const structuredMemory = new StructuredMemoryModule();
-                // FIX: Validate and construct a strongly-typed object for the query, resolving the TypeScript error.
-                // The `type` parameter is required by the module.
                 const type = queryParams.type as 'entity' | 'contact';
                 if (!type || (type !== 'entity' && type !== 'contact')) {
                     return NextResponse.json({ error: 'A `type` parameter ("entity" or "contact") is required for structured memory viewer.' }, { status: 400 });
@@ -57,13 +44,16 @@ export async function GET(req: NextRequest, { params }: { params: { module: stri
                 if (!queryParams.conversationId) {
                     return NextResponse.json({ error: 'conversationId is required for episodic memory viewer' }, { status: 400 });
                 }
-                data = await episodicMemory.query(queryParams);
+                // FIX: Explicitly construct the query parameters object to match the expected type `IEpisodicMemoryQueryParams`.
+                const limit = queryParams.limit ? parseInt(queryParams.limit, 10) : undefined;
+                data = await episodicMemory.query({
+                    conversationId: queryParams.conversationId,
+                    limit: limit && !isNaN(limit) ? limit : undefined,
+                });
                 break;
             }
             case 'semantic': {
                 const semanticMemory = new SemanticMemoryModule();
-                // FIX: Validate and construct a strongly-typed object for the query, resolving the TypeScript error.
-                // The `queryText` parameter is required, and `topK` should be a number.
                  if (!queryParams.queryText) {
                     return NextResponse.json({ error: 'queryText is required for semantic memory viewer' }, { status: 400 });
                 }
@@ -80,7 +70,6 @@ export async function GET(req: NextRequest, { params }: { params: { module: stri
         }
 
         return NextResponse.json(data);
-        */
 
     } catch (error) {
         console.error(`Error in memory viewer for module [${params.module}]:`, error);

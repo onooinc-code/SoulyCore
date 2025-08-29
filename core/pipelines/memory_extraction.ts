@@ -1,17 +1,12 @@
-
-
 /**
  * @fileoverview Implements the Memory Extraction Pipeline (Write Path).
  * This service analyzes a completed conversation turn, uses the LLM to extract key
  * information, and stores it in the appropriate long-term memory modules.
  */
 
-/* V2 Architecture Imports (Temporarily Disabled)
 import { SemanticMemoryModule } from '../memory/modules/semantic';
 import { StructuredMemoryModule } from '../memory/modules/structured';
-import llmProvider from '@/core/llm';
-import { GoogleGenAI, Type } from "@google/genai"; // Only for Type enum
-*/
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface IExtractAndStoreParams {
     textToAnalyze: string;
@@ -23,7 +18,6 @@ interface IExtractedData {
 }
 
 export class MemoryExtractionPipeline {
-    /* V2 Architecture Logic (Temporarily Disabled)
     private semanticMemory: SemanticMemoryModule;
     private structuredMemory: StructuredMemoryModule;
 
@@ -31,7 +25,6 @@ export class MemoryExtractionPipeline {
         this.semanticMemory = new SemanticMemoryModule();
         this.structuredMemory = new StructuredMemoryModule();
     }
-    */
 
     /**
      * Analyzes a block of text, extracts structured entities and semantic knowledge,
@@ -40,10 +33,6 @@ export class MemoryExtractionPipeline {
      * @returns A promise that resolves when the extraction and storage are complete.
      */
     async extractAndStore(params: IExtractAndStoreParams): Promise<void> {
-        console.warn("MemoryExtractionPipeline is temporarily disabled to fix build.");
-        return; // No-op to allow build to pass.
-
-        /* V2 Architecture Logic (Temporarily Disabled)
         const { textToAnalyze } = params;
 
         const extractedData = await this.extractDataWithLLM(textToAnalyze);
@@ -85,7 +74,6 @@ export class MemoryExtractionPipeline {
                 }
             }
         }
-        */
     }
 
     /**
@@ -94,8 +82,6 @@ export class MemoryExtractionPipeline {
      * @param text - The text to analyze.
      * @returns A promise that resolves with the extracted data object.
      */
-
-    /*
     private async extractDataWithLLM(text: string): Promise<IExtractedData | null> {
        try {
             // Note: This uses a raw Gemini call because `generateContent` in the provider is text-only.
@@ -161,5 +147,4 @@ export class MemoryExtractionPipeline {
             return null;
         }
     }
-    */
 }

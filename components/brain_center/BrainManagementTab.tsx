@@ -12,8 +12,6 @@ const BrainManagementTab = () => {
     const { log } = useLog();
     const [brains, setBrains] = useState<Brain[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
-    // FIX: Changed the state type to correctly represent that `config_json` is a string for the form,
-    // avoiding an impossible `Record<string, any> & string` intersection type.
     const [currentBrain, setCurrentBrain] = useState<(Omit<Partial<Brain>, 'config_json'> & { config_json: string }) | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [jsonError, setJsonError] = useState<string | null>(null);
@@ -63,6 +61,7 @@ const BrainManagementTab = () => {
         }
         setCurrentBrain(brainForForm);
         setJsonError(null);
+        setIsFormOpen(true);
     };
 
     const handleSaveBrain = async () => {

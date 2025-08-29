@@ -1,27 +1,21 @@
-
-
 /**
  * @fileoverview Implements the Context Assembly Pipeline (Read Path).
  * This service orchestrates queries across all relevant memory modules to build a
  * compact, optimized context block for the LLM on each conversational turn.
  */
 
-/* V2 Architecture Imports (Temporarily Disabled)
 import { EpisodicMemoryModule } from '../memory/modules/episodic';
 import { SemanticMemoryModule, ISemanticQueryResult } from '../memory/modules/semantic';
 import { StructuredMemoryModule } from '../memory/modules/structured';
 import type { Contact } from '@/lib/types';
-*/
 
 interface IAssembleContextParams {
     conversationId: string;
     userQuery: string;
-    // V2 Type (Temporarily using any to avoid import)
-    mentionedContacts?: any[]; // Contact[];
+    mentionedContacts?: Contact[];
 }
 
 export class ContextAssemblyPipeline {
-    /* V2 Architecture Logic (Temporarily Disabled)
     private episodicMemory: EpisodicMemoryModule;
     private semanticMemory: SemanticMemoryModule;
     private structuredMemory: StructuredMemoryModule;
@@ -31,7 +25,6 @@ export class ContextAssemblyPipeline {
         this.semanticMemory = new SemanticMemoryModule();
         this.structuredMemory = new StructuredMemoryModule();
     }
-    */
 
     /**
      * Assembles a contextual string for the LLM by querying various memory sources.
@@ -39,11 +32,7 @@ export class ContextAssemblyPipeline {
      * @returns A promise that resolves to a single, formatted string of context.
      */
     async assembleContext(params: IAssembleContextParams): Promise<string> {
-        console.warn("ContextAssemblyPipeline is temporarily disabled to fix build.");
-        return ""; // Return empty string to allow build to pass
-
-        /* V2 Architecture Logic (Temporarily Disabled)
-        const { conversationId, userQuery, mentionedContacts } = params;
+        const { userQuery, mentionedContacts } = params;
         const contextParts: string[] = [];
 
         // 1. Fetch Structured Memory (Entities) - broad match for now
@@ -59,10 +48,13 @@ export class ContextAssemblyPipeline {
         const semanticResults = await this.semanticMemory.query({ queryText: userQuery, topK: 3 });
         if (semanticResults.length > 0) {
             const relevantKnowledge = semanticResults
+                .filter(match => match.score > 0.5) // Add a relevance threshold
                 .map((match: ISemanticQueryResult) => match.text)
                 .join('\n\n');
-            const semanticContext = `CONTEXT: Here is some relevant information from your knowledge base:\n${relevantKnowledge}`;
-            contextParts.push(semanticContext);
+            if (relevantKnowledge) {
+                const semanticContext = `CONTEXT: Here is some relevant information from your knowledge base:\n${relevantKnowledge}`;
+                contextParts.push(semanticContext);
+            }
         }
 
         // 3. Fetch Contact Context
@@ -74,7 +66,6 @@ export class ContextAssemblyPipeline {
             contextParts.push(contactContext);
         }
 
-        return contextParts.join('\n\n');
-        */
+        return contextParts.join('\n\n---\n\n');
     }
 }

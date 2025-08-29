@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -27,7 +26,6 @@ interface MessageSettings {
 
 const WORD_COUNT_THRESHOLD = 250;
 
-// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
 const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate, onInspect }: MessageProps) => {
     const isUser = message.role === 'user';
     const [isEditing, setIsEditing] = useState(false);

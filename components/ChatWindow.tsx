@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -23,7 +20,6 @@ const CognitiveInspectorModal = dynamic(() => import('./CognitiveInspectorModal'
 });
 
 
-// FIX: Removed React.FC to fix framer-motion type inference issue.
 const ChatWindow = () => {
     const { 
         currentConversation, 
@@ -126,8 +122,6 @@ const ChatWindow = () => {
                     {messages.length > 0 ? (
                         <div className="space-y-4">
                             {messages.map((msg) => (
-                                // FIX: Wrap Message component in a div with the key to resolve TypeScript error.
-                                // The 'key' prop is for React's reconciliation and should be on the wrapping element of a list, not passed to the component's props.
                                 <div key={msg.id}>
                                     <Message 
                                         message={msg}
