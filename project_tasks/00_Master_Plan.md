@@ -1,16 +1,15 @@
-
 # Master Implementation Plan: Cognitive Architecture v2.0
 
 This document provides a high-level overview of all planned tasks for the v2.0 refactor. Each task is detailed in a separate file within the `tasks/` directory.
 
 | Phase | Task ID | Task Description | Related Feature | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **1: Foundational Backend** | 1-1 | Create Core Directory Structure | `V2 [Core] - Core Services Layer Scaffolding` | `Pending` |
-| | 1-2 | Define Core Types & Interfaces | `V2 [Core] - Single Memory Module (SMM) Interfaces` | `Pending` |
-| | 1-3 | Update Database Schema | `V2 [Core] - "Brain" Configuration Management` | `Pending` |
-| **2: Core Module Impl.** | 2-1 | Implement LLM Provider Abstraction | `V2 [Core] - LLM Provider Abstraction Layer` | `Pending` |
-| | 2-2 | Implement Working Memory Module | `V2 [Core] - Working Memory Module` | `Pending` |
-| | 2-3 | Implement Episodic Memory Module | `V2 [Core] - Episodic Memory Module` | `Pending` |
+| **1: Foundational Backend** | 1-1 | Create Core Directory Structure | `V2 [Core] - Core Services Layer Scaffolding` | `✅ Completed` |
+| | 1-2 | Define Core Types & Interfaces | `V2 [Core] - Single Memory Module (SMM) Interfaces` | `✅ Completed` |
+| | 1-3 | Update Database Schema | `V2 [Core] - "Brain" Configuration Management` | `✅ Completed` |
+| **2: Core Module Impl.** | 2-1 | Implement LLM Provider Abstraction | `V2 [Core] - LLM Provider Abstraction Layer` | `✅ Completed` |
+| | 2-2 | Implement Working Memory Module | `V2 [Core] - Working Memory Module` | `✅ Completed` |
+| | 2-3 | Implement Episodic Memory Module | `V2 [Core] - Episodic Memory Module` | `✅ Completed` |
 | | 2-4 | Implement Semantic Memory Module | `V2 [Core] - Semantic Memory Module` | `Pending` |
 | | 2-5 | Implement Structured Memory Module | `V2 [Core] - Structured Memory Module` | `Pending` |
 | **3: Pipeline Orchestration**| 3-1 | Implement Context Assembly Pipeline | `V2 [Core] - Context Assembly Pipeline` | `Pending` |
