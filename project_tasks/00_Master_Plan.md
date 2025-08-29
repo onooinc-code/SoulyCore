@@ -18,7 +18,7 @@ This document provides a high-level overview of all planned tasks for the v2.0 r
 | **4: API Layer Refactor** | 4-1 | Refactor Chat Endpoint | `V2 [API] - Refactor /api/chat Endpoint` | `✅ Completed` |
 | | 4-2 | Refactor Memory Pipeline Endpoint | `V2 [API] - Refactor /api/memory/pipeline Endpoint` | `✅ Completed` |
 | | 4-3 | Create Brain Management API | `V2 [API] - Brain Management Endpoints` | `✅ Completed` |
-| | 4-4 | Create Memory Viewer API | `V2 [API] - Memory Viewer Endpoints` | `Pending` |
+| | 4-4 | Create Memory Viewer API | `V2 [API] - Memory Viewer Endpoints` | `✅ Completed` |
 | | 4-5 | Create Test Case Registry API | `V2 [QA] - Test Case Registry Backend` | `Pending` |
 | **5: Frontend UI Impl.** | 5-1 | Build "The Brain Center" Hub | `V2 [UI] - The "Brain Center" Hub` | `Pending` |
 | | 5-2 | Build Brain Management Tab | `V2 [UI] - Brain Management Tab` | `Pending` |
