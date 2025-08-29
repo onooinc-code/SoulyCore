@@ -152,6 +152,30 @@ async function createTables() {
         }
         console.log("Prompts table columns checked.");
 
+        const brainsTable = await sql`
+            CREATE TABLE IF NOT EXISTS brains (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                name VARCHAR(255) NOT NULL UNIQUE,
+                config_json JSONB NOT NULL,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'brains' created or already exists.", brainsTable.command);
+
+        const featureTestsTable = await sql`
+            CREATE TABLE IF NOT EXISTS feature_tests (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                "featureId" UUID REFERENCES features(id) ON DELETE CASCADE,
+                description TEXT NOT NULL,
+                manual_steps TEXT,
+                expected_result TEXT NOT NULL,
+                last_run_status VARCHAR(50) DEFAULT 'Not Run',
+                last_run_at TIMESTAMP WITH TIME ZONE,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'feature_tests' created or already exists.", featureTestsTable.command);
+
 
         // Insert default settings if they don't exist
         await sql`
