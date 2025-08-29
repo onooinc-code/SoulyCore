@@ -1,8 +1,8 @@
 
 # SoulyCore Cognitive Architecture v2.0: System Architecture
 
-**Document Version:** 1.0
-**Status:** Proposed
+**Document Version:** 1.1
+**Status:** Proposed (Refined)
 
 ---
 
@@ -17,7 +17,7 @@ graph TD
     end
 
     subgraph Vercel Backend
-        B[Next.js API Routes - /api/v2/]
+        B[Next.js API Routes]
         C[Core Services Layer - Cognitive Engine]
     end
 
@@ -43,11 +43,12 @@ graph TD
     A -- HTTP Request --> B
     B -- Calls --> C
     C -- Manages --> D & E
-    D -- Reads from --> G & H & I
-    D -- Writes to --> J
-    E -- Writes to --> G & H &I
-    F -- Communicates with --> K
-    C -- Uses --> F
+    D -- "Reads from" --> G & H & I
+    E -- "Writes to" --> G & H & I
+    F -- "Communicates with" --> K
+    C -- "Uses" --> F
+    C -- "Writes context to" --> J
+    C -- "Reads context from" --> J
 ```
 
 ### 2. Major Data Flows
@@ -58,7 +59,7 @@ The system operates primarily through two opposing data flow pipelines, orchestr
 
 This flow is triggered when a user sends a message. Its purpose is to gather and assemble all necessary context for the AI model.
 
-1.  **UI -> API:** The `ChatWindow` component sends the user's message and the `conversationId` to a new endpoint, e.g., `POST /api/v2/chat`.
+1.  **UI -> API:** The `ChatWindow` component sends the user's message and the `conversationId` to its corresponding API endpoint, e.g., the refactored `POST /api/chat`.
 2.  **API -> Core:** The API route invokes the `Context Assembly Pipeline` within the Core Services Layer.
 3.  **Core -> Memory Modules:** The pipeline executes a series of parallel reads:
     *   Queries Vercel Postgres for recent messages (**Episodic Memory**).
@@ -72,7 +73,7 @@ This flow is triggered when a user sends a message. Its purpose is to gather and
 
 This flow is triggered asynchronously after a successful conversation turn. Its purpose is to learn from the interaction.
 
-1.  **API -> Core (Async):** The `POST /api/v2/chat` endpoint, after sending the response to the user, triggers the `Memory Extraction Pipeline` in the background (fire-and-forget).
+1.  **API -> Core (Async):** The API endpoint, after sending the response to the user, triggers the `Memory Extraction Pipeline` in the background (fire-and-forget).
 2.  **Core -> LLM:** The pipeline sends the conversation turn (user prompt + AI response) to the Gemini API via the `LLM Provider`, but with a different set of instructions focused on extraction and analysis (e.g., "Extract key entities and facts from this text").
 3.  **Core -> Memory Modules:** The extracted data from the LLM is processed and written to the appropriate long-term memory stores:
     *   New/updated facts are embedded and upserted into Pinecone (**Semantic Memory**).
