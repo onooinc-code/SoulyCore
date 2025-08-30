@@ -1,24 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import type { EndpointTestLog } from '@/lib/types';
+import type { EndpointTestLog, ApiEndpoint } from '@/lib/types';
 import JsonEditor from './JsonEditor';
+import { CopyIcon, CheckIcon } from '@/components/Icons';
 
 interface ResponsePanelProps {
     response: any | null;
-    endpointId: string | null;
+    endpoint: ApiEndpoint | null;
+    requestPayload: { params: any; body: any } | null;
     isLoading: boolean;
 }
 
-const ResponsePanel = ({ response, endpointId, isLoading }: ResponsePanelProps) => {
+const ResponsePanel = ({ response, endpoint, requestPayload, isLoading }: ResponsePanelProps) => {
     const [activeTab, setActiveTab] = useState<'body' | 'headers' | 'results'>('body');
     const [testLogs, setTestLogs] = useState<EndpointTestLog[]>([]);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
-        if (activeTab === 'results' && endpointId) {
+        if (activeTab === 'results' && endpoint) {
             const fetchLogs = async () => {
                 try {
-                    const res = await fetch(`/api/api-endpoints/test-logs/${endpointId}`);
+                    const res = await fetch(`/api/api-endpoints/test-logs/${endpoint.id}`);
                     if (!res.ok) throw new Error("Failed to fetch test logs.");
                     const data = await res.json();
                     setTestLogs(data);
@@ -28,7 +31,7 @@ const ResponsePanel = ({ response, endpointId, isLoading }: ResponsePanelProps) 
             };
             fetchLogs();
         }
-    }, [activeTab, endpointId]);
+    }, [activeTab, endpoint]);
     
     // Reset to body tab when a new response comes in
     useEffect(() => {
@@ -36,6 +39,59 @@ const ResponsePanel = ({ response, endpointId, isLoading }: ResponsePanelProps) 
             setActiveTab('body');
         }
     }, [response]);
+
+    const handleCopyReport = () => {
+        if (!response || !endpoint || !requestPayload) return;
+
+        const report = `
+# API Test Report
+**Timestamp:** ${new Date().toISOString()}
+
+---
+
+## Endpoint Details
+- **Method:** ${endpoint.method}
+- **Path:** ${endpoint.path}
+- **Description:** ${endpoint.description || 'N/A'}
+
+---
+
+## Test Result
+- **Status:** ${response.status === endpoint.expected_status_code ? 'Passed' : 'Failed'}
+- **HTTP Code:** ${response.status} ${response.statusText}
+
+---
+
+## Request Params
+\`\`\`json
+${JSON.stringify(requestPayload.params, null, 2)}
+\`\`\`
+
+---
+
+## Request Body
+\`\`\`json
+${JSON.stringify(requestPayload.body, null, 2)}
+\`\`\`
+
+---
+
+## Response Headers
+\`\`\`json
+${JSON.stringify(response.headers, null, 2)}
+\`\`\`
+
+---
+
+## Response Body
+\`\`\`json
+${JSON.stringify(response.body, null, 2)}
+\`\`\`
+        `;
+        navigator.clipboard.writeText(report.trim());
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const TabButton = ({ tab, label }: { tab: 'body' | 'headers' | 'results', label: string }) => (
         <button
@@ -92,8 +148,19 @@ const ResponsePanel = ({ response, endpointId, isLoading }: ResponsePanelProps) 
                     <TabButton tab="results" label="Test Results" />
                 </div>
                  {response && (
-                    <div className="text-sm font-semibold">
-                        Status: <span className={getStatusColor(response.status)}>{response.status} {response.statusText}</span>
+                    <div className="flex items-center gap-3">
+                         <button 
+                            onClick={handleCopyReport}
+                            disabled={!response}
+                            className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white disabled:opacity-50"
+                            title="Copy full test report to clipboard"
+                        >
+                            {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <CopyIcon className="w-4 h-4" />}
+                            {copied ? 'Copied!' : 'Copy Report'}
+                        </button>
+                        <div className="text-sm font-semibold">
+                            Status: <span className={getStatusColor(response.status)}>{response.status} {response.statusText}</span>
+                        </div>
                     </div>
                 )}
             </div>

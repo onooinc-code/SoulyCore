@@ -17,6 +17,7 @@ const APICommandCenterTab = () => {
     const [response, setResponse] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isBatchLoading, setIsBatchLoading] = useState(false);
+    const [lastRequest, setLastRequest] = useState<{ params: any; body: any } | null>(null);
 
     const fetchEndpoints = useCallback(async () => {
         setIsLoading(true);
@@ -41,6 +42,7 @@ const APICommandCenterTab = () => {
         if (!selectedEndpoint) return;
         setIsLoading(true);
         setResponse(null);
+        setLastRequest({ params, body });
         clearError();
         log('Sending API test request', { path: selectedEndpoint.path });
 
@@ -108,7 +110,11 @@ const APICommandCenterTab = () => {
                 <div className="col-span-3 bg-gray-800/50 rounded-lg overflow-hidden">
                     <EndpointNavigatorPanel 
                         endpoints={endpoints} 
-                        onSelectEndpoint={setSelectedEndpoint}
+                        onSelectEndpoint={(endpoint) => {
+                            setSelectedEndpoint(endpoint);
+                            setResponse(null);
+                            setLastRequest(null);
+                        }}
                         selectedEndpointId={selectedEndpoint?.id || null}
                     />
                 </div>
@@ -122,7 +128,8 @@ const APICommandCenterTab = () => {
                 <div className="col-span-4 bg-gray-800/50 rounded-lg overflow-hidden">
                     <ResponsePanel 
                         response={response} 
-                        endpointId={selectedEndpoint?.id || null}
+                        endpoint={selectedEndpoint}
+                        requestPayload={lastRequest}
                         isLoading={isLoading}
                     />
                 </div>
