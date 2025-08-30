@@ -25,7 +25,15 @@ export async function POST(req: NextRequest) {
 
         const { rows } = await sql<ApiEndpoint>`
             INSERT INTO api_endpoints (method, path, group_name, description, default_params_json, default_body_json, expected_status_code)
-            VALUES (${method}, ${path}, ${group_name}, ${description}, ${default_params_json}, ${default_body_json}, ${expected_status_code})
+            VALUES (
+                ${method}, 
+                ${path}, 
+                ${group_name}, 
+                ${description}, 
+                ${default_params_json ? JSON.stringify(default_params_json) : null}, 
+                ${default_body_json ? JSON.stringify(default_body_json) : null}, 
+                ${expected_status_code || 200}
+            )
             RETURNING *;
         `;
         

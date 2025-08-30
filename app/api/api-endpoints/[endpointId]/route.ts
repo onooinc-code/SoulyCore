@@ -10,7 +10,7 @@ export async function PUT(req: NextRequest, { params }: { params: { endpointId: 
         const { method, path, group_name, description, default_params_json, default_body_json, expected_status_code } = endpoint;
 
         if (!method || !path || !group_name) {
-            return NextResponse.json({ error: 'Method, path, and group_name are required' }, { status: 400 });
+            return NextResponse.json({ error: 'Method, path, and group_name are required for an update' }, { status: 400 });
         }
 
         const { rows } = await sql<ApiEndpoint>`
@@ -19,9 +19,9 @@ export async function PUT(req: NextRequest, { params }: { params: { endpointId: 
                 path = ${path}, 
                 group_name = ${group_name}, 
                 description = ${description}, 
-                default_params_json = ${default_params_json}, 
-                default_body_json = ${default_body_json}, 
-                expected_status_code = ${expected_status_code}
+                default_params_json = ${default_params_json ? JSON.stringify(default_params_json) : null}, 
+                default_body_json = ${default_body_json ? JSON.stringify(default_body_json) : null}, 
+                expected_status_code = ${expected_status_code || 200}
             WHERE id = ${endpointId}
             RETURNING *;
         `;
@@ -33,6 +33,9 @@ export async function PUT(req: NextRequest, { params }: { params: { endpointId: 
         return NextResponse.json(rows[0]);
     } catch (error) {
         console.error(`Failed to update API endpoint ${params.endpointId}:`, error);
+        if ((error as any).code === '23505') {
+            return NextResponse.json({ error: 'An endpoint with this path already exists.' }, { status: 409 });
+        }
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
