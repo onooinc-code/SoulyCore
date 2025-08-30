@@ -281,3 +281,15 @@ export const BeakerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.037-.502.068-.752.098m.752-.098a2.25 2.25 0 013 0m0 0c.251.037.502.068.752.098M3.75 12h16.5m-16.5 0a9 9 0 0116.5 0m0 0c0 4.97-4.03 9-9 9s-9-4.03-9-9m16.5-4.896L19.5 5.25m0 0l-1.543-.867M19.5 5.25v2.25" />
     </svg>
 );
+
+export const RocketLaunchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.82m5.84-2.56a6 6 0 01-2.56 5.84m-2.56-5.84a6 6 0 01-7.38-5.84m12.58 0a6 6 0 01-7.38 5.84m7.38-5.84a6 6 0 015.84 2.56m-5.84-2.56a6 6 0 01-5.84-7.38m5.84 7.38a6 6 0 017.38 5.84m-15.38-5.84a6 6 0 01-2.56-5.84m2.56 5.84a6 6 0 015.84-2.56m-5.84 2.56a6 6 0 01-5.84 7.38m5.84-7.38a6 6 0 017.38-5.84m-7.38 5.84a6 6 0 01-2.56 5.84" />
+    </svg>
+);
+
+export const ServerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m15.457 0a4.5 4.5 0 01-6.32 0M2.25 17.25a4.5 4.5 0 006.32 0m0 0l3.18-3.18a4.5 4.5 0 016.32 0l3.18 3.18m-3.18-3.18l-3.18 3.18" />
+    </svg>
+);

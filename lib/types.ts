@@ -152,3 +152,30 @@ export interface Brain {
     config_json: Record<string, any>;
     createdAt: Date;
 }
+
+export type ApiTestStatus = 'Passed' | 'Failed' | 'Not Run';
+
+export interface ApiEndpoint {
+    id: string;
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    path: string;
+    group_name: string;
+    description: string | null;
+    default_params_json: Record<string, any> | null;
+    default_body_json: Record<string, any> | null;
+    expected_status_code: number;
+    last_test_status: ApiTestStatus;
+    last_test_at: Date | null;
+    createdAt: Date;
+}
+
+export interface EndpointTestLog {
+    id: string;
+    endpoint_id: string;
+    status: ApiTestStatus;
+    status_code: number;
+    response_body: Record<string, any> | null;
+    response_headers: Record<string, any> | null;
+    duration_ms: number;
+    createdAt: Date;
+}

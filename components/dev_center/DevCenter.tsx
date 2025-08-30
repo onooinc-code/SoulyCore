@@ -18,15 +18,20 @@ const FeatureHealthDashboard = dynamic(() => import('./FeatureHealthDashboard'),
     loading: () => <div className="flex items-center justify-center h-full"><p className="text-white">Loading Health Dashboard...</p></div>
 });
 
+const APICommandCenterTab = dynamic(() => import('./api_command_center/APICommandCenterTab'), {
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full"><p className="text-white">Loading API Command Center...</p></div>
+});
 
-type Tab = 'health' | 'features' | 'dashboard' | 'roadmap' | 'docs';
+
+type Tab = 'api' | 'health' | 'features' | 'dashboard' | 'roadmap' | 'docs';
 
 interface DevCenterProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
 const DevCenter = ({ setIsOpen }: DevCenterProps) => {
-    const [activeTab, setActiveTab] = useState<Tab>('health');
+    const [activeTab, setActiveTab] = useState<Tab>('api');
 
     const TabButton = ({ tabName, label }: { tabName: Tab; label: string }) => (
         <button
@@ -41,6 +46,7 @@ const DevCenter = ({ setIsOpen }: DevCenterProps) => {
     
     const renderContent = () => {
         switch (activeTab) {
+            case 'api': return <APICommandCenterTab />;
             case 'health': return <FeatureHealthDashboard />;
             case 'features': return <FeaturesDictionary />;
             case 'dashboard': return <Dashboard />;
@@ -72,6 +78,7 @@ const DevCenter = ({ setIsOpen }: DevCenterProps) => {
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
+                    <TabButton tabName="api" label="API Command Center" />
                     <TabButton tabName="health" label="Feature Health" />
                     <TabButton tabName="features" label="Features Dictionary" />
                     <TabButton tabName="dashboard" label="Dashboard" />

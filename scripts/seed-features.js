@@ -1,6 +1,7 @@
 // scripts/seed-features.js
 require('dotenv').config({ path: '.env.local' });
 const { sql } = require('@vercel/postgres');
+const { execSync } = require('child_process');
 
 const featuresData = [
     {
@@ -291,4 +292,17 @@ async function seedFeatures() {
     }
 }
 
-seedFeatures();
+async function runAllSeeds() {
+    await seedFeatures();
+    console.log("Finished seeding features. Now seeding API endpoints...");
+    try {
+        execSync('node scripts/seed-api-endpoints.js', { stdio: 'inherit' });
+        console.log("Successfully seeded API endpoints.");
+    } catch (error) {
+        console.error("Error seeding API endpoints:", error);
+        process.exit(1);
+    }
+}
+
+
+runAllSeeds();

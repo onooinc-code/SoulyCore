@@ -176,6 +176,36 @@ async function createTables() {
         `;
         console.log("Table 'feature_tests' created or already exists.", featureTestsTable.command);
 
+        const apiEndpointsTable = await sql`
+            CREATE TABLE IF NOT EXISTS api_endpoints (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                method VARCHAR(10) NOT NULL,
+                path VARCHAR(255) NOT NULL UNIQUE,
+                group_name VARCHAR(255) NOT NULL,
+                description TEXT,
+                default_params_json JSONB,
+                default_body_json JSONB,
+                expected_status_code INTEGER NOT NULL DEFAULT 200,
+                last_test_status VARCHAR(50) NOT NULL DEFAULT 'Not Run',
+                last_test_at TIMESTAMP WITH TIME ZONE,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'api_endpoints' created or already exists.", apiEndpointsTable.command);
+
+        const endpointTestLogsTable = await sql`
+            CREATE TABLE IF NOT EXISTS endpoint_test_logs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                endpoint_id UUID REFERENCES api_endpoints(id) ON DELETE CASCADE,
+                status VARCHAR(50) NOT NULL,
+                status_code INTEGER NOT NULL,
+                response_body JSONB,
+                response_headers JSONB,
+                duration_ms INTEGER NOT NULL,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'endpoint_test_logs' created or already exists.", endpointTestLogsTable.command);
 
         // Insert default settings if they don't exist
         await sql`
