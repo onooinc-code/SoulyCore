@@ -221,18 +221,16 @@ const Message = ({
                     <MessageFooter message={message} />
                  </div>
                  {showProgressBar && (
-                    <div className="mt-2 text-center">
-                        <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
-                             <div className="w-20 h-1 bg-gray-700 rounded-full overflow-hidden">
-                                <motion.div 
-                                    className="h-full bg-indigo-500"
-                                    initial={{ x: "-100%" }}
-                                    animate={{ x: "100%" }}
-                                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                                />
-                            </div>
-                            <span>{progressText}</span>
+                    <div className={`mt-2 flex items-center gap-2 text-xs text-gray-400 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                         <div className="w-20 h-1 bg-gray-700 rounded-full overflow-hidden">
+                            <motion.div 
+                                className="h-full bg-indigo-500"
+                                initial={{ x: "-100%" }}
+                                animate={{ x: "100%" }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                            />
                         </div>
+                        <span>{progressText}</span>
                     </div>
                 )}
             </div>
