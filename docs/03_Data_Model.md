@@ -71,3 +71,32 @@ Stores the test cases associated with features for the Feature Health Dashboard.
 | `last_run_status` | VARCHAR(50) | The status of the last test run: 'Passed', 'Failed', or 'Not Run'.       |
 | `last_run_at`     | TIMESTAMPTZ | Timestamp of when the test was last run.                                 |
 | `createdAt`       | TIMESTAMPTZ | Timestamp of when the test case was created.                             |
+
+#### `pipeline_runs`
+Logs a high-level record for each execution of a major cognitive pipeline.
+
+| Column          | Type        | Description                                                              |
+|-----------------|-------------|--------------------------------------------------------------------------|
+| `id`            | UUID (PK)   | Unique identifier for the run.                                           |
+| `message_id`    | UUID (FK)   | Foreign key to the `messages` table, linking a run to a specific message turn. |
+| `pipeline_type` | VARCHAR(50) | The type of pipeline, e.g., 'ContextAssembly' or 'MemoryExtraction'.      |
+| `status`        | VARCHAR(50) | The final status: 'running', 'completed', or 'failed'.                   |
+| `final_output`  | TEXT        | The final assembled context string or a summary of extracted data.       |
+| `start_time`    | TIMESTAMPTZ | The start time of the pipeline execution.                                |
+| `end_time`      | TIMESTAMPTZ | The end time of the pipeline execution.                                  |
+| `duration_ms`   | INTEGER     | The total execution time in milliseconds.                                |
+
+#### `pipeline_run_steps`
+Logs the detailed, individual steps within a single `pipeline_runs` execution.
+
+| Column           | Type        | Description                                                              |
+|------------------|-------------|--------------------------------------------------------------------------|
+| `id`             | UUID (PK)   | Unique identifier for the step.                                          |
+| `run_id`         | UUID (FK)   | Foreign key to the `pipeline_runs` table. **Deletes cascade.**           |
+| `step_order`     | INTEGER     | The sequence number of this step in the pipeline.                        |
+| `step_name`      | VARCHAR(255)| The name of the step, e.g., 'QuerySemanticMemory'.                       |
+| `status`         | VARCHAR(50) | The status of the step: 'completed' or 'failed'.                         |
+| `input_payload`  | JSONB       | The input data provided to this step.                                    |
+| `output_payload` | JSONB       | The data returned by this step.                                          |
+| `error_message`  | TEXT        | Any error message if the step failed.                                    |
+| `duration_ms`    | INTEGER     | The execution time of this specific step in milliseconds.                |

@@ -16,6 +16,8 @@ interface MessageProps {
     onUpdate: (messageId: string, newContent: string) => void;
     onRegenerate: (messageId: string) => void;
     onInspect: (messageId: string) => void;
+    isContextAssemblyRunning?: boolean;
+    isMemoryExtractionRunning?: boolean;
 }
 
 type TextAlign = 'left' | 'right';
@@ -26,28 +28,35 @@ interface MessageSettings {
 
 const WORD_COUNT_THRESHOLD = 250;
 
-const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, onRegenerate, onInspect }: MessageProps) => {
+const Message = ({ 
+    message, 
+    onSummarize, 
+    onToggleBookmark, 
+    onDelete, 
+    onUpdate, 
+    onRegenerate, 
+    onInspect,
+    isContextAssemblyRunning,
+    isMemoryExtractionRunning 
+}: MessageProps) => {
     const isUser = message.role === 'user';
     const [isEditing, setIsEditing] = useState(false);
     const [editedContent, setEditedContent] = useState(message.content);
-
-    // State for the summary
     const [summary, setSummary] = useState<string | null>(null);
     const [isSummaryLoading, setIsSummaryLoading] = useState(false);
-    
-    // State for message settings, persisted in local storage
     const [settings, setSettings] = useState<MessageSettings>({ collapsed: false, align: 'left' });
 
     const isLongMessage = !isUser && message.content.split(/\s+/).length > WORD_COUNT_THRESHOLD;
+    
+    const showProgressBar = isContextAssemblyRunning || isMemoryExtractionRunning;
+    const progressText = isContextAssemblyRunning ? "Assembling Context..." : "Extracting Memories...";
 
-    // Effect to load settings and determine initial collapsed state for long messages
     useEffect(() => {
         try {
             const allSettings = JSON.parse(localStorage.getItem('messageSettings') || '{}');
             if (allSettings[message.id]) {
                 setSettings(allSettings[message.id]);
             } else if (isLongMessage) {
-                // It's a long message and we haven't seen it before, so collapse it by default.
                 setSettings(prev => ({ ...prev, collapsed: true }));
             }
         } catch (error) {
@@ -55,11 +64,9 @@ const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, o
         }
     }, [message.id, isLongMessage]);
 
-     // Effect to fetch summary when a long message is collapsed
     useEffect(() => {
         if (isLongMessage && settings.collapsed && !summary) {
             const fetchSummary = async () => {
-                // 1. Check cache first
                 try {
                     const cachedSummaries = JSON.parse(localStorage.getItem('messageSummaries') || '{}');
                     if (cachedSummaries[message.id]) {
@@ -68,7 +75,6 @@ const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, o
                     }
                 } catch (e) { console.error("Failed to parse summary cache", e); }
 
-                // 2. If not in cache, fetch from API
                 setIsSummaryLoading(true);
                 try {
                     const res = await fetch('/api/summarize', {
@@ -81,7 +87,6 @@ const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, o
                     
                     if (data.summary) {
                         setSummary(data.summary);
-                        // 3. Cache the new summary
                         try {
                              const cachedSummaries = JSON.parse(localStorage.getItem('messageSummaries') || '{}');
                              cachedSummaries[message.id] = data.summary;
@@ -208,13 +213,28 @@ const Message = ({ message, onSummarize, onToggleBookmark, onDelete, onUpdate, o
                         onInspect={() => onInspect(message.id)}
                     />
                 </div>
-                <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`} style={{ textAlign: settings.align }}>
+                <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`}>
                     {renderMessageContent()}
                 </div>
                  {renderToggleCollapseButton()}
                  <div className={`flex items-center mt-1 ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <MessageFooter message={message} />
-                </div>
+                 </div>
+                 {showProgressBar && (
+                    <div className="mt-2 text-center">
+                        <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                             <div className="w-20 h-1 bg-gray-700 rounded-full overflow-hidden">
+                                <motion.div 
+                                    className="h-full bg-indigo-500"
+                                    initial={{ x: "-100%" }}
+                                    animate={{ x: "100%" }}
+                                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                />
+                            </div>
+                            <span>{progressText}</span>
+                        </div>
+                    </div>
+                )}
             </div>
              {isUser && (
                 <div className="w-8 h-8 rounded-full bg-gray-600 flex-shrink-0 flex items-center justify-center font-bold text-sm">

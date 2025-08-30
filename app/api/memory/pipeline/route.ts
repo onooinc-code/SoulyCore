@@ -6,7 +6,7 @@ async function serverLog(message: string, payload?: any, level: 'info' | 'warn' 
     try {
         await sql`
             INSERT INTO logs (message, payload, level)
-            VALUES (${message}, ${payload ? JSON.stringify(payload) : null}, ${level});
+            VALUES (${payload ? JSON.stringify(payload) : null}, ${level});
         `;
     } catch (e) {
         console.error("Failed to write log to database:", e);
@@ -17,22 +17,27 @@ async function serverLog(message: string, payload?: any, level: 'info' | 'warn' 
 
 export async function POST(req: NextRequest) {
     try {
-        const { textToAnalyze } = await req.json();
+        const { textToAnalyze, aiMessageId } = await req.json();
 
-        if (!textToAnalyze) {
-            await serverLog('V2 Memory pipeline called with no text.', null, 'warn');
-            return NextResponse.json({ error: 'No text provided for analysis' }, { status: 400 });
+        if (!textToAnalyze || !aiMessageId) {
+            await serverLog('V2 Memory pipeline called with missing data.', { textToAnalyze, aiMessageId }, 'warn');
+            return NextResponse.json({ error: 'textToAnalyze and aiMessageId are required' }, { status: 400 });
         }
 
-        await serverLog('V2 Memory pipeline started.', { textLength: textToAnalyze.length });
+        // --- V2 Pipeline Logging: Start ---
+         const { rows: runRows } = await sql`
+            INSERT INTO pipeline_runs (message_id, pipeline_type, status)
+            VALUES (${aiMessageId}, 'MemoryExtraction', 'running')
+            RETURNING id;
+        `;
+        const runId = runRows[0].id;
+        // --- V2 Pipeline Logging: End ---
 
-        // --- Start of V2 Architecture Integration ---
-        
         // 1. Instantiate the new Memory Extraction Pipeline
         const extractionPipeline = new MemoryExtractionPipeline();
 
         // 2. Execute the pipeline (fire-and-forget, no need to await for UI response)
-        extractionPipeline.extractAndStore({ textToAnalyze }).then(() => {
+        extractionPipeline.extractAndStore({ textToAnalyze, runId }).then(() => {
              serverLog('V2 Memory pipeline processing completed in background.', { textLength: textToAnalyze.length });
         }).catch(pipelineError => {
              const errorDetails = {
@@ -42,10 +47,8 @@ export async function POST(req: NextRequest) {
             console.error('Error in background memory pipeline execution:', pipelineError);
             serverLog('Critical error in V2 memory pipeline background execution.', { error: errorDetails }, 'error');
         });
-
-        // --- End of V2 Architecture Integration ---
         
-        // Respond to the client immediately without waiting for the pipeline to finish.
+        // Respond to the client immediately
         return NextResponse.json({
             message: 'Memory pipeline execution initiated successfully in the background.',
         });

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon } from './Icons';
+import type { PipelineRun, PipelineRunStep } from '@/lib/types';
 
 interface CognitiveInspectorModalProps {
     isOpen: boolean;
@@ -10,8 +11,43 @@ interface CognitiveInspectorModalProps {
     messageId: string | null;
 }
 
+const PipelineStep = ({ step }: { step: PipelineRunStep }) => (
+    <div className="bg-gray-900 p-3 rounded-lg">
+        <div className="flex justify-between items-center">
+            <h4 className="font-semibold text-gray-200">
+                Step {step.step_order}: {step.step_name}
+            </h4>
+            <span className={`text-xs px-2 py-0.5 rounded-full ${step.status === 'completed' ? 'bg-green-600/50 text-green-300' : 'bg-red-600/50 text-red-300'}`}>
+                {step.status}
+            </span>
+        </div>
+        <details className="mt-2 text-xs text-gray-400">
+            <summary className="cursor-pointer focus:outline-none">Show Details</summary>
+            <div className="mt-2 space-y-2 pl-2 border-l border-gray-700">
+                {step.input_payload && (
+                    <div>
+                        <h5 className="font-semibold">Input:</h5>
+                        <pre className="text-xs whitespace-pre-wrap font-mono bg-gray-800 p-2 rounded-md overflow-auto">
+                            <code>{JSON.stringify(step.input_payload, null, 2)}</code>
+                        </pre>
+                    </div>
+                )}
+                 {step.output_payload && (
+                    <div>
+                        <h5 className="font-semibold">Output:</h5>
+                        <pre className="text-xs whitespace-pre-wrap font-mono bg-gray-800 p-2 rounded-md overflow-auto">
+                            <code>{JSON.stringify(step.output_payload, null, 2)}</code>
+                        </pre>
+                    </div>
+                )}
+                <p>Duration: {step.duration_ms}ms</p>
+            </div>
+        </details>
+    </div>
+);
+
 const CognitiveInspectorModal = ({ isOpen, onClose, messageId }: CognitiveInspectorModalProps) => {
-    const [inspectionData, setInspectionData] = useState<{ preLlmContext: string; postLlmExtraction: any } | null>(null);
+    const [inspectionData, setInspectionData] = useState<{ pipelineRun: PipelineRun; pipelineSteps: PipelineRunStep[] } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +74,36 @@ const CognitiveInspectorModal = ({ isOpen, onClose, messageId }: CognitiveInspec
         }
     }, [isOpen, messageId]);
 
+    const renderContent = () => {
+        if (isLoading) return <p className="text-gray-400 text-center">Loading inspection data...</p>;
+        if (error) return <p className="text-red-400 text-center">Error: {error}</p>;
+        if (!inspectionData) return <p className="text-gray-500 text-center">No data to display.</p>;
+        
+        const { pipelineRun, pipelineSteps } = inspectionData;
+
+        return (
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                <div className="bg-gray-900/50 p-4 rounded-lg flex flex-col">
+                    <h3 className="font-semibold text-lg mb-2 text-indigo-400">Pipeline Run: {pipelineRun.pipeline_type}</h3>
+                    <div className="space-y-1 text-sm text-gray-300 mb-4">
+                        <p><strong>Status:</strong> <span className={`font-semibold ${pipelineRun.status === 'completed' ? 'text-green-400' : 'text-yellow-400'}`}>{pipelineRun.status}</span></p>
+                        <p><strong>Duration:</strong> {pipelineRun.duration_ms}ms</p>
+                    </div>
+                    <h4 className="font-semibold text-gray-200 mb-1">Final Output:</h4>
+                    <pre className="text-xs whitespace-pre-wrap font-mono bg-gray-900 p-3 rounded-md overflow-auto flex-1">
+                        <code>{pipelineRun.final_output}</code>
+                    </pre>
+                </div>
+                 <div className="bg-gray-900/50 p-4 rounded-lg flex flex-col">
+                    <h3 className="font-semibold text-lg mb-2 text-green-400">Execution Steps</h3>
+                    <div className="space-y-3 overflow-y-auto flex-1 pr-2">
+                        {pipelineSteps.map(step => <PipelineStep key={step.id} step={step} />)}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -53,7 +119,7 @@ const CognitiveInspectorModal = ({ isOpen, onClose, messageId }: CognitiveInspec
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
                         transition={{ duration: 0.2 }}
-                        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+                        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl h-full max-h-[90vh] flex flex-col"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
@@ -62,25 +128,8 @@ const CognitiveInspectorModal = ({ isOpen, onClose, messageId }: CognitiveInspec
                                 <XIcon className="w-6 h-6" />
                             </button>
                         </div>
-                        <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
-                            {isLoading && <p className="text-gray-400 md:col-span-2 text-center">Loading inspection data...</p>}
-                            {error && <p className="text-red-400 md:col-span-2 text-center">Error: {error}</p>}
-                            {inspectionData && (
-                                <>
-                                    <div className="bg-gray-900/50 p-4 rounded-lg">
-                                        <h3 className="font-semibold text-lg mb-2 text-indigo-400">1. Context Sent to LLM</h3>
-                                        <pre className="text-xs whitespace-pre-wrap font-mono bg-gray-900 p-3 rounded-md overflow-auto">
-                                            <code>{inspectionData.preLlmContext}</code>
-                                        </pre>
-                                    </div>
-                                    <div className="bg-gray-900/50 p-4 rounded-lg">
-                                        <h3 className="font-semibold text-lg mb-2 text-green-400">2. Data Extracted from Turn</h3>
-                                        <pre className="text-xs whitespace-pre-wrap font-mono bg-gray-900 p-3 rounded-md overflow-auto">
-                                            <code>{JSON.stringify(inspectionData.postLlmExtraction, null, 2)}</code>
-                                        </pre>
-                                    </div>
-                                </>
-                            )}
+                        <div className="flex-1 p-6 overflow-y-auto">
+                           {renderContent()}
                         </div>
                     </motion.div>
                 </motion.div>

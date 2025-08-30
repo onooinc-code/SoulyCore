@@ -218,6 +218,7 @@ const cognitiveFeaturesData = [
     {
         name: 'V2 [UI] - Cognitive Inspector',
         overview: 'An "Inspect" button on every chat message that opens a view showing the exact context sent to the LLM and the specific data extracted from that turn.',
+        status: '✅ Completed',
     },
     {
         name: 'V2 [UI] - Universal Progress Indicator',
@@ -281,7 +282,7 @@ async function seedFeatures() {
         for (const feature of cognitiveFeaturesData) {
             await sql`
                 INSERT INTO features (name, overview, status)
-                VALUES (${feature.name}, ${feature.overview}, '⚪ Planned');
+                VALUES (${feature.name}, ${feature.overview}, ${feature.status || '⚪ Planned'});
             `;
         }
         console.log(`Successfully inserted ${cognitiveFeaturesData.length} new cognitive features.`);

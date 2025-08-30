@@ -22,6 +22,8 @@ const endpoints = [
   // Features
   { method: 'GET', path: '/api/features', group_name: 'features', description: 'Get all features.' },
   { method: 'POST', path: '/api/features', group_name: 'features', description: 'Create a new feature.', default_body_json: { name: "Test Feature", status: "⚪ Planned" } },
+  // Inspect
+  { method: 'GET', path: '/api/inspect/some-uuid', group_name: 'inspect', description: 'Get pipeline run details for a message.' },
   // Knowledge
   { method: 'POST', path: '/api/knowledge/add', group_name: 'knowledge', description: 'Add a new knowledge snippet.', default_body_json: { content: "This is a test knowledge snippet." } },
   // Logs

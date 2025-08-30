@@ -179,3 +179,32 @@ export interface EndpointTestLog {
     duration_ms: number;
     createdAt: Date;
 }
+
+export interface PipelineRun {
+    id: string;
+    message_id: string;
+    pipeline_type: 'ContextAssembly' | 'MemoryExtraction';
+    status: 'running' | 'completed' | 'failed';
+    final_output: string | null;
+    error_message: string | null;
+    start_time: Date;
+    end_time: Date | null;
+    duration_ms: number | null;
+}
+
+export interface PipelineRunStep {
+    id: string;
+    run_id: string;
+    step_order: number;
+    step_name: string;
+    status: 'completed' | 'failed';
+    input_payload: Record<string, any> | null;
+    output_payload: Record<string, any> | null;
+    model_used: string | null;
+    prompt_used: string | null;
+    config_used: Record<string, any> | null;
+    error_message: string | null;
+    start_time: Date;
+    end_time: Date | null;
+    duration_ms: number | null;
+}

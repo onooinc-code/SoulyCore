@@ -207,6 +207,42 @@ async function createTables() {
         `;
         console.log("Table 'endpoint_test_logs' created or already exists.", endpointTestLogsTable.command);
 
+        const pipelineRunsTable = await sql`
+            CREATE TABLE IF NOT EXISTS pipeline_runs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                message_id UUID REFERENCES messages(id) ON DELETE SET NULL,
+                pipeline_type VARCHAR(50) NOT NULL, -- 'ContextAssembly' or 'MemoryExtraction'
+                status VARCHAR(50) NOT NULL DEFAULT 'running', -- 'running', 'completed', 'failed'
+                final_output TEXT,
+                error_message TEXT,
+                start_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                end_time TIMESTAMP WITH TIME ZONE,
+                duration_ms INTEGER,
+                CONSTRAINT uq_message_pipeline UNIQUE(message_id, pipeline_type)
+            );
+        `;
+        console.log("Table 'pipeline_runs' created or already exists.", pipelineRunsTable.command);
+
+        const pipelineRunStepsTable = await sql`
+            CREATE TABLE IF NOT EXISTS pipeline_run_steps (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                run_id UUID REFERENCES pipeline_runs(id) ON DELETE CASCADE,
+                step_order INTEGER NOT NULL,
+                step_name VARCHAR(255) NOT NULL,
+                status VARCHAR(50) NOT NULL, -- 'completed', 'failed'
+                input_payload JSONB,
+                output_payload JSONB,
+                model_used VARCHAR(255),
+                prompt_used TEXT,
+                config_used JSONB,
+                error_message TEXT,
+                start_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                end_time TIMESTAMP WITH TIME ZONE,
+                duration_ms INTEGER
+            );
+        `;
+        console.log("Table 'pipeline_run_steps' created or already exists.", pipelineRunStepsTable.command);
+
         // Insert default settings if they don't exist
         await sql`
             INSERT INTO settings (key, value)

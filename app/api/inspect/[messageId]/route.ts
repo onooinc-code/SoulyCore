@@ -7,40 +7,32 @@ export async function GET(req: NextRequest, { params }: { params: { messageId: s
     try {
         const { messageId } = params;
 
-        // In a real implementation, this endpoint would perform two key actions:
-        // 1. Fetch the assembled context for the turn: This would involve finding the user message
-        //    that preceded the AI message with the given `messageId`. The content of that user
-        //    message (as stored in the DB) contains the full context string.
-        // 2. Fetch the extraction results: This would involve finding the log entries associated with
-        //    the MemoryExtractionPipeline that ran after this conversation turn. This currently
-        //    requires a more robust logging system with correlation IDs.
+        // 1. Find the pipeline run associated with this message
+        const { rows: runRows } = await sql`
+            SELECT * FROM pipeline_runs WHERE message_id = ${messageId} LIMIT 1;
+        `;
 
-        // For this task, we will return mock data to allow the frontend to be built.
-        const mockContext = `CONTEXT: You know about these entities:
-- SoulyCore (Project): The definitive, full-stack version of SoulyCore with a cloud-native, autonomous memory system.
+        if (runRows.length === 0) {
+            return NextResponse.json({
+                pipelineRun: { 
+                    final_output: 'No pipeline run found for this message. This may be an older message, a message generated from a regeneration, or the pipeline is still running.',
+                    pipeline_type: 'N/A',
+                    status: 'not_found'
+                },
+                pipelineSteps: [],
+            });
+        }
+        
+        const pipelineRun = runRows[0];
 
-CONTEXT: Here is some relevant information from your knowledge base:
-The "Cognitive Inspector" is a new UI feature designed to provide developers with a real-time view into the AI's "thought process". It shows the exact context sent to the LLM for a given turn and the structured data that was extracted from the response.
-
-USER PROMPT:
-Can you tell me more about the new Cognitive Inspector feature?`;
-
-        const mockExtraction = {
-            "entities": [
-                {
-                    "name": "Cognitive Inspector",
-                    "type": "UI Feature",
-                    "details": "A developer tool to view pre-LLM context and post-LLM data extraction."
-                }
-            ],
-            "knowledge": [
-                "The Cognitive Inspector helps developers understand the AI's reasoning by showing its inputs and outputs for a specific turn."
-            ]
-        };
-
+        // 2. Find the steps for that run
+        const { rows: stepRows } = await sql`
+            SELECT * FROM pipeline_run_steps WHERE run_id = ${pipelineRun.id} ORDER BY step_order ASC;
+        `;
+        
         return NextResponse.json({
-            preLlmContext: mockContext,
-            postLlmExtraction: mockExtraction,
+            pipelineRun,
+            pipelineSteps: stepRows,
         });
 
     } catch (error) {

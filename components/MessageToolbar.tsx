@@ -53,7 +53,7 @@ const MessageToolbar = ({
 
     const menuActions = [
         { id: 'summarize', icon: SummarizeIcon, action: onSummarize, title: 'Summarize message' },
-        ...(!isUser ? [{ id: 'inspect', icon: BeakerIcon, action: onInspect, title: 'Inspect cognitive process' }] : []),
+        { id: 'inspect', icon: BeakerIcon, action: onInspect, title: 'Inspect cognitive process' },
         { id: 'collapse', icon: isCollapsed ? ExpandIcon : CollapseIcon, action: onToggleCollapse, title: isCollapsed ? 'Expand message' : 'Collapse message' },
         { id: 'align-left', icon: TextAlignLeftIcon, action: () => onSetAlign('left'), title: 'Align text left' },
         { id: 'align-right', icon: TextAlignRightIcon, action: () => onSetAlign('right'), title: 'Align text right' },

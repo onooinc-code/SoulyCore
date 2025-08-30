@@ -185,11 +185,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const msgs = await response.json();
             setMessages(msgs);
             log(`Successfully fetched ${msgs.length} messages.`);
+            return msgs;
         } catch (error) {
              const errorMessage = 'Could not load messages for this chat.';
              setStatus({ error: errorMessage });
              log(errorMessage, { error: { message: (error as Error).message, stack: (error as Error).stack } }, 'error');
              console.error(error);
+             return [];
         }
     }, [setStatus, log]);
 
@@ -306,11 +308,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         try {
-            // For a normal message send, add the optimistic message before sending.
-            // For a regeneration, the history is provided and already correct.
             let messageHistory = historyOverride ? [...historyOverride] : [...messages, optimisticUserMessage];
             
-            // In v2, the server now handles saving BOTH messages. We only need to save the user message before the call.
             log('Saving user message to DB...');
             const userMsgRes = await fetch(`/api/conversations/${currentConversation.id}/messages`, {
                  method: 'POST',
@@ -318,7 +317,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                  body: JSON.stringify({ message: optimisticUserMessage }),
             });
             if (!userMsgRes.ok) throw new Error("Failed to save your message.");
-            const savedUserMessage = await userMsgRes.json();
+            const savedUserMessage: Message = await userMsgRes.json();
             log('User message saved successfully.', savedUserMessage);
             
              // Replace optimistic message with saved one
@@ -329,6 +328,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 messages: messageHistory, 
                 conversation: currentConversation,
                 mentionedContacts,
+                userMessageId: savedUserMessage.id, // Pass ID for pipeline logging
             };
             log('Sending request to /api/chat', chatApiPayload);
             const chatRes = await fetch('/api/chat', {
@@ -344,23 +344,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             log('Received response from /api/chat.', { aiResponse, suggestion });
             
             if (aiResponse) {
-                // In v2, the server saves the AI message. We just need to refetch to get it.
-                await fetchMessages(currentConversation.id);
+                // In v2, the server saves the AI message. We refetch to get it and its ID.
+                const updatedMessages = await fetchMessages(currentConversation.id);
+                const aiMessage = updatedMessages[updatedMessages.length - 1];
 
-                // If tab is not visible, mark the conversation as having unread messages.
                 if (!isVisibleRef.current) {
                     log('Marking conversation as unread due to tab inactivity.', { conversationId: currentConversation.id });
                     setUnreadConversations(prev => new Set(prev).add(currentConversation.id));
                 }
 
-                 // Trigger background memory pipeline
+                 // Trigger background memory pipeline with the AI message ID
                 const textToAnalyze = `${message.content}\n${aiResponse}`;
-                log('Triggering background memory pipeline.', { textLength: textToAnalyze.length });
+                log('Triggering background memory pipeline.', { textLength: textToAnalyze.length, aiMessageId: aiMessage?.id });
                 startBackgroundTask();
                 fetch('/api/memory/pipeline', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ textToAnalyze })
+                    body: JSON.stringify({ textToAnalyze, aiMessageId: aiMessage?.id })
                 }).catch(err => {
                     const errorMessage = "Memory pipeline trigger failed.";
                     log(errorMessage, { error: { message: (err as Error).message, stack: (err as Error).stack } }, 'error');
@@ -514,7 +514,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         const historyToResend = messages.slice(0, messageIndex);
-        if (historyToResend[historyToResend.length - 1].role !== 'user') {
+        const userMessageForContext = historyToResend[historyToResend.length - 1];
+        if (userMessageForContext.role !== 'user') {
             log('Regeneration aborted: Preceding message is not from user.', { messageId });
             return;
         }
@@ -524,41 +525,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         try {
             // Delete the old AI response from the database and UI first
-            const deleteRes = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
-            if (!deleteRes.ok) throw new Error('Failed to delete the previous AI response.');
-            log('Successfully deleted old AI response from DB.', { messageId });
-            setMessages(prev => prev.filter(m => m.id !== messageId));
+            await deleteMessage(messageId);
 
             // Now, get a new response
-            const chatApiPayload = { 
-                messages: historyToResend, 
-                conversation: currentConversation,
+            // FIX: Explicitly type the new message object to ensure its `role` property
+            // is correctly inferred as type 'Role' ('user' | 'model') instead of the broader 'string'.
+            const newPromptMessage: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
+                role: 'user',
+                content: userMessageForContext.content,
             };
-            log('Sending request to /api/chat for regeneration', chatApiPayload);
-
-            const chatRes = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(chatApiPayload)
-            });
-            if (!chatRes.ok) {
-                 const errorData = await chatRes.json();
-                 throw new Error(errorData.error || 'Failed to get new AI response');
-            }
-            // The response from chat API will trigger a refetch in the main addMessage flow
-            // so we don't need to manually add the message here in v2.
-            await fetchMessages(currentConversation.id);
+            
+            await addMessage(newPromptMessage, [], historyToResend.slice(0, -1));
 
         } catch (error) {
             const errorMessage = (error as Error).message;
             setStatus({ error: `Failed during regeneration. ${errorMessage}` });
             log('Error regenerating AI response.', { messageId, error: { message: errorMessage, stack: (error as Error).stack } }, 'error');
-            fetchMessages(currentConversation.id);
+            fetchMessages(currentConversation.id); // Resync on error
         } finally {
             setIsLoading(false);
             setStatus({ currentAction: "" });
         }
-    }, [messages, currentConversation, log, setStatus, fetchMessages]);
+    }, [messages, currentConversation, log, setStatus, fetchMessages, addMessage, deleteMessage]);
 
     const regenerateUserPromptAndGetResponse = useCallback(async (messageId: string) => {
         log(`Regenerating user prompt and getting new response for message: ${messageId}`);
@@ -603,21 +591,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
             setStatus({ currentAction: "Prompt rewritten. Getting new response..." });
 
-            const deleteUserMsgRes = await fetch(`/api/messages/${userMessage.id}`, { method: 'DELETE' });
-            if (!deleteUserMsgRes.ok) throw new Error('Failed to delete original user message.');
-            log('Deleted old user message from DB.', { messageId: userMessage.id });
-
-            if (aiMessageToDelete) {
-                const deleteAiMsgRes = await fetch(`/api/messages/${aiMessageToDelete.id}`, { method: 'DELETE' });
-                if (!deleteAiMsgRes.ok) throw new Error('Failed to delete original AI response.');
-                log('Deleted old AI response from DB.', { messageId: aiMessageToDelete.id });
+            // Delete old messages
+            await deleteMessage(userMessage.id);
+            if(aiMessageToDelete) {
+                await deleteMessage(aiMessageToDelete.id);
             }
-
-            setMessages(prev => prev.filter(m => {
-                if (m.id === userMessage.id) return false;
-                if (aiMessageToDelete && m.id === aiMessageToDelete.id) return false;
-                return true;
-            }));
 
             const newPromptMessage: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
                 role: 'user',
@@ -635,7 +613,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setIsLoading(false);
             setStatus({ currentAction: "" });
         }
-    }, [messages, log, setStatus, addMessage]);
+    }, [messages, log, setStatus, addMessage, deleteMessage]);
 
     const clearMessages = useCallback(async (conversationId: string) => {
         log(`Clearing all messages for conversation: ${conversationId}`);

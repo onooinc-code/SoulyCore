@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
 import Message from './Message';
 import ChatInput from './ChatInput';
@@ -33,7 +33,8 @@ const ChatWindow = () => {
         deleteMessage,
         updateMessage,
         regenerateAiResponse,
-        regenerateUserPromptAndGetResponse
+        regenerateUserPromptAndGetResponse,
+        backgroundTaskCount
     } = useAppContext();
     const { log } = useLog();
     
@@ -114,6 +115,15 @@ const ChatWindow = () => {
 
     const isDbError = status.error && /database|vercel|table|relation.+does not exist/i.test(status.error);
 
+    const lastMessageIds = useMemo(() => {
+        const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+        const lastModelMessage = [...messages].reverse().find(m => m.role === 'model');
+        return {
+            user: lastUserMessage?.id,
+            model: lastModelMessage?.id,
+        };
+    }, [messages]);
+
     return (
         <div className="flex flex-col flex-1 min-h-0 bg-gray-900">
             <Header />
@@ -131,6 +141,8 @@ const ChatWindow = () => {
                                         onUpdate={updateMessage}
                                         onRegenerate={() => handleRegenerate(msg.id)}
                                         onInspect={(messageId) => setInspectorModalState({ isOpen: true, messageId })}
+                                        isContextAssemblyRunning={isLoading && msg.role === 'user' && msg.id === lastMessageIds.user}
+                                        isMemoryExtractionRunning={backgroundTaskCount > 0 && msg.role === 'model' && msg.id === lastMessageIds.model}
                                     />
                                 </div>
                             ))}

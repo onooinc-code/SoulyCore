@@ -21,33 +21,39 @@ async function serverLog(message: string, payload?: any, level: 'info' | 'warn' 
 }
 
 export async function POST(req: NextRequest) {
+    let runId: string | null = null;
+    let userMessageId: string | null = null;
+    
     try {
-        const { messages, conversation, mentionedContacts } = await req.json();
-        
-        if (!messages || !conversation) {
-            await serverLog('Chat API called with missing data', { messages, conversation }, 'warn');
-            return NextResponse.json({ error: 'Missing messages or conversation data' }, { status: 400 });
+        const { messages, conversation, mentionedContacts, userMessageId: receivedUserMessageId } = await req.json();
+        userMessageId = receivedUserMessageId;
+
+        if (!messages || !conversation || !userMessageId) {
+            await serverLog('Chat API called with missing data', { conversation }, 'warn');
+            return NextResponse.json({ error: 'Missing messages, conversation data, or userMessageId' }, { status: 400 });
         }
         
-        await serverLog('V2 Chat API request received', { conversationId: conversation.id, messageCount: messages.length });
-        const userMessageContent = messages[messages.length - 1].content;
+        // --- V2 Pipeline Logging: Start ---
+        const { rows: runRows } = await sql`
+            INSERT INTO pipeline_runs (message_id, pipeline_type, status)
+            VALUES (${userMessageId}, 'ContextAssembly', 'running')
+            RETURNING id;
+        `;
+        runId = runRows[0].id;
+        // --- V2 Pipeline Logging: End ---
 
-        // --- Start of V2 Architecture Integration ---
+        const userMessageContent = messages[messages.length - 1].content;
 
         // 1. Instantiate Core Services
         const contextPipeline = new ContextAssemblyPipeline();
-        const episodicMemory = new EpisodicMemoryModule();
         
         // 2. Assemble Context using the new pipeline
-        await serverLog('V2: Assembling context via pipeline...');
         const contextString = await contextPipeline.assembleContext({
             conversationId: conversation.id,
             userQuery: userMessageContent,
             mentionedContacts,
+            runId: runId!, // Pass runId for step logging
         });
-        if (contextString) {
-             await serverLog('V2: Context assembled successfully.', { contextLength: contextString.length });
-        }
        
         // 3. Prepare message history for the LLM
         const history: Content[] = messages.map((msg: Message) => ({
@@ -55,7 +61,6 @@ export async function POST(req: NextRequest) {
             parts: [{ text: msg.content }]
         }));
         
-        // Replace the last user message with the context-enhanced one
         const finalUserPrompt = [contextString, userMessageContent].filter(Boolean).join('\n\n');
         history[history.length-1].parts = [{ text: finalUserPrompt }];
         
@@ -65,8 +70,7 @@ export async function POST(req: NextRequest) {
             topP: conversation.topP
         };
 
-        // 4. Generate AI response using the new LLM Provider
-        await serverLog('V2: Generating AI response from LLMProvider', { model: 'gemini-2.5-flash', config: modelConfig });
+        // 4. Generate AI response
         const responseText = await llmProvider.generateContent(
             history, 
             conversation.systemPrompt,
@@ -74,22 +78,27 @@ export async function POST(req: NextRequest) {
         );
         
         if (!responseText) {
-            await serverLog('V2: Failed to get response from LLMProvider.', { history }, 'error');
-            return NextResponse.json({ error: 'Failed to get response from AI.' }, { status: 500 });
+            throw new Error('Failed to get response from AI.');
         }
-        await serverLog('V2: Successfully received AI response.');
+        
+        // --- V2 Pipeline Logging: Finalize Run ---
+        await sql`
+            UPDATE pipeline_runs
+            SET status = 'completed', final_output = ${contextString}, end_time = CURRENT_TIMESTAMP,
+                duration_ms = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - start_time)) * 1000
+            WHERE id = ${runId};
+        `;
+        // --- V2 Pipeline Logging: End ---
 
-        // 5. Persist the AI's response to episodic memory using the new module
+        // 5. Persist the AI's response to episodic memory
+        const episodicMemory = new EpisodicMemoryModule();
         const aiMessageData: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
             role: 'model',
             content: responseText,
         };
-        // Note: The client will receive the response first for speed, but the server now handles
-        // saving the AI message, differing from the legacy flow.
         await episodicMemory.store({ conversationId: conversation.id, message: aiMessageData });
-        await serverLog('V2: AI response stored in episodic memory.');
         
-        // 6. Generate proactive suggestion (can still use legacy helper for this)
+        // 6. Generate proactive suggestion
         const suggestion = await generateProactiveSuggestion(history);
 
         return NextResponse.json({ response: responseText, suggestion });
@@ -101,6 +110,18 @@ export async function POST(req: NextRequest) {
         };
         console.error('Error in chat API:', error);
         await serverLog('Critical error in chat API', { error: errorDetails }, 'error');
+
+        // --- V2 Pipeline Logging: Handle Failure ---
+        if (runId) {
+             await sql`
+                UPDATE pipeline_runs
+                SET status = 'failed', error_message = ${errorDetails.message}, end_time = CURRENT_TIMESTAMP,
+                    duration_ms = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - start_time)) * 1000
+                WHERE id = ${runId};
+            `;
+        }
+        // --- V2 Pipeline Logging: End ---
+
         return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
     }
 }
