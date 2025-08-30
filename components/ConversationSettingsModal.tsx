@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -7,15 +6,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from './providers/AppProvider';
 import { useLog } from './providers/LogProvider';
 
+// Per Gemini SDK guidelines, only this model should be used for this task.
+const geminiModels = [
+    'gemini-2.5-pro',
+];
+
+// FIX: Added interface for component props to resolve TypeScript error.
 interface ConversationSettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
-
-// Per Gemini SDK guidelines, only this model should be used for this task.
-const geminiModels = [
-    'gemini-2.5-flash',
-];
 
 // FIX: Removed React.FC to fix framer-motion type inference issue.
 const ConversationSettingsModal = ({ isOpen, onClose }: ConversationSettingsModalProps) => {

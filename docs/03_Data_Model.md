@@ -98,5 +98,8 @@ Logs the detailed, individual steps within a single `pipeline_runs` execution.
 | `status`         | VARCHAR(50) | The status of the step: 'completed' or 'failed'.                         |
 | `input_payload`  | JSONB       | The input data provided to this step.                                    |
 | `output_payload` | JSONB       | The data returned by this step.                                          |
+| `model_used`     | VARCHAR(255)| The AI model used for this step, if any.                                 |
+| `prompt_used`    | TEXT        | The full prompt sent to the AI model, if any.                            |
+| `config_used`    | JSONB       | The configuration object used for the AI model call, if any.             |
 | `error_message`  | TEXT        | Any error message if the step failed.                                    |
 | `duration_ms`    | INTEGER     | The execution time of this specific step in milliseconds.                |

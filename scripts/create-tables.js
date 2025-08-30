@@ -247,7 +247,7 @@ async function createTables() {
         await sql`
             INSERT INTO settings (key, value)
             VALUES 
-                ('defaultModelConfig', '{"model": "gemini-2.5-flash", "temperature": 0.7, "topP": 0.95}'),
+                ('defaultModelConfig', '{"model": "gemini-2.5-pro", "temperature": 0.7, "topP": 0.95}'),
                 ('defaultAgentConfig', '{"systemPrompt": "You are a helpful AI assistant.", "useSemanticMemory": true, "useStructuredMemory": true}'),
                 ('enableDebugLog', '{"enabled": false}')
             ON CONFLICT (key) DO NOTHING;

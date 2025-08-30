@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
             return acc;
         }, {} as Record<string, any>);
 
-        const modelConfig = settings.defaultModelConfig || { model: 'gemini-2.5-flash', temperature: 0.7, topP: 0.95 };
+        const modelConfig = settings.defaultModelConfig || { model: 'gemini-2.5-pro', temperature: 0.7, topP: 0.95 };
         const agentConfig = settings.defaultAgentConfig || { systemPrompt: 'You are a helpful AI assistant.', useSemanticMemory: true, useStructuredMemory: true };
 
         const query = `

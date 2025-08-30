@@ -4,7 +4,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { ILLMProvider, HistoryContent, IModelConfig } from '../types';
 
-const modelName = 'gemini-2.5-flash';
+const modelName = 'gemini-2.5-pro';
 
 export class GeminiProvider implements ILLMProvider {
     private ai: GoogleGenAI;

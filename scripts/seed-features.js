@@ -217,7 +217,7 @@ const cognitiveFeaturesData = [
     },
     {
         name: 'V2 [UI] - Cognitive Inspector',
-        overview: 'An "Inspect" button on every chat message that opens a view showing the exact context sent to the LLM and the specific data extracted from that turn.',
+        overview: 'An "Inspect" button on messages that opens a modal showing a step-by-step breakdown of the backend cognitive pipeline (Context Assembly or Memory Extraction) that ran for that specific message turn. The data is pulled from a persistent log in the database.',
         status: '✅ Completed',
     },
     {

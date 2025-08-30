@@ -33,23 +33,40 @@ export class MemoryExtractionPipeline {
         stepOrder: number,
         stepName: string,
         fn: () => Promise<T>,
-        inputPayload?: any
+        details?: { input?: any; model?: string; prompt?: string; config?: any; }
     ): Promise<T> {
         const startTime = Date.now();
         try {
             const result = await fn();
             const duration = Date.now() - startTime;
             await sql`
-                INSERT INTO pipeline_run_steps (run_id, step_order, step_name, status, input_payload, output_payload, duration_ms, end_time)
-                VALUES (${runId}, ${stepOrder}, ${stepName}, 'completed', ${inputPayload ? JSON.stringify(inputPayload) : null}, ${JSON.stringify(result)}, ${duration}, CURRENT_TIMESTAMP);
+                INSERT INTO pipeline_run_steps (
+                    run_id, step_order, step_name, status, input_payload, 
+                    output_payload, model_used, prompt_used, config_used, 
+                    duration_ms, end_time
+                )
+                VALUES (
+                    ${runId}, ${stepOrder}, ${stepName}, 'completed', 
+                    ${details?.input ? JSON.stringify(details.input) : null}, 
+                    ${JSON.stringify(result)}, ${details?.model || null}, ${details?.prompt || null}, 
+                    ${details?.config ? JSON.stringify(details.config) : null}, 
+                    ${duration}, CURRENT_TIMESTAMP
+                );
             `;
             return result;
         } catch (e) {
             const duration = Date.now() - startTime;
             const errorMessage = (e as Error).message;
             await sql`
-                INSERT INTO pipeline_run_steps (run_id, step_order, step_name, status, input_payload, error_message, duration_ms, end_time)
-                VALUES (${runId}, ${stepOrder}, ${stepName}, 'failed', ${inputPayload ? JSON.stringify(inputPayload) : null}, ${errorMessage}, ${duration}, CURRENT_TIMESTAMP);
+                INSERT INTO pipeline_run_steps (
+                    run_id, step_order, step_name, status, input_payload, 
+                    error_message, duration_ms, end_time
+                )
+                VALUES (
+                    ${runId}, ${stepOrder}, ${stepName}, 'failed', 
+                    ${details?.input ? JSON.stringify(details.input) : null}, 
+                    ${errorMessage}, ${duration}, CURRENT_TIMESTAMP
+                );
             `;
             throw e;
         }
@@ -67,7 +84,7 @@ export class MemoryExtractionPipeline {
         const startTime = Date.now();
 
         try {
-            const extractedData = await this.logStep(runId, 1, 'ExtractDataWithLLM', () => this.extractDataWithLLM(textToAnalyze), { textLength: textToAnalyze.length });
+            const extractedData = await this.extractDataWithLLM(textToAnalyze, runId);
 
             if (!extractedData) {
                 throw new Error("Failed to extract data from text.");
@@ -116,69 +133,80 @@ export class MemoryExtractionPipeline {
      * Uses the configured LLM provider to extract structured data from a text block.
      * This is a private helper method for the pipeline.
      * @param text - The text to analyze.
+     * @param runId - The ID of the current pipeline run for logging.
      * @returns A promise that resolves with the extracted data object.
      */
-    private async extractDataWithLLM(text: string): Promise<IExtractedData | null> {
-       try {
-            const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
-            if (!apiKey) throw new Error("API key not found for extraction.");
-            const ai = new GoogleGenAI({ apiKey });
-
-            const prompt = `
-                From the following text, perform two tasks:
-                1. Extract key entities (people, places, organizations, projects, concepts).
-                2. Extract distinct, self-contained chunks of information that could be useful knowledge for the future.
-                
-                Return the result as a single JSON object with two keys: "entities" and "knowledge".
-                - "entities" should be an array of objects, each with "name", "type", and "details" properties.
-                - "knowledge" should be an array of strings. Do not extract trivial statements.
-
-                Text:
-                ---
-                ${text}
-                ---
-            `;
-
-            const result = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            entities: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        name: { type: Type.STRING },
-                                        type: { type: Type.STRING },
-                                        details: { type: Type.STRING }
-                                    },
-                                    required: ['name', 'type', 'details']
-                                }
-                            },
-                            knowledge: {
-                                type: Type.ARRAY,
-                                items: { type: Type.STRING }
-                            }
-                        },
-                        required: ['entities', 'knowledge']
-                    }
-                }
-            });
+    private async extractDataWithLLM(text: string, runId: string): Promise<IExtractedData | null> {
+        const prompt = `
+            From the following text, perform two tasks:
+            1. Extract key entities (people, places, organizations, projects, concepts).
+            2. Extract distinct, self-contained chunks of information that could be useful knowledge for the future.
             
-            if (!result || !result.text) {
-                console.error("Data extraction failed: No text in response.");
-                return { entities: [], knowledge: [] };
-            }
-            const jsonStr = result.text.trim();
-            return JSON.parse(jsonStr);
+            Return the result as a single JSON object with two keys: "entities" and "knowledge".
+            - "entities" should be an array of objects, each with "name", "type", and "details" properties.
+            - "knowledge" should be an array of strings. Do not extract trivial statements.
 
-        } catch (e) {
-            console.error("MemoryExtractionPipeline: LLM data extraction failed:", e);
-            return null;
-        }
+            Text:
+            ---
+            ${text}
+            ---
+        `;
+
+        const modelConfig = {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    entities: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                name: { type: Type.STRING },
+                                type: { type: Type.STRING },
+                                details: { type: Type.STRING }
+                            },
+                            required: ['name', 'type', 'details']
+                        }
+                    },
+                    knowledge: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                    }
+                },
+                required: ['entities', 'knowledge']
+            }
+        };
+
+        const fn = async () => {
+            try {
+                const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+                if (!apiKey) throw new Error("API key not found for extraction.");
+                const ai = new GoogleGenAI({ apiKey });
+
+                const result = await ai.models.generateContent({
+                    model: 'gemini-2.5-pro',
+                    contents: prompt,
+                    config: modelConfig,
+                });
+
+                if (!result || !result.text) {
+                    console.error("Data extraction failed: No text in response.");
+                    return { entities: [], knowledge: [] };
+                }
+                const jsonStr = result.text.trim();
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                console.error("MemoryExtractionPipeline: LLM data extraction failed:", e);
+                throw e; // Re-throw to be caught by logStep
+            }
+        };
+
+        return this.logStep(runId, 1, 'ExtractDataWithLLM', fn, {
+            input: { textLength: text.length },
+            model: 'gemini-2.5-pro',
+            prompt,
+            config: modelConfig,
+        });
     }
 }

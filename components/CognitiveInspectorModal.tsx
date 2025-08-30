@@ -40,6 +40,19 @@ const PipelineStep = ({ step }: { step: PipelineRunStep }) => (
                         </pre>
                     </div>
                 )}
+                {step.model_used && (
+                     <div>
+                        <h5 className="font-semibold">AI Call Details:</h5>
+                        <div className="font-mono bg-gray-800 p-2 rounded-md overflow-auto">
+                           <p><strong>Model:</strong> {step.model_used}</p>
+                           {step.config_used && <p><strong>Config:</strong> {JSON.stringify(step.config_used)}</p>}
+                           <details className="mt-1">
+                                <summary className="cursor-pointer">View Prompt</summary>
+                                <pre className="text-xs whitespace-pre-wrap mt-1"><code>{step.prompt_used}</code></pre>
+                           </details>
+                        </div>
+                    </div>
+                )}
                 <p>Duration: {step.duration_ms}ms</p>
             </div>
         </details>

@@ -19,7 +19,7 @@ All backend logic is exposed through RESTful API endpoints built with Next.js AP
 | PUT    | `/api/brains/[brainId]`                              | **V2 New!** Updates a specific Brain. |
 | DELETE | `/api/brains/[brainId]`                              | **V2 New!** Deletes a specific Brain. |
 | GET    | `/api/memory-viewer/[module]`                        | **V2 New!** Inspects the raw data within a specified memory module. |
-| GET    | `/api/inspect/[messageId]`                           | **V2 New!** Fetches the pre-LLM context and post-LLM extraction for a message turn. |
+| GET    | `/api/inspect/[messageId]`                           | **V2 New!** Fetches the detailed pipeline execution log for a specific message turn. |
 | GET    | `/api/tests`                                         | **V2 New!** Fetches all registered QA test cases. |
 | POST   | `/api/tests`                                         | **V2 New!** Creates a new test case. |
 | PUT    | `/api/tests/[testId]`                                | **V2 New!** Updates a test case, including its run status. |

@@ -1,7 +1,4 @@
 
-
-
-
 import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/genai";
 
 // This function lazily initializes the GoogleGenAI client.
@@ -15,7 +12,7 @@ const getAiClient = () => {
   return new GoogleGenAI({ apiKey });
 };
 
-const modelName = 'gemini-2.5-flash';
+const modelName = 'gemini-2.5-pro';
 
 export const generateEmbedding = async (text: string): Promise<number[]> => {
     // NOTE: As the GenAI SDK does not have a dedicated embedding endpoint, this function simulates
