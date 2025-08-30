@@ -53,6 +53,14 @@ const PipelineStep = ({ step }: { step: PipelineRunStep }) => (
                         </div>
                     </div>
                 )}
+                {step.error_message && (
+                    <div>
+                        <h5 className="font-semibold text-red-400">Error:</h5>
+                        <pre className="text-xs whitespace-pre-wrap font-mono bg-red-900/50 p-2 rounded-md overflow-auto">
+                            <code>{step.error_message}</code>
+                        </pre>
+                    </div>
+                )}
                 <p>Duration: {step.duration_ms}ms</p>
             </div>
         </details>

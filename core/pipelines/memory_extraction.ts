@@ -177,6 +177,8 @@ export class MemoryExtractionPipeline {
                 required: ['entities', 'knowledge']
             }
         };
+        
+        const modelName = 'gemini-2.5-flash';
 
         const fn = async () => {
             try {
@@ -185,7 +187,7 @@ export class MemoryExtractionPipeline {
                 const ai = new GoogleGenAI({ apiKey });
 
                 const result = await ai.models.generateContent({
-                    model: 'gemini-2.5-pro',
+                    model: modelName,
                     contents: prompt,
                     config: modelConfig,
                 });
@@ -204,7 +206,7 @@ export class MemoryExtractionPipeline {
 
         return this.logStep(runId, 1, 'ExtractDataWithLLM', fn, {
             input: { textLength: text.length },
-            model: 'gemini-2.5-pro',
+            model: modelName,
             prompt,
             config: modelConfig,
         });
