@@ -1,52 +1,35 @@
 
 # SoulyCore Official Documentation
 
-This document provides a comprehensive overview of the SoulyCore application, covering the business vision and a detailed, feature-by-feature technical breakdown.
-
-**Document Version:** 2.1
-**Last Updated:** [Current Date]
+**Document Version:** 3.0
+**Status:** Live (Reflects Cognitive Architecture v2.0)
 
 ---
 
-## Part 1: Business Documentation
+## Part 1: Business & Vision
 
 ### 1.1 Executive Summary
 
-**SoulyCore** is a next-generation, full-stack AI assistant designed with a foundational principle: persistent, intelligent, and multi-faceted memory. Unlike traditional stateless chat assistants, SoulyCore actively learns from every interaction, building a rich, contextual understanding of users, projects, and concepts over time. It leverages a cloud-native architecture to provide a secure, scalable, and highly configurable conversational AI experience.
+**SoulyCore** is a next-generation, AI-powered assistant built on the foundational principle of a persistent, intelligent, and multi-faceted memory. Evolved into its second-generation Cognitive Architecture, it now functions as a true **Total Recall Companion**. It actively learns from every interaction by leveraging a decoupled, modular Core Engine to manage its long-term memory and cognitive functions.
 
-It is built for power users, developers, and small teams who require an AI partner that not only answers questions but also retains context, manages information, and proactively assists in complex workflows.
+It is built for power users, developers, and small teams who require an AI partner that not only answers questions but also retains context, manages complex information, and proactively assists in sophisticated workflows through a secure, cloud-native, and highly configurable platform.
 
-### 1.2 Vision & Problem Statement
+### 1.2 Vision: The Total Recall Companion
 
-**The Problem:** Standard AI assistants suffer from digital amnesia. They treat each conversation as an isolated event, forcing users to repeat context and information. They lack a persistent "world model," making them inefficient for long-term projects, knowledge management, and personalized assistance.
-
-**Our Solution:** SoulyCore directly addresses this by integrating a sophisticated, multi-layered memory system at its core.
-
-*   **Structured Memory:** Remembers concrete facts (people, places, projects).
-*   **Semantic Memory:** Understands the relationships and concepts behind the facts.
-*   **Procedural Memory:** Can be extended with tools and workflows.
-
-**Our Vision:** To create a true AI partner that grows alongside its user. An assistant that not only recalls information but also synthesizes new insights, offers proactive suggestions, and becomes an indispensable hub for both personal and professional knowledge.
+The core vision of SoulyCore is to create a true AI partner that grows alongside its user. The v2 Cognitive Architecture directly addresses the "digital amnesia" of traditional AI assistants by externalizing memory into specialized, independently managed modules. This allows SoulyCore to maintain long-term context, synthesize new insights from disparate information, and become an indispensable hub for both personal and professional knowledge management.
 
 ---
 
-## Part 2: Feature & Technical Breakdown
+## Part 2: Technical Documentation
 
-### Live Feature Dictionary
+The detailed technical documentation for SoulyCore is organized into several key documents within the `/docs` directory.
 
-The detailed, real-time status of all application features is now managed directly within the SoulyCore application.
+*   **[Project Overview](./docs/00_Project_Overview.md):** A high-level summary of the application's purpose, core technologies, and target user.
+*   **[Frontend Architecture](./docs/01_Frontend_Architecture.md):** A breakdown of the React component structure, state management strategy with React Context, and key UI interaction flows.
+*   **[Backend API Architecture](./docs/02_Backend_API_Architecture.md):** A complete inventory of all Next.js API endpoints and a deep dive into the logic of the core `chat` and `memory` pipeline routes.
+*   **[Data Model](./docs/03_Data_Model.md):** A detailed schema reference for all tables in the Vercel Postgres database, including `conversations`, `messages`, `brains`, and `feature_tests`.
+*   **[Developer Tooling](./docs/04_Developer_Tooling.md):** An overview of the integrated tools for developers, including the SoulyDev Center, live Features Dictionary, and the new Feature Health Dashboard.
 
-Please navigate to **SoulyDev Center -> Features Dictionary** to view, manage, and track the implementation status, technical details, and related files for every component of the system.
+### Cognitive Architecture v2.0 Deep Dive
 
-This approach ensures that the feature documentation is always up-to-date and serves as a single source of truth for the development team.
-
-### High-Level Architecture
-
-*   **Framework:** Next.js 14 (App Router)
-*   **Language:** TypeScript
-*   **Styling:** Tailwind CSS
-*   **UI Animation:** Framer Motion
-*   **AI:** Google Gemini API
-*   **Structured Database:** Vercel Postgres
-*   **Vector Database:** Pinecone
-*   **Deployment:** Vercel
+For an in-depth understanding of the new backend engine, please refer to the specific documents in the `docs/v2_Cognitive_Architecture` directory. These have been updated to reflect the implemented system.

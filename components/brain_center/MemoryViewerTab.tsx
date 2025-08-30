@@ -25,7 +25,8 @@ const MemoryViewerTab = () => {
         const url = new URL(`/api/memory-viewer/${selectedModule}`, window.location.origin);
         Object.entries(queryParams).forEach(([key, value]) => {
             if (value) {
-                url.searchParams.append(key, value);
+                // FIX: Explicitly cast the value to a string to resolve 'unknown' type error.
+                url.searchParams.append(key, String(value));
             }
         });
 

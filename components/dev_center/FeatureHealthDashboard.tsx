@@ -237,13 +237,16 @@ const FeatureHealthDashboard = () => {
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
                     <div className="overflow-y-auto pr-2 space-y-2">
                         {features.map(feature => (
-                            <FeatureRow 
-                                key={feature.id}
-                                feature={feature}
-                                tests={testsByFeatureId[feature.id] || []}
-                                onSelectTest={setSelectedTest}
-                                selectedTestId={selectedTest?.id || null}
-                            />
+                            // FIX: Wrap FeatureRow component in a div with the key to resolve TypeScript error.
+                            // The 'key' prop is for React's reconciliation and should be on the wrapping element of a list, not passed to the component's props.
+                            <div key={feature.id}>
+                                <FeatureRow
+                                    feature={feature}
+                                    tests={testsByFeatureId[feature.id] || []}
+                                    onSelectTest={setSelectedTest}
+                                    selectedTestId={selectedTest?.id || null}
+                                />
+                            </div>
                         ))}
                     </div>
                     <div className="overflow-hidden">

@@ -1,79 +1,55 @@
 
-# SoulyCore: Backend API Architecture (As-Is)
+# SoulyCore: Backend API Architecture
 
-**Document Version:** 1.0
-**Status:** Baseline (Current Implementation)
+**Document Version:** 2.0
+**Status:** Current Implementation (Cognitive Architecture v2.0)
 
 ---
 
 ### 1. API Endpoint Inventory
 
-All backend logic is exposed through RESTful API endpoints built with Next.js API Routes. All data is exchanged in JSON format.
+All backend logic is exposed through RESTful API endpoints built with Next.js API Routes. With the v2 refactor, these routes are now lightweight wrappers that delegate complex business logic to the **Core Services Layer**.
 
 | Method | Path                                                 | Description                                                                 |
 |--------|------------------------------------------------------|-----------------------------------------------------------------------------|
-| POST   | `/api/chat`                                          | **Core endpoint.** Generates an AI response based on context and history.     |
-| POST   | `/api/memory/pipeline`                               | Processes a conversation turn to extract and save entities and knowledge.   |
-| GET    | `/api/conversations`                                 | Fetches a list of all conversations, ordered by last update.                |
-| POST   | `/api/conversations`                                 | Creates a new conversation with default settings.                           |
-| PUT    | `/api/conversations/[conversationId]`                | Updates a specific conversation's settings (title, system prompt, etc.).     |
-| DELETE | `/api/conversations/[conversationId]`                | Deletes a specific conversation and all of its associated messages.         |
+| POST   | `/api/chat`                                          | **Core endpoint.** Invokes the `ContextAssemblyPipeline` to generate an AI response. |
+| POST   | `/api/memory/pipeline`                               | Asynchronously invokes the `MemoryExtractionPipeline` to learn from a conversation turn. |
+| GET    | `/api/brains`                                        | **V2 New!** Fetches all Brain configurations. |
+| POST   | `/api/brains`                                        | **V2 New!** Creates a new Brain configuration. |
+| PUT    | `/api/brains/[brainId]`                              | **V2 New!** Updates a specific Brain. |
+| DELETE | `/api/brains/[brainId]`                              | **V2 New!** Deletes a specific Brain. |
+| GET    | `/api/memory-viewer/[module]`                        | **V2 New!** Inspects the raw data within a specified memory module. |
+| GET    | `/api/inspect/[messageId]`                           | **V2 New!** Fetches the pre-LLM context and post-LLM extraction for a message turn. |
+| GET    | `/api/tests`                                         | **V2 New!** Fetches all registered QA test cases. |
+| POST   | `/api/tests`                                         | **V2 New!** Creates a new test case. |
+| PUT    | `/api/tests/[testId]`                                | **V2 New!** Updates a test case, including its run status. |
+| DELETE | `/api/tests/[testId]`                                | **V2 New!** Deletes a test case. |
+| GET    | `/api/conversations`                                 | Fetches a list of all conversations.                                        |
+| POST   | `/api/conversations`                                 | Creates a new conversation using default settings.                          |
+| PUT    | `/api/conversations/[conversationId]`                | Updates a conversation's settings (title, system prompt, model config).     |
 | GET    | `/api/conversations/[conversationId]/messages`       | Fetches all messages for a specific conversation.                           |
-| POST   | `/api/conversations/[conversationId]/messages`       | Adds a new message to a specific conversation.                              |
-| POST   | `/api/conversations/[conversationId]/generate-title` | Asks the AI to generate and save a new title for the conversation.        |
-| POST   | `/api/conversations/[conversationId]/clear-messages` | Deletes all messages within a conversation without deleting the conversation itself. |
-| GET    | `/api/messages/[messageId]`                          | (Not implemented)                                                           |
-| PUT    | `/api/messages/[messageId]`                          | Updates the content of a specific message.                                  |
-| DELETE | `/api/messages/[messageId]`                          | Deletes a specific message.                                                 |
-| PUT    | `/api/messages/[messageId]/bookmark`                 | Toggles the bookmark status of a specific message.                          |
-| GET    | `/api/bookmarks`                                     | Fetches all messages that have been bookmarked.                             |
-| GET    | `/api/contacts`                                      | Fetches a list of all contacts.                                             |
-| POST   | `/api/contacts`                                      | Creates a new contact.                                                      |
-| PUT    | `/api/contacts/[contactId]`                          | Updates a specific contact.                                                 |
-| DELETE | `/api/contacts/[contactId]`                          | Deletes a specific contact.                                                 |
-| GET    | `/api/entities`                                      | Fetches a list of all learned entities.                                     |
-| POST   | `/api/entities`                                      | Creates or updates (upserts) a new entity.                                  |
-| PUT    | `/api/entities/[entityId]`                           | Updates a specific entity.                                                  |
-| DELETE | `/api/entities/[entityId]`                           | Deletes a specific entity.                                                  |
-| POST   | `/api/summarize`                                     | Generates a summary for a given block of text.                              |
-| POST   | `/api/prompt/regenerate`                             | Asks the AI to rewrite a user's prompt based on conversation history.       |
-| GET    | `/api/settings`                                      | Fetches all global application settings.                                    |
-| PUT    | `/api/settings`                                      | Updates multiple global application settings in a single transaction.       |
-| POST   | `/api/knowledge/add`                                 | Manually adds a new knowledge snippet to the semantic memory (Pinecone).      |
-| GET    | `/api/logs/all`                                      | Fetches all stored application logs.                                        |
-| DELETE | `/api/logs/all`                                      | Deletes all stored application logs.                                        |
-| POST   | `/api/logs/create`                                   | Saves a new log entry to the database.                                      |
-| GET    | `/api/features`                                      | Fetches all features for the DevCenter.                                     |
-| POST   | `/api/features`                                      | Creates a new feature.                                                      |
-| PUT    | `/api/features/[featureId]`                          | Updates a specific feature.                                                 |
-| DELETE | `/api/features/[featureId]`                          | Deletes a specific feature.                                                 |
-| GET    | `/api/prompts`                                       | Fetches all saved prompt templates.                                         |
-| POST   | `/api/prompts`                                       | Creates a new prompt template.                                              |
-| PUT    | `/api/prompts/[promptId]`                            | Updates a specific prompt template.                                         |
-| DELETE | `/api/prompts/[promptId]`                            | Deletes a specific prompt template.                                         |
-| POST   | `/api/prompts/execute-chain`                         | Executes a multi-step prompt workflow.                                      |
+| POST   | `/api/conversations/[conversationId]/messages`       | Adds a new message to a conversation.                                       |
+| (All other existing CRUD endpoints remain as before)           | ...                                                                         |
 
-### 2. Deep Dive: `POST /api/chat` Logic Flow
+### 2. Deep Dive: `POST /api/chat` Logic Flow (V2 Architecture)
 
-This is the most complex and critical endpoint, responsible for orchestrating the AI's response generation.
+The `/api/chat` endpoint is now a lean orchestrator, delegating all heavy lifting to the Core Engine.
 
-1.  **Request Parsing**: The endpoint receives a JSON body containing the `messages` array (conversation history), the `conversation` object (with settings like `systemPrompt`, `useSemanticMemory`, etc.), and an optional `mentionedContacts` array.
+1.  **Request Parsing**: The endpoint receives a JSON body with `messages` (history) and the `conversation` object.
+2.  **Instantiate Core Services**: It creates instances of the `ContextAssemblyPipeline` and the `EpisodicMemoryModule`.
+3.  **Invoke Context Assembly**: It calls `contextPipeline.assembleContext(...)`, passing the necessary parameters like `conversationId`, `userQuery`, and `mentionedContacts`. The pipeline handles all communication with the various memory modules (Episodic, Semantic, Structured) to build a comprehensive context string.
+4.  **Construct Final Prompt**: The context string returned by the pipeline is prepended to the user's latest message content.
+5.  **Invoke LLM Provider**: The route calls the `llmProvider.generateContent(...)` method, passing the full history and the system instructions. The provider handles the direct communication with the Gemini API.
+6.  **Persist AI Response**: Upon receiving the response text, the endpoint uses the `EpisodicMemoryModule` to store the AI's message in the database.
+7.  **Generate Suggestion**: It may still make a secondary call to generate a proactive suggestion.
+8.  **Response to Client**: The endpoint sends the final JSON response to the client, containing the AI's response text and any suggestion.
 
-2.  **Image Extraction**: It uses a regular expression to search the last user message for a base64-encoded image data URI. If found, the image data is extracted into a Gemini-compatible `imagePart`, and the data URI is stripped from the text content.
+### 3. Deep Dive: `POST /api/memory/pipeline` Logic Flow (V2 Architecture)
 
-3.  **Context Assembly**: The endpoint conditionally builds a context string to prepend to the user's message. This happens in several stages:
-    *   **Structured Memory (Entities)**: If `conversation.useStructuredMemory` is `true`, it queries the `entities` table in Vercel Postgres for all known entities and formats them into a "You know about these entities:" block.
-    *   **Semantic Memory (Knowledge)**: If `conversation.useSemanticMemory` is `true`, it calls `generateEmbedding` on the user's message content, queries the Pinecone `knowledgeBaseIndex` for the top 3 most similar text chunks, and formats them into a "Here is some relevant information:" block.
-    *   **Contact Context**: If the `mentionedContacts` array is present, it formats the details of each contact (name, company, notes, etc.) into a "You have the following context about people mentioned:" block.
+This endpoint is now a fire-and-forget trigger for the backend memory extraction process.
 
-4.  **Final Prompt Construction**: The various context blocks are joined together with the user's text message to form the final, comprehensive prompt that will be sent to the AI.
-
-5.  **History Formatting**: The `messages` array is formatted into the `Content[]` structure required by the `@google/genai` SDK. The final user prompt (with context and optionally the image part) is added as the last item in the history.
-
-6.  **Gemini API Call**: It calls the `generateChatResponse` function from `lib/gemini-server.ts`, passing the formatted history, the conversation's system prompt, and model parameters (temperature, topP).
-
-7.  **Proactive Suggestion (Secondary Call)**: After successfully receiving a response from Gemini, it appends the AI's response to the history and makes a *second*, non-critical call to the `generateProactiveSuggestion` function. This asks the model to suggest a relevant next action based on the latest exchange.
-
-8.  **Response to Client**: The endpoint sends a JSON response to the client containing the main AI `response` text and the `suggestion` string (which can be `null`).
-
-9.  **Error Handling & Logging**: The entire process is wrapped in a `try...catch` block. It uses a `serverLog` helper function to write detailed logs of its operations (e.g., "Injected mentioned contacts context", "Generating AI response from Gemini") to the `logs` table in the database for debugging.
+1.  **Request Parsing**: The endpoint receives a JSON body containing the `textToAnalyze` (the user query and AI response combined).
+2.  **Instantiate Pipeline**: It creates an instance of the `MemoryExtractionPipeline`.
+3.  **Asynchronous Execution**: It calls `extractionPipeline.extractAndStore(...)` but does **not** `await` the result. This immediately frees up the server to respond to the client.
+4.  **Immediate Response**: The endpoint immediately returns a `200 OK` response to the client, confirming that the memory processing has been initiated.
+5.  **Background Processing**: The `MemoryExtractionPipeline` runs in the background, performing its LLM call to extract data and then calling the `store()` methods of the Semantic and Structured memory modules to persist the new knowledge. All errors are handled and logged within the pipeline itself.

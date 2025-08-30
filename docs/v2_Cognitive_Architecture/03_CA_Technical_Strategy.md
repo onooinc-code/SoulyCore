@@ -1,14 +1,14 @@
 
-# SoulyCore Cognitive Architecture v2.0: Technical Strategy
+# SoulyCore Cognitive Architecture v2.0: Implemented Technical Strategy
 
 **Document Version:** 1.0
-**Status:** Proposed
+**Status:** Implemented
 
 ---
 
-### 1. Technology Stack Definition
+### 1. Technology Stack
 
-The v2 architecture will leverage a modern, scalable, and managed technology stack to minimize operational overhead and maximize performance.
+The v2 architecture leverages a modern, scalable, and managed technology stack to minimize operational overhead and maximize performance.
 
 | Component | Technology | Rationale |
 | :--- | :--- | :--- |
@@ -23,36 +23,30 @@ The v2 architecture will leverage a modern, scalable, and managed technology sta
 
 ### 2. Model & Provider Abstraction
 
-To ensure long-term flexibility and avoid vendor lock-in, all interactions with AI models will be routed through an abstraction layer.
+To ensure long-term flexibility and avoid vendor lock-in, all interactions with AI models are routed through an abstraction layer.
 
-*   **Strategy:** Implement an adapter pattern.
+*   **Strategy:** An adapter pattern has been implemented.
 *   **Implementation:**
-    1.  Define a generic `LLMProvider` interface within the new `src/core/llm/` directory.
-    2.  This interface will mandate methods like `generateContent(prompt: string, config: ModelConfig): Promise<string>` and `generateEmbedding(text: string): Promise<number[]>`.
-    3.  Create a concrete implementation, `GeminiProvider`, that implements this interface and contains the specific logic for calling the `@google/genai` SDK.
-    4.  All other parts of the Core Engine will only ever interact with the `LLMProvider` interface, not the concrete `GeminiProvider`. This will allow us to easily add an `AnthropicProvider` or `OpenAIProvider` in the future with minimal code changes.
+    1.  A generic `ILLMProvider` interface is defined in `src/core/llm/types.ts`.
+    2.  A concrete implementation, `GeminiProvider`, implements this interface and contains the specific logic for calling the `@google/genai` SDK.
+    3.  All other parts of the Core Engine only interact with the `ILLMProvider` interface, allowing for easy extension with other model providers in the future.
 
-### 3. Storage Strategy Definition
+### 3. Storage Strategy
 
-This table explicitly maps the conceptual memory modules from the Cognitive Model to their chosen storage technologies.
+This table maps the conceptual memory modules from the Cognitive Model to their implemented storage technologies.
 
 | Memory Module | Storage Technology | Primary Table(s) / Index | Rationale |
 | :--- | :--- | :--- | :--- |
 | **Episodic** | Vercel Postgres | `conversations`, `messages` | SQL provides strong transactional integrity for chronological, relational data. |
-| **Semantic** | Pinecone | `soul-knowledgebase-v2` | Optimized for low-latency, high-throughput vector similarity search. |
-| **Structured**| Vercel Postgres | `contacts`, `entities_v2` | The relational nature of SQL is perfect for structured, user-managed data. |
+| **Semantic** | Pinecone | `soul-knowledgebase` | Optimized for low-latency, high-throughput vector similarity search. |
+| **Structured**| Vercel Postgres | `contacts`, `entities` | The relational nature of SQL is perfect for structured, user-managed data. |
 | **Procedural**| Vercel Postgres | `tools`, `workflows` | (Future) Storing tool schemas and workflow definitions in SQL allows for easy management. |
 | **Working** | Vercel KV (Redis) | `session:[sessionId]` | Extremely fast reads/writes for ephemeral data needed during a single API request. |
 
 ### 4. Quality Assurance & Testing Strategy
 
-Quality is paramount in this refactor. The existing `DevCenter` will be upgraded to support a robust QA process.
+A robust QA process has been integrated into the `DevCenter`.
 
-*   **Feature Health Dashboard:** The existing dashboard will be enhanced to poll the status of all system components and display a clear health status (🟢, 🔴, 🟡).
-*   **Test Case Registry:** A new database table, `feature_tests`, will be created. It will have a foreign key relationship to the `features` table. Each entry will contain:
-    *   `featureId` (FK)
-    *   `description`: A plain-text description of the test case.
-    *   `manual_steps`: A markdown field detailing the steps for manual verification.
-    *   `automated_script`: A text field containing a code snippet for an automated test (e.g., using Jest or Playwright).
-    *   `expected_result`: A clear description of the success criteria.
-*   **Test Execution:** The Feature Health Dashboard will include a UI to trigger these tests. Initially, this will be for manual execution and viewing, with a future goal of integrating with a CI/CD pipeline for fully automated, scheduled test runs.
+*   **Feature Health Dashboard:** A new tab in the Dev Center displays the health status of all system components.
+*   **Test Case Registry:** The `feature_tests` database table stores detailed test cases linked to features. Each entry contains a description, manual steps, expected results, and the last run status.
+*   **Manual Test Execution:** The Feature Health Dashboard includes a UI to view test cases, execute them manually, and record the results (`Passed`/`Failed`). This provides an at-a-glance view of the application's stability.

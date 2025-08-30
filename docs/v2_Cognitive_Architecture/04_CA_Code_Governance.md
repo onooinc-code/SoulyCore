@@ -1,14 +1,14 @@
 
 # SoulyCore Cognitive Architecture v2.0: Code Governance
 
-**Document Version:** 1.1
-**Status:** Proposed (Refined)
+**Document Version:** 1.2
+**Status:** Implemented
 
 ---
 
-### 1. New Core File Structure Plan
+### 1. Core File Structure
 
-To support the new modular architecture and ensure a clean separation of concerns, a new `core/` directory will be introduced at the project root. This directory will house all new business logic for the Cognitive Engine, keeping it isolated from the existing Next.js structure. The `app/`, `components/`, and `lib/` directories will remain at the root level.
+The v2 architecture introduced a new `core/` directory at the project root to house all business logic for the Cognitive Engine, cleanly separating it from the Next.js presentation and API layers.
 
 ```
 soulycore/
@@ -16,59 +16,58 @@ soulycore/
 │   ├── api/
 │   └── ...
 ├── components/                 // UI Components (unchanged)
-├── core/                       // NEW: Core Business Logic
-│   ├── ingestion/
-│   │   └── ingestion.ts
-│   ├── llm/
+├── core/                       // Core Business Logic
+│   ├── llm/                    // LLM Abstraction Layer
 │   │   ├── providers/
 │   │   │   └── gemini.ts
 │   │   ├── types.ts
 │   │   └── index.ts
-│   └── memory/
-│       ├── modules/
-│       │   ├── episodic.ts
-│       │   └── semantic.ts
-│       ├── pipelines/
-│       │   ├── context_assembly.ts
-│       │   └── memory_extraction.ts
-│       └── types.ts
+│   ├── memory/                 // Memory Module Implementations
+│   │   ├── modules/
+│   │   │   ├── episodic.ts
+│   │   │   ├── semantic.ts
+│   │   │   ├── structured.ts
+│   │   │   └── working.ts
+│   │   └── types.ts
+│   └── pipelines/              // High-level Orchestrators
+│       ├── context_assembly.ts
+│       └── memory_extraction.ts
 ├── docs/
-├── lib/                        // Legacy business logic (to be deprecated)
+├── lib/                        // Legacy helpers & DB connection (partially deprecated)
 └── public/
 ```
 
 ### 2. Deprecation & Migration Strategy
 
-The existing logic within `lib/gemini-server.ts`, `lib/pinecone.ts`, and the primary API routes are now considered **DEPRECATED**. They will be replaced using a gradual and safe refactoring strategy.
+The business logic formerly located in `lib/gemini-server.ts`, `lib/pinecone.ts`, and within the primary API routes is now considered **DEPRECATED**. The migration to the new Core Engine has been completed.
 
-1.  **Build Core Services:** The new `core/` directory will be built out independently with its own modules, pipelines, and tests.
-2.  **Incremental Refactoring:** Existing API routes in `app/api/` will be refactored one by one. Instead of creating a separate `/v2/` namespace, the logic inside each existing route (e.g., `app/api/chat/route.ts`) will be updated to call the new, corresponding services from the `core/` directory.
-3.  **Decommission Legacy Code:** As an API route is successfully migrated to use the new core services, the old business logic it previously relied on in the `lib/` directory will be marked as deprecated and eventually removed once no other routes depend on it. This ensures a controlled, gradual migration with minimal risk.
+1.  **Core Services Built:** The `core/` directory has been fully implemented with its own modules, pipelines, and types.
+2.  **API Routes Refactored:** Existing API routes in `app/api/` (e.g., `app/api/chat/route.ts`) have been updated to be lightweight wrappers that call the new, corresponding services from the `core/` directory.
+3.  **Legacy Code Decommissioned:** The old, monolithic business logic has been removed from the API routes. Some helpers may remain in `lib/` but are slated for eventual removal.
 
 ### 3. TypeScript Policy
 
-Strictness and clarity are mandatory for the new core engine.
+Strictness and clarity are mandatory for the core engine.
 
-*   **Strict Mode:** The project's `tsconfig.json` will continue to enforce `"strict": true`.
-*   **No Implicit `any`:** The `"noImplicitAny": true` rule will be strictly enforced.
-*   **Centralized Types:** All shared types and interfaces for the Cognitive Engine **must** be defined in `core/memory/types.ts`. This creates a single source of truth for our data structures.
+*   **Strict Mode:** The project's `tsconfig.json` enforces `"strict": true`.
+*   **No Implicit `any`:** The `"noImplicitAny": true` rule is strictly enforced.
+*   **Centralized Types:** All shared types and interfaces for the Cognitive Engine are defined in `core/memory/types.ts` and `core/llm/types.ts`.
 *   **Naming Conventions:**
-    *   Interfaces and Types: `PascalCase` (e.g., `interface IBrainConfig`).
+    *   Interfaces and Types: `PascalCase` (e.g., `interface IBrain`).
     *   Functions, Variables, and Methods: `camelCase` (e.g., `function assembleContext()`).
-*   **JSDoc Comments:** All exported functions and class methods within the `core/` directory **must** be preceded by a JSDoc block explaining its purpose, parameters (`@param`), and return value (`@returns`).
+*   **JSDoc Comments:** All exported functions and class methods within the `core/` directory are preceded by JSDoc blocks explaining their purpose, parameters (`@param`), and return value (`@returns`).
 
 ### 4. Error Handling Protocol
 
 Standardized error handling is critical for a robust backend.
 
-1.  **Custom Error Classes:** A new file, `core/errors.ts`, will define custom error classes that extend the base `Error` class (e.g., `MemoryModuleError`, `LLMProviderError`, `PipelineError`).
-2.  **Service-Level Throwing:** Core services (`core/`) must **throw** these custom errors when an operation fails. They should not handle the error and return `null` or `undefined`.
-3.  **API-Level Catching:** The API route handlers in `app/api/` are responsible for wrapping all calls to core services in `try...catch` blocks.
-4.  **Standardized Response:** When an error is caught, the API route must log the full error internally and return a standardized JSON error response to the client with a relevant HTTP status code. Example:
+1.  **Service-Level Throwing:** Core services (`core/`) **throw** standard `Error` objects when an operation fails. They do not silently handle errors and return `null`.
+2.  **API-Level Catching:** The API route handlers in `app/api/` are responsible for wrapping all calls to core services in `try...catch` blocks.
+3.  **Standardized Response:** When an error is caught, the API route logs the full error internally and returns a standardized JSON error response to the client with a relevant HTTP status code and detailed error message. Example:
     ```json
     {
-      "error": {
-        "code": "CONTEXT_ASSEMBLY_FAILED",
+      "error": "Internal Server Error",
+      "details": {
         "message": "Failed to retrieve data from semantic memory."
       }
     }
