@@ -18,7 +18,10 @@ async function createTables() {
                 "useStructuredMemory" BOOLEAN DEFAULT true,
                 model VARCHAR(255),
                 temperature REAL,
-                "topP" REAL
+                "topP" REAL,
+                "enableMemoryExtraction" BOOLEAN DEFAULT true,
+                "enableProactiveSuggestions" BOOLEAN DEFAULT true,
+                "enableAutoSummarization" BOOLEAN DEFAULT true
             );
         `;
         console.log("Table 'conversations' created or already exists.", conversationsTable.command);
@@ -41,7 +44,23 @@ async function createTables() {
         } catch (e) {
             if (!e.message.includes('column "topP" already exists')) throw e;
         }
-        console.log("Conversation model columns checked.");
+        // Add new feature flag columns
+         try {
+            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "enableMemoryExtraction" BOOLEAN DEFAULT true;`;
+        } catch (e) {
+            if (!e.message.includes('column "enableMemoryExtraction" already exists')) throw e;
+        }
+        try {
+            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "enableProactiveSuggestions" BOOLEAN DEFAULT true;`;
+        } catch (e) {
+            if (!e.message.includes('column "enableProactiveSuggestions" already exists')) throw e;
+        }
+         try {
+            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "enableAutoSummarization" BOOLEAN DEFAULT true;`;
+        } catch (e) {
+            if (!e.message.includes('column "enableAutoSummarization" already exists')) throw e;
+        }
+        console.log("Conversation model and feature columns checked.");
 
 
         const messagesTable = await sql`
@@ -247,10 +266,11 @@ async function createTables() {
         await sql`
             INSERT INTO settings (key, value)
             VALUES 
-                ('defaultModelConfig', '{"model": "gemini-2.5-pro", "temperature": 0.7, "topP": 0.95}'),
+                ('defaultModelConfig', '{"model": "gemini-2.5-flash", "temperature": 0.7, "topP": 0.95}'),
                 ('defaultAgentConfig', '{"systemPrompt": "You are a helpful AI assistant.", "useSemanticMemory": true, "useStructuredMemory": true}'),
-                ('enableDebugLog', '{"enabled": false}')
-            ON CONFLICT (key) DO NOTHING;
+                ('enableDebugLog', '{"enabled": false}'),
+                ('featureFlags', '{"enableMemoryExtraction": true, "enableProactiveSuggestions": true, "enableAutoSummarization": true}')
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
         `;
         console.log("Default settings inserted or already exist.");
 

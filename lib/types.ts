@@ -13,6 +13,9 @@ export interface Conversation {
     model?: string;
     temperature?: number;
     topP?: number;
+    enableMemoryExtraction?: boolean;
+    enableProactiveSuggestions?: boolean;
+    enableAutoSummarization?: boolean;
 }
 
 export interface Message {
@@ -122,6 +125,11 @@ export interface AppSettings {
     };
     enableDebugLog: {
         enabled: boolean;
+    };
+    featureFlags: {
+        enableMemoryExtraction: boolean;
+        enableProactiveSuggestions: boolean;
+        enableAutoSummarization: boolean;
     };
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Message as MessageType } from '@/lib/types';
+import type { Message as MessageType, Conversation } from '@/lib/types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
@@ -19,6 +19,7 @@ interface MessageProps {
     onViewHtml: (htmlContent: string) => void;
     isContextAssemblyRunning?: boolean;
     isMemoryExtractionRunning?: boolean;
+    currentConversation: Conversation | null;
 }
 
 type TextAlign = 'left' | 'right';
@@ -39,7 +40,8 @@ const Message = ({
     onInspect,
     onViewHtml,
     isContextAssemblyRunning,
-    isMemoryExtractionRunning 
+    isMemoryExtractionRunning,
+    currentConversation
 }: MessageProps) => {
     const isUser = message.role === 'user';
     const [isEditing, setIsEditing] = useState(false);
@@ -72,7 +74,7 @@ const Message = ({
     }, [message.id, isLongMessage]);
 
     useEffect(() => {
-        if (isLongMessage && settings.collapsed && !summary) {
+        if (isLongMessage && settings.collapsed && !summary && currentConversation?.enableAutoSummarization) {
             const fetchSummary = async () => {
                 try {
                     const cachedSummaries = JSON.parse(localStorage.getItem('messageSummaries') || '{}');
@@ -111,7 +113,7 @@ const Message = ({
             };
             fetchSummary();
         }
-    }, [isLongMessage, settings.collapsed, message.id, message.content, summary]);
+    }, [isLongMessage, settings.collapsed, message.id, message.content, summary, currentConversation]);
 
     
     const updateSetting = <K extends keyof MessageSettings>(key: K, value: MessageSettings[K]) => {
@@ -162,6 +164,9 @@ const Message = ({
         }
 
         if (isLongMessage && settings.collapsed) {
+            if (!currentConversation?.enableAutoSummarization) {
+                 return <p className="italic text-gray-400">Message content collapsed. Auto-summary is disabled for this conversation.</p>;
+            }
             if (isSummaryLoading) {
                 return <p className="italic text-gray-400">Generating summary...</p>;
             }

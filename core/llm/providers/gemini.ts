@@ -4,7 +4,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { ILLMProvider, HistoryContent, IModelConfig } from '../types';
 
-const modelName = 'gemini-2.5-pro';
+// @google/genai-api-guideline-fix: Use 'gemini-2.5-flash' for general text tasks.
+const modelName = 'gemini-2.5-flash';
 
 export class GeminiProvider implements ILLMProvider {
     private ai: GoogleGenAI;
@@ -32,7 +33,7 @@ export class GeminiProvider implements ILLMProvider {
                 }
             });
 
-            // Per @google/genai guidelines, access the text property directly from the response object.
+            // @google/genai-api-guideline-fix: Per @google/genai guidelines, access the text property directly from the response object.
             if (!result || !result.text) {
                 console.error("GeminiProvider: Content generation returned no text.", { result });
                 throw new Error("Content generation failed to return text.");

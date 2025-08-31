@@ -1,7 +1,3 @@
-
-
-
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -98,6 +94,29 @@ const GlobalSettingsModal = ({ setIsOpen }: GlobalSettingsModalProps) => {
                         <label htmlFor="defaultSystemPrompt" className="sr-only">System Prompt</label>
                         <textarea id="defaultSystemPrompt" name="defaultSystemPrompt" value={localSettings.defaultAgentConfig.systemPrompt} onChange={e => setLocalSettings(s => ({...s!, defaultAgentConfig: {...s!.defaultAgentConfig, systemPrompt: e.target.value}}))} placeholder="System Prompt" className="w-full p-2 bg-gray-700 rounded-lg text-sm" rows={3}></textarea>
                     </div>
+
+                    {/* Feature Flags */}
+                    {localSettings.featureFlags && (
+                        <div className="p-4 bg-gray-900/50 rounded-lg">
+                            <h3 className="font-semibold text-lg mb-2">Feature Flags</h3>
+                             <p className="text-sm text-gray-400 mb-4">Default settings for resource-intensive features in new conversations.</p>
+                             <div className="space-y-3">
+                                <label htmlFor="enableMemoryExtraction" className="flex items-center gap-3 text-sm font-medium text-gray-300 cursor-pointer">
+                                    <input id="enableMemoryExtraction" name="enableMemoryExtraction" type="checkbox" checked={localSettings.featureFlags.enableMemoryExtraction} onChange={e => setLocalSettings(s => ({...s!, featureFlags: {...s!.featureFlags, enableMemoryExtraction: e.target.checked }}))} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                                    <span>Enable Memory Extraction</span>
+                                </label>
+                                 <label htmlFor="enableProactiveSuggestions" className="flex items-center gap-3 text-sm font-medium text-gray-300 cursor-pointer">
+                                    <input id="enableProactiveSuggestions" name="enableProactiveSuggestions" type="checkbox" checked={localSettings.featureFlags.enableProactiveSuggestions} onChange={e => setLocalSettings(s => ({...s!, featureFlags: {...s!.featureFlags, enableProactiveSuggestions: e.target.checked }}))} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                                    <span>Enable Proactive Suggestions</span>
+                                </label>
+                                 <label htmlFor="enableAutoSummarization" className="flex items-center gap-3 text-sm font-medium text-gray-300 cursor-pointer">
+                                    <input id="enableAutoSummarization" name="enableAutoSummarization" type="checkbox" checked={localSettings.featureFlags.enableAutoSummarization} onChange={e => setLocalSettings(s => ({...s!, featureFlags: {...s!.featureFlags, enableAutoSummarization: e.target.checked }}))} className="h-5 w-5 rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                                    <span>Enable Auto-Collapse Summaries</span>
+                                </label>
+                            </div>
+                        </div>
+                    )}
+
 
                      {/* Developer Settings */}
                     <div className="p-4 bg-gray-900/50 rounded-lg">

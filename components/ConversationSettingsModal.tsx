@@ -8,7 +8,7 @@ import { useLog } from './providers/LogProvider';
 
 // Per Gemini SDK guidelines, only this model should be used for this task.
 const geminiModels = [
-    'gemini-2.5-pro',
+    'gemini-2.5-flash',
 ];
 
 // FIX: Added interface for component props to resolve TypeScript error.

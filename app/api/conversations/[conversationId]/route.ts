@@ -6,7 +6,12 @@ import { Conversation } from '@/lib/types';
 export async function PUT(req: NextRequest, { params }: { params: { conversationId: string } }) {
     try {
         const { conversationId } = params;
-        const { title, summary, systemPrompt, useSemanticMemory, useStructuredMemory, model, temperature, topP } = await req.json();
+        const { 
+            title, summary, systemPrompt, 
+            useSemanticMemory, useStructuredMemory, 
+            model, temperature, topP,
+            enableMemoryExtraction, enableProactiveSuggestions, enableAutoSummarization
+        } = await req.json();
         
         const updates: string[] = [];
         const values: any[] = [];
@@ -43,6 +48,18 @@ export async function PUT(req: NextRequest, { params }: { params: { conversation
         if (topP !== undefined) {
             updates.push(`"topP" = $${queryIndex++}`);
             values.push(topP);
+        }
+        if (enableMemoryExtraction !== undefined) {
+            updates.push(`"enableMemoryExtraction" = $${queryIndex++}`);
+            values.push(enableMemoryExtraction);
+        }
+        if (enableProactiveSuggestions !== undefined) {
+            updates.push(`"enableProactiveSuggestions" = $${queryIndex++}`);
+            values.push(enableProactiveSuggestions);
+        }
+        if (enableAutoSummarization !== undefined) {
+            updates.push(`"enableAutoSummarization" = $${queryIndex++}`);
+            values.push(enableAutoSummarization);
         }
         
         updates.push(`"lastUpdatedAt" = CURRENT_TIMESTAMP`);

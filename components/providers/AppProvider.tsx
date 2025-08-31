@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
-import type { Conversation, Message, Contact, AppSettings, Prompt } from '@/lib/types';
+import type { Conversation, Message, Contact, AppSettings, Prompt, Role } from '@/lib/types';
 import { useLog } from './LogProvider';
 import { Content } from '@google/genai';
 
@@ -363,21 +363,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     setUnreadConversations(prev => new Set(prev).add(currentConversation.id));
                 }
 
-                 // Trigger background memory pipeline with the AI message ID
-                const textToAnalyze = `${message.content}\n${aiResponse}`;
-                log('Triggering background memory pipeline.', { textLength: textToAnalyze.length, aiMessageId: aiMessage?.id });
-                startBackgroundTask();
-                fetch('/api/memory/pipeline', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ textToAnalyze, aiMessageId: aiMessage?.id })
-                }).catch(err => {
-                    const errorMessage = "Memory pipeline trigger failed.";
-                    log(errorMessage, { error: { message: (err as Error).message, stack: (err as Error).stack } }, 'error');
-                    console.error(errorMessage, err)
-                }).finally(() => {
-                    endBackgroundTask();
-                });
+                 // Trigger background memory pipeline with the AI message ID (conditionally)
+                 if (currentConversation.enableMemoryExtraction) {
+                    const textToAnalyze = `${message.content}\n${aiResponse}`;
+                    log('Triggering background memory pipeline.', { textLength: textToAnalyze.length, aiMessageId: aiMessage?.id });
+                    startBackgroundTask();
+                    fetch('/api/memory/pipeline', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ textToAnalyze, aiMessageId: aiMessage?.id })
+                    }).catch(err => {
+                        const errorMessage = "Memory pipeline trigger failed.";
+                        log(errorMessage, { error: { message: (err as Error).message, stack: (err as Error).stack } }, 'error');
+                        console.error(errorMessage, err)
+                    }).finally(() => {
+                        endBackgroundTask();
+                    });
+                 } else {
+                    log('Memory extraction skipped due to conversation settings.');
+                 }
             }
             
             return { aiResponse, suggestion };
@@ -624,7 +628,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             // FIX: Explicitly type the new message object to ensure its `role` property
             // is correctly inferred as type 'Role' ('user' | 'model') instead of the broader 'string'.
             const newPromptMessage: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
-                role: 'user',
+                role: 'user' as Role,
                 content: userMessageForContext.content,
             };
             

@@ -157,6 +157,7 @@ const ChatWindow = () => {
                                         isContextAssemblyRunning={isLoading && msg.role === 'user' && msg.id === lastMessageIds.user && !activeWorkflow}
                                         isMemoryExtractionRunning={backgroundTaskCount > 0 && msg.role === 'model' && msg.id === lastMessageIds.model}
                                         onViewHtml={handleViewHtml}
+                                        currentConversation={currentConversation}
                                     />
                                 </div>
                             ))}

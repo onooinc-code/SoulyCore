@@ -25,21 +25,24 @@ export async function POST(req: NextRequest) {
         const newTitle = title || 'New Chat';
 
         // Fetch default settings from the database
-        const { rows: settingsRows } = await sql`SELECT key, value FROM settings WHERE key IN ('defaultModelConfig', 'defaultAgentConfig');`;
+        const { rows: settingsRows } = await sql`SELECT key, value FROM settings WHERE key IN ('defaultModelConfig', 'defaultAgentConfig', 'featureFlags');`;
         
         const settings = settingsRows.reduce((acc, row) => {
             acc[row.key] = row.value;
             return acc;
         }, {} as Record<string, any>);
 
-        const modelConfig = settings.defaultModelConfig || { model: 'gemini-2.5-pro', temperature: 0.7, topP: 0.95 };
+        const modelConfig = settings.defaultModelConfig || { model: 'gemini-2.5-flash', temperature: 0.7, topP: 0.95 };
         const agentConfig = settings.defaultAgentConfig || { systemPrompt: 'You are a helpful AI assistant.', useSemanticMemory: true, useStructuredMemory: true };
+        const featureFlags = settings.featureFlags || { enableMemoryExtraction: true, enableProactiveSuggestions: true, enableAutoSummarization: true };
 
         const query = `
             INSERT INTO conversations (
-                title, "systemPrompt", "useSemanticMemory", "useStructuredMemory", model, temperature, "topP"
+                title, "systemPrompt", "useSemanticMemory", "useStructuredMemory", 
+                model, temperature, "topP",
+                "enableMemoryExtraction", "enableProactiveSuggestions", "enableAutoSummarization"
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING *;
         `;
         const values = [
@@ -49,7 +52,10 @@ export async function POST(req: NextRequest) {
             agentConfig.useStructuredMemory,
             modelConfig.model,
             modelConfig.temperature,
-            modelConfig.topP
+            modelConfig.topP,
+            featureFlags.enableMemoryExtraction,
+            featureFlags.enableProactiveSuggestions,
+            featureFlags.enableAutoSummarization,
         ];
 
         const { rows } = await db.query(query, values);

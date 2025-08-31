@@ -98,8 +98,11 @@ export async function POST(req: NextRequest) {
         };
         await episodicMemory.store({ conversationId: conversation.id, message: aiMessageData });
         
-        // 6. Generate proactive suggestion
-        const suggestion = await generateProactiveSuggestion(history);
+        // 6. Generate proactive suggestion (conditionally)
+        let suggestion = null;
+        if (conversation.enableProactiveSuggestions) {
+            suggestion = await generateProactiveSuggestion(history);
+        }
 
         return NextResponse.json({ response: responseText, suggestion });
 

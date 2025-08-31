@@ -178,6 +178,7 @@ export class MemoryExtractionPipeline {
             }
         };
         
+        // @google/genai-api-guideline-fix: Use 'gemini-2.5-flash' for general text tasks.
         const modelName = 'gemini-2.5-flash';
 
         const fn = async () => {
