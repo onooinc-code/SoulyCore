@@ -1,11 +1,9 @@
-
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Prompt, PromptChainStep } from '@/lib/types';
-import { motion, AnimatePresence } from 'framer-motion';
-import { XIcon, PlusIcon, TrashIcon, EditIcon } from './Icons';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { XIcon, PlusIcon, TrashIcon, EditIcon, MenuIcon, UserCircleIcon, ArrowDownOnSquareIcon, WarningIcon } from './Icons';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { useLog } from './providers/LogProvider';
 
@@ -62,11 +60,26 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
     };
 
     const handleSavePrompt = async () => {
-        if (!currentPrompt || !currentPrompt.name || !currentPrompt.content) return;
+        if (!currentPrompt || !currentPrompt.name || (currentPrompt.type === 'single' && !currentPrompt.content)) {
+             setStatus({ error: 'Name and Content are required for a single prompt.' });
+             return;
+        }
+        if (currentPrompt.type === 'chain' && (!currentPrompt.chain_definition || currentPrompt.chain_definition.length === 0)) {
+            setStatus({ error: 'A workflow must have at least one step.' });
+            return;
+        }
+        
         clearError();
         const isUpdating = !!currentPrompt.id;
         const action = isUpdating ? 'Updating' : 'Creating';
         log(`${action} prompt...`, { promptData: currentPrompt });
+
+        // For chains, set a placeholder content
+        const promptToSave = { ...currentPrompt };
+        if (promptToSave.type === 'chain') {
+            promptToSave.content = `This is a chained prompt with ${promptToSave.chain_definition?.length || 0} step(s).`;
+        }
+
 
         const url = isUpdating ? `/api/prompts/${currentPrompt.id}` : '/api/prompts';
         const method = isUpdating ? 'PUT' : 'POST';
@@ -75,7 +88,7 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentPrompt),
+                body: JSON.stringify(promptToSave),
             });
             if (!res.ok) throw new Error(`Failed to ${isUpdating ? 'update' : 'create'} prompt`);
             
@@ -171,9 +184,6 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
                 <input value={currentPrompt?.folder || ''} onChange={e => setCurrentPrompt({...currentPrompt, folder: e.target.value})} placeholder="Folder (Optional)" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
                 <input value={currentPrompt?.tags?.join(', ') || ''} onChange={e => setCurrentPrompt({...currentPrompt, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})} placeholder="Tags, comma-separated" className="w-full p-2 bg-gray-700 rounded-lg text-sm"/>
             </div>
-            {currentPrompt?.type === 'chain' && (
-                 <input value={currentPrompt?.content || 'This is a chained prompt. Its content is determined by its steps.'} onChange={e => setCurrentPrompt({...currentPrompt, content: e.target.value})} className="w-full p-2 bg-gray-700 rounded-lg text-sm text-gray-400" title="Placeholder content for chained prompts."/>
-            )}
             <div className="flex gap-2">
                 <button onClick={handleSavePrompt} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-500">Save Prompt</button>
                 <button onClick={() => setCurrentPrompt(null)} className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-500">Cancel</button>
@@ -232,16 +242,104 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
     );
 };
 
+// --- New Refactored Workflow Builder ---
 
-// FIX: Removed React.FC to fix framer-motion type inference issue.
-const WorkflowBuilder = ({ chainDefinition, onChainChange, singlePrompts }: { chainDefinition: PromptChainStep[], onChainChange: (newChain: PromptChainStep[]) => void, singlePrompts: Prompt[] }) => {
-    
+const WorkflowStepCard = ({ step, onUpdate, onRemove, singlePrompts, availableInputSteps }: {
+    step: PromptChainStep;
+    onUpdate: (stepNumber: number, newStepData: Partial<PromptChainStep>) => void;
+    onRemove: (stepNumber: number) => void;
+    singlePrompts: Prompt[];
+    availableInputSteps: number[];
+}) => {
     const getPromptVariables = (promptId: string): string[] => {
         const prompt = singlePrompts.find(p => p.id === promptId);
         if (!prompt) return [];
         const variableRegex = /{{\s*(\w+)\s*}}/g;
         const matches = [...prompt.content.matchAll(variableRegex)];
         return [...new Set(matches.map(match => match[1]))];
+    };
+
+    const handlePromptSelection = (promptId: string) => {
+        const variables = getPromptVariables(promptId);
+        const newInputMapping = variables.reduce((acc, varName) => {
+            acc[varName] = { source: 'userInput' };
+            return acc;
+        }, {} as Record<string, { source: 'userInput' | 'stepOutput'; step?: number }>);
+        onUpdate(step.step, { promptId, inputMapping: newInputMapping });
+    };
+
+    const handleMappingChange = (varName: string, source: string, sourceStep?: number) => {
+        const newMapping = { ...step.inputMapping };
+        if (source === 'userInput') {
+            newMapping[varName] = { source: 'userInput' };
+        } else if (source === 'stepOutput' && sourceStep) {
+            newMapping[varName] = { source: 'stepOutput', step: sourceStep };
+        }
+        onUpdate(step.step, { inputMapping: newMapping });
+    };
+    
+    const selectedPromptName = singlePrompts.find(p => p.id === step.promptId)?.name || 'Select a prompt...';
+
+    return (
+        <div className="flex items-start gap-3">
+            <div className="p-2 cursor-grab" title="Drag to reorder step"><MenuIcon className="w-5 h-5 text-gray-500" /></div>
+            <div className="flex-1 bg-gray-700/50 p-3 rounded-md">
+                <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-indigo-400">Step {step.step}</span>
+                    <button onClick={() => onRemove(step.step)} className="text-red-400 hover:text-red-300 text-xs font-semibold">REMOVE</button>
+                </div>
+                <select value={step.promptId} onChange={(e) => handlePromptSelection(e.target.value)} className="w-full p-2 bg-gray-600 rounded-lg text-sm mb-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <option value="">{selectedPromptName}</option>
+                    {singlePrompts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                {step.promptId && Object.keys(step.inputMapping).length > 0 && (
+                    <div className="space-y-2 text-xs pl-4 border-l-2 border-gray-600">
+                        <h5 className="font-semibold text-gray-400">Variable Inputs:</h5>
+                        {Object.keys(step.inputMapping).map(varName => {
+                             const mapping = step.inputMapping[varName];
+                             const isInvalid = mapping.source === 'stepOutput' && (!mapping.step || !availableInputSteps.includes(mapping.step));
+                            return (
+                                <div key={varName} className={`flex items-center gap-2 p-2 rounded-md ${isInvalid ? 'bg-red-900/50 ring-1 ring-red-500' : 'bg-gray-800/50'}`}>
+                                    {/* FIX: Wrapped the WarningIcon component in a span to pass the `title` attribute for the tooltip, resolving a TypeScript error where `title` is not a direct prop of the SVG component. */}
+                                    {isInvalid && <span title={`Invalid source: Step ${mapping.step} is not available before the current step.`}><WarningIcon className="w-4 h-4 text-red-400 flex-shrink-0" /></span>}
+                                    <span className="text-gray-300 font-mono bg-gray-700 px-1.5 py-0.5 rounded">{`{{${varName}}}`}</span>
+                                    <span className="text-gray-500">&larr;</span>
+                                    <select 
+                                        value={mapping.source === 'stepOutput' ? `step_${mapping.step}` : 'userInput'}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === 'userInput') {
+                                                handleMappingChange(varName, 'userInput');
+                                            } else {
+                                                const sourceStep = parseInt(val.split('_')[1], 10);
+                                                handleMappingChange(varName, 'stepOutput', sourceStep);
+                                            }
+                                        }}
+                                        className="p-1 bg-gray-600 rounded text-xs w-full focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                    >
+                                        <option value="userInput">User Input</option>
+                                        {availableInputSteps.map(prevStepNum => (
+                                            <option key={prevStepNum} value={`step_${prevStepNum}`}>Output from Step {prevStepNum}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const WorkflowBuilder = ({ chainDefinition, onChainChange, singlePrompts }: { chainDefinition: PromptChainStep[], onChainChange: (newChain: PromptChainStep[]) => void, singlePrompts: Prompt[] }) => {
+    
+    const handleReorder = (newOrder: PromptChainStep[]) => {
+        const renumberedChain = newOrder.map((step, index) => ({
+            ...step,
+            step: index + 1,
+        }));
+        onChainChange(renumberedChain);
     };
 
     const addStep = () => {
@@ -265,74 +363,33 @@ const WorkflowBuilder = ({ chainDefinition, onChainChange, singlePrompts }: { ch
         onChainChange(newChain);
     };
 
-    const handlePromptSelection = (stepNumber: number, promptId: string) => {
-        const variables = getPromptVariables(promptId);
-        const newInputMapping = variables.reduce((acc, varName) => {
-            acc[varName] = { source: 'userInput' };
-            return acc;
-        }, {} as Record<string, { source: 'userInput' | 'stepOutput'; step?: number }>);
-        updateStep(stepNumber, { promptId, inputMapping: newInputMapping });
-    };
-
-    const handleMappingChange = (stepNumber: number, varName: string, source: string, sourceStep?: number) => {
-        const step = chainDefinition.find(s => s.step === stepNumber);
-        if (!step) return;
-        const newMapping = { ...step.inputMapping };
-        if (source === 'userInput') {
-            newMapping[varName] = { source: 'userInput' };
-        } else if (source === 'stepOutput' && sourceStep) {
-            newMapping[varName] = { source: 'stepOutput', step: sourceStep };
-        }
-        updateStep(stepNumber, { inputMapping: newMapping });
-    };
-
     return (
-        <div className="bg-gray-800 p-3 rounded-lg space-y-3 max-h-64 overflow-y-auto">
-            <h4 className="text-sm font-semibold">Workflow Steps</h4>
-            {chainDefinition.map((step, index) => (
-                <div key={index} className="bg-gray-700/50 p-3 rounded-md">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold">Step {step.step}</span>
-                        <button onClick={() => removeStep(step.step)} className="text-red-400 hover:text-red-300 text-xs">Remove</button>
-                    </div>
-                    <select value={step.promptId} onChange={(e) => handlePromptSelection(step.step, e.target.value)} className="w-full p-2 bg-gray-600 rounded-lg text-sm mb-2">
-                        <option value="">Select a prompt for this step...</option>
-                        {singlePrompts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                    {step.promptId && Object.keys(step.inputMapping).length > 0 && (
-                        <div className="space-y-2 text-xs pl-4 border-l-2 border-gray-600">
-                            <h5 className="font-semibold text-gray-400">Variable Inputs:</h5>
-                            {Object.keys(step.inputMapping).map(varName => (
-                                <div key={varName} className="flex items-center gap-2">
-                                    <span className="text-gray-300 font-mono bg-gray-800 px-1.5 py-0.5 rounded">{`{{${varName}}}`}</span>
-                                    <span>&larr;</span>
-                                    <select 
-                                        value={step.inputMapping[varName].source === 'stepOutput' ? `step_${step.inputMapping[varName].step}` : 'userInput'}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            if (val === 'userInput') {
-                                                handleMappingChange(step.step, varName, 'userInput');
-                                            } else {
-                                                const sourceStep = parseInt(val.split('_')[1], 10);
-                                                handleMappingChange(step.step, varName, 'stepOutput', sourceStep);
-                                            }
-                                        }}
-                                        className="p-1 bg-gray-600 rounded text-xs"
-                                    >
-                                        <option value="userInput">User Input</option>
-                                        {chainDefinition.filter(s => s.step < step.step).map(prevStep => (
-                                            <option key={prevStep.step} value={`step_${prevStep.step}`}>Output from Step {prevStep.step}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+        <div className="bg-gray-800 p-3 rounded-lg space-y-3 max-h-80 overflow-y-auto">
+            <h4 className="text-sm font-semibold text-gray-300">Workflow Builder</h4>
+             {chainDefinition.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 border-2 border-dashed border-gray-700 rounded-lg">
+                    <p>This workflow has no steps.</p>
+                    <p className="text-xs">Click "Add Step" to begin building your chain.</p>
                 </div>
-            ))}
-            <button onClick={addStep} className="w-full text-sm py-2 bg-indigo-600/50 hover:bg-indigo-600/70 rounded-md">+ Add Step</button>
+            ) : (
+                <Reorder.Group axis="y" values={chainDefinition} onReorder={handleReorder} className="space-y-3">
+                    {chainDefinition.map((step, index) => (
+                         <Reorder.Item key={step.step} value={step} dragListener={false}>
+                             <WorkflowStepCard
+                                step={step}
+                                onUpdate={updateStep}
+                                onRemove={removeStep}
+                                singlePrompts={singlePrompts}
+                                availableInputSteps={Array.from({ length: index }, (_, i) => i + 1)}
+                            />
+                        </Reorder.Item>
+                    ))}
+                </Reorder.Group>
+            )}
+            <button onClick={addStep} className="w-full text-sm py-2 bg-indigo-600/50 hover:bg-indigo-600/70 rounded-md font-semibold transition-colors">+ Add Step</button>
         </div>
     );
 };
+
 
 export default PromptsHub;
