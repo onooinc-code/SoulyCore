@@ -168,9 +168,9 @@ const MemoryCenter = ({ setIsOpen }: MemoryCenterProps) => {
                                 <td className="p-3">{entity.type}</td>
                                 <td className="p-3"><code className="text-xs bg-gray-700 text-indigo-300 p-1 rounded-md">{entity.details_json}</code></td>
                                 <td className="p-3">
-                                    <div className="flex gap-4">
-                                        <button onClick={() => { setEntityForm(entity); setIsEntityFormVisible(true); }} title="Edit this entity's details."><EditIcon className="w-5 h-5 text-gray-400 hover:text-blue-400"/></button>
-                                        <button onClick={() => handleDeleteEntity(entity.id)} title="Permanently delete this entity from the AI's memory."><TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500"/></button>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => { setEntityForm(entity); setIsEntityFormVisible(true); }} title="Edit this entity's details." className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-blue-400"><EditIcon className="w-5 h-5"/></button>
+                                        <button onClick={() => handleDeleteEntity(entity.id)} title="Permanently delete this entity from the AI's memory." className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-red-500"><TrashIcon className="w-5 h-5"/></button>
                                     </div>
                                 </td>
                             </tr>

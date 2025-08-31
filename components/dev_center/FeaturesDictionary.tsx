@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -102,9 +101,9 @@ const FeatureItem = ({ feature, onEdit, onDelete }: FeatureItemProps) => {
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusColorMap[feature.status]}`}>
                         {feature.status}
                     </span>
-                    <div className="flex gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1 hover:text-blue-400" title="Edit this feature's documentation."><EditIcon className="w-5 h-5"/></button>
-                        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 hover:text-red-500" title="Permanently delete this feature from the dictionary."><TrashIcon className="w-5 h-5"/></button>
+                    <div className="flex gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-blue-400" title="Edit this feature's documentation."><EditIcon className="w-5 h-5"/></button>
+                        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-red-500" title="Permanently delete this feature from the dictionary."><TrashIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </motion.div>

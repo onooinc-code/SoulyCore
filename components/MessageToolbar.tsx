@@ -63,21 +63,21 @@ const MessageToolbar = ({
         { id: 'align-left', icon: TextAlignLeftIcon, action: () => onSetAlign('left'), title: 'Align text left' },
         { id: 'align-right', icon: TextAlignRightIcon, action: () => onSetAlign('right'), title: 'Align text right' },
         ...(isUser ? [{ id: 'edit', icon: EditIcon, action: onEdit, title: 'Edit your message' }] : []),
-        { id: 'delete', icon: TrashIcon, action: onDelete, title: 'Delete message', className: 'text-red-400' },
+        { id: 'delete', icon: TrashIcon, action: onDelete, title: 'Delete message', className: 'hover:text-red-400' },
     ];
 
     return (
-        <div className="relative flex items-center gap-1 text-gray-400 bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-full px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="relative flex items-center gap-1 text-gray-400 bg-black/20 backdrop-blur-md border border-white/10 rounded-full px-2 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             {mainActions.map(action => (
-                <button key={action.id} onClick={action.action} className={`p-1.5 rounded-full hover:bg-gray-700/50 ${action.className}`} title={action.title}>
+                <button key={action.id} onClick={action.action} className={`p-1.5 rounded-full hover:bg-white/10 transition-colors ${action.className}`} title={action.title}>
                     <action.icon className="w-4 h-4" />
                 </button>
             ))}
             
-            <div className="w-px h-4 bg-gray-600 mx-1"></div>
+            <div className="w-px h-4 bg-white/10 mx-1"></div>
 
             <div className="relative">
-                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 rounded-full hover:bg-gray-700/50 hover:text-white" title="More actions">
+                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1.5 rounded-full hover:bg-white/10 hover:text-white transition-colors" title="More actions">
                     <DotsHorizontalIcon className="w-4 h-4" />
                 </button>
                 <AnimatePresence>
@@ -88,7 +88,7 @@ const MessageToolbar = ({
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
                             transition={{ duration: 0.15, ease: "easeOut" }}
-                            className="absolute bottom-full right-0 mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-1 z-10"
+                            className="absolute bottom-full right-0 mb-2 w-48 bg-gray-800/80 backdrop-blur-md border border-white/10 rounded-lg shadow-xl p-1 z-10"
                         >
                             {menuActions.map(action => (
                                 <button

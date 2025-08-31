@@ -97,36 +97,32 @@ const Header = () => {
                     </AnimatePresence>
                 </div>
 
-                <div className="flex items-center gap-4 flex-shrink-0">
-                    <div className="flex items-center gap-2">
-                        <button onClick={() => setSidebarOpen(prev => !prev)} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-700 transition-colors" title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}>
-                            <SidebarLeftIcon className="w-5 h-5" />
-                        </button>
-                        <button onClick={() => setLogPanelOpen(prev => !prev)} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-700 transition-colors" title={isLogPanelOpen ? "Hide Log Panel" : "Show Log Panel"}>
-                            <LogIcon className="w-5 h-5" />
-                        </button>
-                        <button onClick={() => changeFontSize('decrease')} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-700 transition-colors" title="Decrease font size">
-                            <MinusIcon className="w-5 h-5" />
-                        </button>
-                        <button onClick={() => changeFontSize('increase')} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-700 transition-colors" title="Increase font size">
-                            <PlusIcon className="w-5 h-5" />
-                        </button>
-                    </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button onClick={() => setSidebarOpen(prev => !prev)} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}>
+                        <SidebarLeftIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setLogPanelOpen(prev => !prev)} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title={isLogPanelOpen ? "Hide Log Panel" : "Show Log Panel"}>
+                        <LogIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => changeFontSize('decrease')} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title="Decrease font size">
+                        <MinusIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => changeFontSize('increase')} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title="Increase font size">
+                        <PlusIcon className="w-5 h-5" />
+                    </button>
 
                     {currentConversation && (
                         <>
-                            <div className="w-px h-6 bg-gray-700"></div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={handleGenerateTitle} className="p-2 text-gray-400 hover:text-indigo-400 rounded-full hover:bg-gray-700" title="Ask the AI to generate a new, concise title for this conversation based on its content.">
-                                    <SparklesIcon className="w-5 h-5" />
-                                </button>
-                                <button onClick={handleEdit} className="p-2 text-gray-400 hover:text-blue-400 rounded-full hover:bg-gray-700" title="Manually edit the title of this conversation.">
-                                    <EditIcon className="w-5 h-5" />
-                                </button>
-                                <button onClick={handleDelete} className="p-2 text-gray-400 hover:text-red-400 rounded-full hover:bg-gray-700" title="Permanently delete this entire conversation and all its messages.">
-                                    <TrashIcon className="w-5 h-5" />
-                                </button>
-                            </div>
+                            <div className="w-px h-6 bg-gray-700 mx-2"></div>
+                            <button onClick={handleGenerateTitle} className="p-2 rounded-xl text-indigo-300 transition-all duration-200 bg-indigo-500/10 border border-indigo-400/20 backdrop-blur-sm hover:bg-indigo-500/20 hover:scale-110" title="Ask the AI to generate a new, concise title for this conversation based on its content.">
+                                <SparklesIcon className="w-5 h-5" />
+                            </button>
+                            <button onClick={handleEdit} className="p-2 rounded-xl text-blue-300 transition-all duration-200 bg-blue-500/10 border border-blue-400/20 backdrop-blur-sm hover:bg-blue-500/20 hover:scale-110" title="Manually edit the title of this conversation.">
+                                <EditIcon className="w-5 h-5" />
+                            </button>
+                            <button onClick={handleDelete} className="p-2 rounded-xl text-red-300 transition-all duration-200 bg-red-500/10 border border-red-400/20 backdrop-blur-sm hover:bg-red-500/20 hover:scale-110" title="Permanently delete this entire conversation and all its messages.">
+                                <TrashIcon className="w-5 h-5" />
+                            </button>
                         </>
                     )}
                 </div>

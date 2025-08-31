@@ -206,9 +206,9 @@ const ContactsHub = ({ setIsOpen }: ContactsHubProps) => {
                                         </div>
                                     </td>
                                     <td className="p-3">
-                                        <div className="flex gap-4">
-                                            <button onClick={() => handleOpenForm(contact)} title="Edit this contact's details."><EditIcon className="w-5 h-5 text-gray-400 hover:text-blue-400"/></button>
-                                            <button onClick={() => handleDeleteContact(contact.id)} title="Permanently delete this contact."><TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500"/></button>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleOpenForm(contact)} title="Edit this contact's details." className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-blue-400"><EditIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handleDeleteContact(contact.id)} title="Permanently delete this contact." className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-red-500"><TrashIcon className="w-5 h-5"/></button>
                                         </div>
                                     </td>
                                 </motion.tr>

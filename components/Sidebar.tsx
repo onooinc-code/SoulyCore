@@ -218,7 +218,7 @@ const Sidebar = ({
                                                     <span className="text-xs text-gray-500 flex-shrink-0 ml-2 group-hover:hidden">
                                                         {getRelativeTime(new Date(convo.lastUpdatedAt))}
                                                     </span>
-                                                    <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center bg-gray-700 rounded-full">
+                                                    <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center bg-gray-800/50 backdrop-blur-sm border border-white/10 rounded-full">
                                                         <button onClick={(e) => handleGenerateTitle(e, convo.id)} className="p-1.5 text-gray-300 hover:text-indigo-400" title="Generate new title"><SparklesIcon className="w-4 h-4" /></button>
                                                         <button onClick={(e) => handleEditTitle(e, convo.id, convo.title)} className="p-1.5 text-gray-300 hover:text-blue-400" title="Rename"><EditIcon className="w-4 h-4" /></button>
                                                         <button onClick={(e) => handleDelete(e, convo.id)} className="p-1.5 text-gray-300 hover:text-red-400" title="Delete"><TrashIcon className="w-4 h-4" /></button>
@@ -235,12 +235,12 @@ const Sidebar = ({
                 </AnimatePresence>
             </div>
             <div className="pt-2 border-t border-gray-700 flex-shrink-0">
-                 <div className="space-y-2 my-2">
+                 <div className="space-y-1 my-2">
                      {menuItems.map(item => (
                          <button
                             key={item.label}
                             onClick={item.action}
-                            className="flex items-center w-full p-2 text-sm font-semibold text-gray-300 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                            className="flex items-center w-full p-2 text-sm font-semibold text-gray-300 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50"
                             title={item.tooltip}
                         >
                             <item.icon className="w-5 h-5 mr-3 text-gray-400" />
@@ -248,9 +248,9 @@ const Sidebar = ({
                         </button>
                      ))}
                 </div>
-                <div className="flex items-center justify-around p-2 bg-gray-900/50 rounded-lg">
+                <div className="flex items-center justify-around p-1 bg-black/20 rounded-xl">
                     {toolbarItems.map(item => (
-                        <button key={item.label} onClick={item.action} title={item.tooltip} className="p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors">
+                        <button key={item.label} onClick={item.action} title={item.tooltip} className="p-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
                             <item.icon className="w-5 h-5" />
                         </button>
                     ))}

@@ -257,8 +257,8 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                     </button>
                 </div>
             )}
-            <form onSubmit={handleSubmit} className="flex items-start space-x-4">
-                <button
+            <form onSubmit={handleSubmit} className="flex items-start space-x-2">
+                 <button
                     type="button"
                     onClick={() => {
                         log('User toggled Prompts Launcher.');
@@ -266,16 +266,16 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                         setIsPromptsListOpen(willBeOpen);
                         if (willBeOpen) fetchPrompts();
                     }}
-                    className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                    className="p-3 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     disabled={isLoading}
                     title="Use a saved prompt"
                 >
                     <PromptsIcon className="w-5 h-5" />
                 </button>
-                <button 
+                 <button 
                     type="button" 
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-3 bg-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                    className="p-3 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     disabled={isLoading || !!imageDataUrl}
                     title="Attach an image"
                 >
@@ -298,9 +298,9 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                         </div>
                     )}
                 </div>
-                <button
+                 <button
                     type="submit"
-                    className="p-3 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
+                    className="p-3 bg-indigo-600/50 hover:bg-indigo-600/80 backdrop-blur-sm border border-indigo-400/30 rounded-xl text-white transition-all duration-200 hover:scale-110 disabled:bg-indigo-400/50 disabled:cursor-not-allowed"
                     disabled={isLoading || (!content.trim() && !imageDataUrl)}
                     title="Send message"
                 >

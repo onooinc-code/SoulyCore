@@ -226,9 +226,9 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
                                             <h4 className="font-bold text-gray-200 break-words">{prompt.name}</h4>
                                             {prompt.type === 'chain' && <span className="text-xs text-indigo-400 font-semibold">WORKFLOW</span>}
                                         </div>
-                                        <div className="flex gap-2 flex-shrink-0 ml-4">
-                                            <button onClick={() => handleOpenForm(prompt)} title="Edit this prompt"><EditIcon className="w-5 h-5 text-gray-400 hover:text-blue-400"/></button>
-                                            <button onClick={() => handleDeletePrompt(prompt.id)} title="Delete this prompt"><TrashIcon className="w-5 h-5 text-gray-400 hover:text-red-500"/></button>
+                                        <div className="flex gap-1 flex-shrink-0 ml-4">
+                                            <button onClick={() => handleOpenForm(prompt)} title="Edit this prompt" className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-blue-400"><EditIcon className="w-5 h-5"/></button>
+                                            <button onClick={() => handleDeletePrompt(prompt.id)} title="Delete this prompt" className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-red-500"><TrashIcon className="w-5 h-5"/></button>
                                         </div>
                                     </div>
                                     <p className="mt-3 text-sm text-gray-400 font-mono bg-gray-800 p-2 rounded-md whitespace-pre-wrap max-h-24 overflow-y-auto">{prompt.content}</p>
