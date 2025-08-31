@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Message as MessageType } from '@/lib/types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,6 +16,7 @@ interface MessageProps {
     onUpdate: (messageId: string, newContent: string) => void;
     onRegenerate: (messageId: string) => void;
     onInspect: (messageId: string) => void;
+    onViewHtml: (htmlContent: string) => void;
     isContextAssemblyRunning?: boolean;
     isMemoryExtractionRunning?: boolean;
 }
@@ -36,6 +37,7 @@ const Message = ({
     onUpdate, 
     onRegenerate, 
     onInspect,
+    onViewHtml,
     isContextAssemblyRunning,
     isMemoryExtractionRunning 
 }: MessageProps) => {
@@ -50,6 +52,11 @@ const Message = ({
     
     const showProgressBar = isContextAssemblyRunning || isMemoryExtractionRunning;
     const progressText = isContextAssemblyRunning ? "Assembling Context..." : "Extracting Memories...";
+
+    const extractedHtml = useMemo(() => {
+        const match = message.content.match(/```html\n([\s\S]*?)\n```/);
+        return match ? match[1] : null;
+    }, [message.content]);
 
     useEffect(() => {
         try {
@@ -211,6 +218,7 @@ const Message = ({
                         onEdit={() => setIsEditing(true)}
                         onRegenerate={() => onRegenerate(message.id)}
                         onInspect={() => onInspect(message.id)}
+                        onViewHtml={extractedHtml ? () => onViewHtml(extractedHtml) : undefined}
                     />
                 </div>
                 <div className={`prose-custom w-full p-4 rounded-lg ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-700 text-gray-200 rounded-bl-none'}`}>

@@ -1,13 +1,20 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from 'react';
-import type { Conversation, Message, Contact, AppSettings } from '@/lib/types';
+import type { Conversation, Message, Contact, AppSettings, Prompt } from '@/lib/types';
 import { useLog } from './LogProvider';
 import { Content } from '@google/genai';
 
 export interface IStatus {
   currentAction: string;
   error: string | null;
+}
+
+interface ActiveWorkflowState {
+  prompt: Prompt;
+  userInputs: Record<string, string>;
+  currentStepIndex: number;
+  stepOutputs: Record<number, string>; // Key is step number (1-based)
 }
 
 interface AppContextType {
@@ -45,6 +52,8 @@ interface AppContextType {
     backgroundTaskCount: number;
     startBackgroundTask: () => void;
     endBackgroundTask: () => void;
+    startWorkflow: (prompt: Prompt, userInputs: Record<string, string>) => void;
+    activeWorkflow: ActiveWorkflowState | null;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -67,6 +76,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const isVisibleRef = useRef(true);
     const [fontSize, setFontSize] = useState('base');
     const [backgroundTaskCount, setBackgroundTaskCount] = useState(0);
+    const [activeWorkflow, setActiveWorkflow] = useState<ActiveWorkflowState | null>(null);
 
     const startBackgroundTask = useCallback(() => {
         setBackgroundTaskCount(prev => prev + 1);
@@ -386,6 +396,89 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, [currentConversation, messages, setStatus, log, startBackgroundTask, endBackgroundTask, fetchMessages]);
 
+    const executeNextWorkflowStep = useCallback(async (workflowState: ActiveWorkflowState) => {
+        const { prompt, userInputs, currentStepIndex, stepOutputs } = workflowState;
+        
+        if (!prompt.chain_definition || currentStepIndex >= prompt.chain_definition.length) {
+            log('Workflow finished.');
+            setActiveWorkflow(null);
+            return;
+        }
+
+        const currentStep = prompt.chain_definition[currentStepIndex];
+        log(`Executing workflow step ${currentStep.step}`, { promptId: currentStep.promptId });
+        
+        try {
+            // Fetch the single prompt for the current step
+            const promptRes = await fetch(`/api/prompts/${currentStep.promptId}`);
+            if (!promptRes.ok) throw new Error(`Could not fetch prompt for step ${currentStep.step}`);
+            const stepPrompt: Prompt = await promptRes.json();
+
+            let interpolatedContent = stepPrompt.content;
+
+            // Interpolate variables
+            for (const [variableName, mapping] of Object.entries(currentStep.inputMapping)) {
+                let value: string;
+                if (mapping.source === 'userInput') {
+                    value = userInputs[variableName];
+                } else {
+                    value = stepOutputs[mapping.step!];
+                }
+                if (value === undefined) {
+                    throw new Error(`Missing value for variable ${variableName} in step ${currentStep.step}`);
+                }
+                const regex = new RegExp(`{{\\s*${variableName}\\s*}}`, 'g');
+                interpolatedContent = interpolatedContent.replace(regex, value);
+            }
+
+            const stepMessage: Omit<Message, 'id' | 'createdAt' | 'conversationId'> = {
+                role: 'user',
+                content: interpolatedContent,
+            };
+
+            const { aiResponse } = await addMessage(stepMessage);
+
+            if (!aiResponse) {
+                throw new Error(`AI response was empty for step ${currentStep.step}. Halting workflow.`);
+            }
+
+            // Prepare for next step
+            const nextState: ActiveWorkflowState = {
+                ...workflowState,
+                currentStepIndex: currentStepIndex + 1,
+                stepOutputs: {
+                    ...stepOutputs,
+                    [currentStep.step]: aiResponse
+                }
+            };
+            setActiveWorkflow(nextState);
+            executeNextWorkflowStep(nextState); // Recursive call for the next step
+
+        } catch (error) {
+            const errorMessage = (error as Error).message;
+            setStatus({ error: `Workflow failed at step ${currentStep.step}: ${errorMessage}` });
+            log('Workflow step failed. Halting execution.', { step: currentStep.step, error: errorMessage }, 'error');
+            setActiveWorkflow(null); // Stop the workflow
+        }
+    }, [addMessage, log, setStatus]);
+
+    const startWorkflow = useCallback((prompt: Prompt, userInputs: Record<string, string>) => {
+        log('Starting new workflow.', { promptName: prompt.name });
+        if (!currentConversation) {
+            setStatus({ error: "Cannot start a workflow without an active conversation." });
+            return;
+        }
+        const initialState: ActiveWorkflowState = {
+            prompt,
+            userInputs,
+            currentStepIndex: 0,
+            stepOutputs: {}
+        };
+        setActiveWorkflow(initialState);
+        executeNextWorkflowStep(initialState);
+    }, [log, currentConversation, setStatus, executeNextWorkflowStep]);
+
+
     const toggleBookmark = useCallback(async (messageId: string) => {
         setStatus({ currentAction: "Updating bookmark..." });
         log(`Toggling bookmark for message: ${messageId}`);
@@ -637,6 +730,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [messages, currentConversation, log, setStatus]);
 
 
+    // FIX: The context value was incorrectly defined as an array `[]` instead of an object `{}`.
+    // This has been corrected to return an object that matches the `AppContextType`.
     const contextValue = useMemo(() => ({
         conversations,
         currentConversation,
@@ -672,6 +767,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         backgroundTaskCount,
         startBackgroundTask,
         endBackgroundTask,
+        startWorkflow,
+        activeWorkflow,
     }), [
         conversations, currentConversation, messages, setCurrentConversationById,
         updateCurrentConversation, createNewConversation, addMessage, toggleBookmark,
@@ -680,7 +777,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         generateConversationTitle, deleteMessage, updateMessage, regenerateAiResponse,
         regenerateUserPromptAndGetResponse, unreadConversations, clearMessages,
         changeFontSize, isSidebarOpen, setSidebarOpen, isLogPanelOpen, setLogPanelOpen,
-        backgroundTaskCount, startBackgroundTask, endBackgroundTask
+        backgroundTaskCount, startBackgroundTask, endBackgroundTask, startWorkflow, activeWorkflow
     ]);
 
     return (

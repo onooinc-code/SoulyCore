@@ -22,7 +22,7 @@ interface ChatInputProps {
 
 // FIX: Removed React.FC to allow for proper type inference with framer-motion props.
 const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
-    const { setStatus, setIsLoading } = useAppContext();
+    const { setStatus, startWorkflow } = useAppContext();
     const { log } = useLog();
     const [content, setContent] = useState('');
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -150,33 +150,6 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         setShowMentions(false);
     };
 
-    const executeChain = async (promptId: string, userInputs: Record<string, string>) => {
-        setIsLoading(true);
-        setStatus({ currentAction: "Executing workflow...", error: null });
-        log('Executing prompt chain.', { promptId, userInputs });
-        try {
-            const res = await fetch('/api/prompts/execute-chain', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ promptId, userInputs }),
-            });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.error || 'Failed to execute prompt chain.');
-            }
-            const { finalResponse } = await res.json();
-            log('Prompt chain executed successfully.', { finalResponse });
-            setContent(finalResponse);
-        } catch (error) {
-            const errorMessage = (error as Error).message;
-            setStatus({ error: errorMessage });
-            log('Error executing prompt chain.', { error: { message: errorMessage } }, 'error');
-        } finally {
-            setIsLoading(false);
-            setStatus({ currentAction: "" });
-        }
-    };
-
     const handlePromptSelect = (prompt: Prompt) => {
         setIsPromptsListOpen(false);
         setPromptSearchTerm('');
@@ -196,7 +169,7 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
                 setVariableModalState({ isOpen: true, prompt, variables: [...userInputVariables] });
             } else {
                 log('User selected a chained prompt with no user inputs.', { promptName: prompt.name });
-                executeChain(prompt.id, {});
+                startWorkflow(prompt, {});
                 setPendingPrompt(null);
             }
         } else { // 'single' prompt
@@ -220,7 +193,7 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         
         if (pendingPrompt.type === 'chain') {
             log('User submitted variables for a chained prompt.', { promptName: pendingPrompt.name });
-            executeChain(pendingPrompt.id, values);
+            startWorkflow(pendingPrompt, values);
         } else { // single
             log('User submitted variables for a single prompt.', { promptName: pendingPrompt.name });
             let finalContent = pendingPrompt.content;

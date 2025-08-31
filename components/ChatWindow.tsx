@@ -13,10 +13,16 @@ import { motion } from 'framer-motion';
 import { useLog } from './providers/LogProvider';
 import Header from './Header'; // Import the new Header component
 import dynamic from 'next/dynamic';
+import LoadingIndicator from './LoadingIndicator';
 
 const CognitiveInspectorModal = dynamic(() => import('./CognitiveInspectorModal'), {
     ssr: false,
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Inspector...</p></div>
+});
+
+const HtmlViewerModal = dynamic(() => import('./HtmlViewerModal'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Viewer...</p></div>
 });
 
 
@@ -34,7 +40,8 @@ const ChatWindow = () => {
         updateMessage,
         regenerateAiResponse,
         regenerateUserPromptAndGetResponse,
-        backgroundTaskCount
+        backgroundTaskCount,
+        activeWorkflow
     } = useAppContext();
     const { log } = useLog();
     
@@ -44,6 +51,8 @@ const ChatWindow = () => {
     const [summaryModalState, setSummaryModalState] = useState<{isOpen: boolean, text: string, isLoading: boolean}>({isOpen: false, text: '', isLoading: false});
     const [inspectorModalState, setInspectorModalState] = useState<{ isOpen: boolean; messageId: string | null }>({ isOpen: false, messageId: null });
     const [proactiveSuggestion, setProactiveSuggestion] = useState<string | null>(null);
+    const [htmlModalState, setHtmlModalState] = useState({ isOpen: false, content: '' });
+
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -113,6 +122,10 @@ const ChatWindow = () => {
         setProactiveSuggestion(null);
     };
 
+    const handleViewHtml = (htmlContent: string) => {
+        setHtmlModalState({ isOpen: true, content: htmlContent });
+    };
+
     const isDbError = status.error && /database|vercel|table|relation.+does not exist/i.test(status.error);
 
     const lastMessageIds = useMemo(() => {
@@ -141,11 +154,22 @@ const ChatWindow = () => {
                                         onUpdate={updateMessage}
                                         onRegenerate={() => handleRegenerate(msg.id)}
                                         onInspect={(messageId) => setInspectorModalState({ isOpen: true, messageId })}
-                                        isContextAssemblyRunning={isLoading && msg.role === 'user' && msg.id === lastMessageIds.user}
+                                        isContextAssemblyRunning={isLoading && msg.role === 'user' && msg.id === lastMessageIds.user && !activeWorkflow}
                                         isMemoryExtractionRunning={backgroundTaskCount > 0 && msg.role === 'model' && msg.id === lastMessageIds.model}
+                                        onViewHtml={handleViewHtml}
                                     />
                                 </div>
                             ))}
+                            {isLoading && activeWorkflow && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex items-center justify-center py-4 gap-4 text-sm text-gray-400"
+                                >
+                                    <LoadingIndicator />
+                                    <span>Executing workflow step {activeWorkflow.currentStepIndex + 1} of {activeWorkflow.prompt.chain_definition?.length}...</span>
+                                </motion.div>
+                            )}
                              <div ref={messagesEndRef} />
                         </div>
                     ) : (
@@ -233,6 +257,11 @@ const ChatWindow = () => {
                 isOpen={inspectorModalState.isOpen}
                 onClose={() => setInspectorModalState({ isOpen: false, messageId: null })}
                 messageId={inspectorModalState.messageId}
+            />
+            <HtmlViewerModal 
+                isOpen={htmlModalState.isOpen}
+                onClose={() => setHtmlModalState({ isOpen: false, content: '' })}
+                htmlContent={htmlModalState.content}
             />
         </div>
     );

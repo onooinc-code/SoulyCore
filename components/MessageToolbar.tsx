@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CopyIcon, BookmarkIcon, BookmarkFilledIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon, DotsHorizontalIcon, BeakerIcon } from './Icons';
+import { CopyIcon, BookmarkIcon, BookmarkFilledIcon, SummarizeIcon, CollapseIcon, ExpandIcon, CheckIcon, EditIcon, TrashIcon, RefreshIcon, TextAlignLeftIcon, TextAlignRightIcon, DotsHorizontalIcon, BeakerIcon, EyeIcon } from './Icons';
 import { useLog } from './providers/LogProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,10 +18,11 @@ interface MessageToolbarProps {
     onDelete: () => void;
     onRegenerate: () => void;
     onInspect: () => void;
+    onViewHtml?: () => void;
 }
 
 const MessageToolbar = ({
-    isBookmarked, isCollapsed, isUser, onCopy, onBookmark, onSummarize, onToggleCollapse, onSetAlign, onEdit, onDelete, onRegenerate, onInspect
+    isBookmarked, isCollapsed, isUser, onCopy, onBookmark, onSummarize, onToggleCollapse, onSetAlign, onEdit, onDelete, onRegenerate, onInspect, onViewHtml
 }: MessageToolbarProps) => {
     const [copied, setCopied] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,6 +51,10 @@ const MessageToolbar = ({
         { id: 'bookmark', icon: isBookmarked ? BookmarkFilledIcon : BookmarkIcon, action: onBookmark, title: 'Bookmark this message', className: isBookmarked ? 'text-yellow-400' : 'hover:text-yellow-400' },
         { id: 'regenerate', icon: RefreshIcon, action: onRegenerate, title: isUser ? 'Rewrite prompt and get new response' : 'Get a new response', className: 'hover:text-white' },
     ];
+    
+    if (onViewHtml) {
+        mainActions.push({ id: 'viewHtml', icon: EyeIcon, action: onViewHtml, title: 'Render HTML content', className: 'hover:text-white' });
+    }
 
     const menuActions = [
         { id: 'summarize', icon: SummarizeIcon, action: onSummarize, title: 'Summarize message' },

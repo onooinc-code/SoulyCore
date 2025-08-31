@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { Prompt } from '@/lib/types';
 
+// GET a single prompt by ID
+export async function GET(req: NextRequest, { params }: { params: { promptId: string } }) {
+    try {
+        const { promptId } = params;
+        const { rows } = await sql<Prompt>`SELECT * FROM prompts WHERE id = ${promptId};`;
+
+        if (rows.length === 0) {
+            return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
+        }
+        
+        return NextResponse.json(rows[0] as Prompt);
+    } catch (error) {
+        console.error(`Failed to fetch prompt ${params.promptId}:`, error);
+        const errorDetails = { message: (error as Error).message, stack: (error as Error).stack };
+        return NextResponse.json({ error: 'Internal Server Error', details: errorDetails }, { status: 500 });
+    }
+}
+
+
 // PUT (update) a prompt
 export async function PUT(req: NextRequest, { params }: { params: { promptId: string } }) {
     try {

@@ -248,7 +248,7 @@ export const KeyboardIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
 
 export const ChatBubbleLeftRightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72.15c.58.55.93.133.93 2.151v.043c0 .814-.622 1.48-1.42 1.58a17.931 17.931 0 01-5.744 0c-.798-.1-1.42-.766-1.42-1.58v-.043c0-1.018.35-1.601.93-2.151l-3.72-.15c-1.133-.093-1.98-1.057-1.98-2.193v-4.286c0-.97.616-1.813 1.5-2.097M16.5 9.75c0 .621-.504 1.125-1.125 1.125H8.625c-.621 0-1.125-.504-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h6.75c.621 0 1.125.504 1.125 1.125v1.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72.15c.58.55.93.133.93 2.151v.043c0 .814-.622 1.48-1.42 1.58a17.931 17.931 0 01-5.744 0c-.798-.1-1.42-.766-1.42-1.58v-.043c0-1.018.35-1.601.93-2.151l-3.72-.15c-1.133-.093-1.98-1.057-1.98-2.193v-4.286c0-.97.616-1.813 1.5-2.097M16.5 9.75c0 .621-.504 1.125-1.125 1.125H8.625c-.621 0-1.125-.504-1.125-1.125v-1.5c0-.621.504 1.125 1.125-1.125h6.75c.621 0 1.125.504 1.125 1.125v1.5z" />
     </svg>
 );
 
@@ -291,5 +291,12 @@ export const RocketLaunchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props)
 export const ServerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 00-.12-1.03l-2.268-9.64a3.375 3.375 0 00-3.285-2.602H7.923a3.375 3.375 0 00-3.285 2.602l-2.268 9.64a4.5 4.5 0 00-.12 1.03v.228m15.457 0a4.5 4.5 0 01-6.32 0M2.25 17.25a4.5 4.5 0 006.32 0m0 0l3.18-3.18a4.5 4.5 0 016.32 0l3.18 3.18m-3.18-3.18l-3.18 3.18" />
+    </svg>
+);
+
+export const EyeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.432 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
 );
