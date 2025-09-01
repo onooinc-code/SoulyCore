@@ -1,11 +1,99 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from './providers/AppProvider';
-import { SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LogIcon, MinusIcon, PlusIcon } from './Icons';
+import { SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LogIcon, MinusIcon, PlusIcon, DocumentTextIcon } from './Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import ToolbarButton from './ToolbarButton';
+import type { VersionHistory } from '@/lib/types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import dynamic from 'next/dynamic';
+
+const VersionLogModal = dynamic(() => import('./VersionLogModal'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Version History...</p></div>
+});
+
+
+const VersionCard = () => {
+    const [currentVersion, setCurrentVersion] = useState<VersionHistory | null>(null);
+    const [isHovered, setIsHovered] = useState(false);
+    const [isNew, setIsNew] = useState(false);
+    const [isLogOpen, setIsLogOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchVersion = async () => {
+            try {
+                const res = await fetch('/api/version/current');
+                if (res.ok) {
+                    const data = await res.json();
+                    setCurrentVersion(data);
+                    const lastSeenVersion = localStorage.getItem('lastSeenVersion');
+                    if (lastSeenVersion !== data.version) {
+                        setIsNew(true);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch current version", error);
+            }
+        };
+        fetchVersion();
+    }, []);
+
+    const handleMouseEnter = () => {
+        setIsHovered(true);
+        if (isNew && currentVersion) {
+            localStorage.setItem('lastSeenVersion', currentVersion.version);
+            setIsNew(false);
+        }
+    };
+
+    if (!currentVersion) return null;
+
+    const isToday = new Date(currentVersion.release_date).toDateString() === new Date().toDateString();
+
+    return (
+        <>
+            <motion.div
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={() => setIsHovered(false)}
+                className="relative"
+            >
+                <div className={`relative px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-colors duration-300 ${isToday ? 'bg-indigo-600/80 text-indigo-100' : 'bg-gray-700/80 text-gray-300'}`}>
+                    v{currentVersion.version}
+                    {isNew && (
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                        </span>
+                    )}
+                </div>
+                <AnimatePresence>
+                    {isHovered && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full right-0 mt-2 w-72 bg-gray-900/80 backdrop-blur-md border border-white/10 rounded-lg shadow-2xl p-4 z-20"
+                        >
+                            <h4 className="font-bold text-white">Version {currentVersion.version}</h4>
+                            <p className="text-xs text-gray-400 mb-2">Released: {new Date(currentVersion.release_date).toLocaleDateString()}</p>
+                            <div className="prose-custom text-xs max-h-40 overflow-y-auto pr-2">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentVersion.changes}</ReactMarkdown>
+                            </div>
+                            <button onClick={() => setIsLogOpen(true)} className="mt-3 w-full text-center text-xs text-indigo-300 hover:underline">View Full History</button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+            <VersionLogModal isOpen={isLogOpen} onClose={() => setIsLogOpen(false)} />
+        </>
+    );
+};
+
 
 const Header = () => {
     const { 
@@ -17,6 +105,7 @@ const Header = () => {
         isSidebarOpen,
         setSidebarOpen,
         setLogPanelOpen,
+        setResponseViewerOpen,
     } = useAppContext();
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState('');
@@ -61,9 +150,9 @@ const Header = () => {
             ></div>
 
             <div className="flex items-center justify-between w-full max-w-4xl mx-auto gap-4">
+                {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                 {!isSidebarOpen && (
                     <div className="flex-shrink-0">
-                        {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                         <ToolbarButton onClick={() => setSidebarOpen(true)} title="Show Sidebar" color="gray">
                             <SidebarLeftIcon className="w-5 h-5 transform rotate-180" />
                         </ToolbarButton>
@@ -99,34 +188,40 @@ const Header = () => {
                     </AnimatePresence>
                 </div>
                 <div className="flex items-center justify-end gap-2 flex-shrink-0">
+                    <VersionCard />
+                    <div className="w-px h-6 bg-gray-600 mx-1"></div>
                     {currentConversation && (
                         <>
-                            {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
+                            {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                             <ToolbarButton onClick={handleGenerateTitle} title="Generate new title with AI" color="purple">
                                 <SparklesIcon className="w-5 h-5" />
                             </ToolbarButton>
-                            {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
+                            {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                             <ToolbarButton onClick={handleEdit} title="Rename conversation" color="blue">
                                 <EditIcon className="w-5 h-5" />
                             </ToolbarButton>
-                            {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
+                            {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                             <ToolbarButton onClick={handleDelete} title="Delete conversation" color="red">
                                 <TrashIcon className="w-5 h-5" />
                             </ToolbarButton>
                             <div className="w-px h-6 bg-gray-600 mx-1"></div>
                         </>
                     )}
-                    {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
+                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                     <ToolbarButton onClick={() => changeFontSize('decrease')} title="Decrease font size" color="gray">
                         <MinusIcon className="w-5 h-5" />
                     </ToolbarButton>
-                    {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
+                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                     <ToolbarButton onClick={() => changeFontSize('increase')} title="Increase font size" color="gray">
                         <PlusIcon className="w-5 h-5" />
                     </ToolbarButton>
-                    {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
+                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                     <ToolbarButton onClick={() => setLogPanelOpen(prev => !prev)} title="Toggle Log Panel" color="cyan">
                         <LogIcon className="w-5 h-5" />
+                    </ToolbarButton>
+                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
+                    <ToolbarButton onClick={() => setResponseViewerOpen(true)} title="View Last Response Report" color="purple">
+                        <DocumentTextIcon className="w-5 h-5" />
                     </ToolbarButton>
                 </div>
             </div>

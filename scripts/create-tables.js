@@ -283,6 +283,17 @@ async function createTables() {
         `;
         console.log("Table 'hedra_goals' created or already exists.", hedraGoalsTable.command);
 
+        const versionHistoryTable = await sql`
+            CREATE TABLE IF NOT EXISTS version_history (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                version VARCHAR(255) NOT NULL UNIQUE,
+                release_date TIMESTAMP WITH TIME ZONE NOT NULL,
+                changes TEXT,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'version_history' created or already exists.", versionHistoryTable.command);
+
 
         // Insert default settings if they don't exist
         await sql`

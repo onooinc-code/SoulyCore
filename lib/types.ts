@@ -231,3 +231,11 @@ export interface HedraGoal {
     content: string;
     lastUpdatedAt: Date;
 }
+
+export interface VersionHistory {
+    id: string;
+    version: string;
+    release_date: Date;
+    changes: string; // Markdown content
+    createdAt: Date;
+}

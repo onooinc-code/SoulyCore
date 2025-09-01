@@ -254,7 +254,9 @@ const Sidebar = ({
                      ))}
                 </div>
                 <div className="flex items-center justify-around p-1">
-                    {/* FIX: Wrapped ToolbarButton in a div with the key to resolve a TypeScript error where the 'key' prop was being incorrectly checked against ToolbarButtonProps. */}
+{/*
+FIX: The ToolbarButton component expects a 'children' prop, which was missing. The item's icon is now correctly passed as a child to the component, resolving the TypeScript error.
+*/}
                     {toolbarItems.map(item => (
                         <div key={item.label}>
                             <ToolbarButton onClick={item.action} title={item.tooltip} color={item.color}>
