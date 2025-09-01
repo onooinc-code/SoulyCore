@@ -15,7 +15,7 @@ const DashboardPanel = ({ title, children, isCollapsedOverride }: DashboardPanel
     const [isFullscreen, setIsFullscreen] = useState(false);
     
     useEffect(() => {
-        if (isCollapsedOverride !== null) {
+        if (typeof isCollapsedOverride === 'boolean') {
             setIsCollapsed(isCollapsedOverride);
         }
     }, [isCollapsedOverride]);
