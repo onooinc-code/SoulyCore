@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '@/components/providers/AppProvider';
-import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon, SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LightbulbIcon, PromptsIcon, SearchIcon, BrainIcon } from '@/components/Icons';
+import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIcon, LogIcon, SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LightbulbIcon, PromptsIcon, SearchIcon, BrainIcon, DashboardIcon } from '@/components/Icons';
 import { useLog } from './providers/LogProvider';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Conversation } from '@/lib/types';
@@ -48,6 +48,7 @@ interface SidebarProps {
     setContactsHubOpen: (isOpen: boolean) => void;
     setDevCenterOpen: (isOpen: boolean) => void;
     setBrainCenterOpen: (isOpen: boolean) => void;
+    setDashboardCenterOpen: (isOpen: boolean) => void;
     setGlobalSettingsOpen: (isOpen: boolean) => void;
     setBookmarksOpen: (isOpen: boolean) => void;
     setPromptsHubOpen: (isOpen: boolean) => void;
@@ -61,6 +62,7 @@ const Sidebar = ({
     setContactsHubOpen, 
     setDevCenterOpen,
     setBrainCenterOpen,
+    setDashboardCenterOpen,
     setGlobalSettingsOpen,
     setBookmarksOpen,
     setPromptsHubOpen,
@@ -140,6 +142,7 @@ const Sidebar = ({
 
 
     const menuItems = [
+        { label: 'Dashboard', icon: DashboardIcon, action: () => { log('User opened Dashboard Center.'); setDashboardCenterOpen(true); }, tooltip: "Open the main Dashboard Center." },
         { label: 'Brain Center', icon: BrainIcon, action: () => { log('User opened Brain Center.'); setBrainCenterOpen(true); }, tooltip: "Open the Brain Center to manage the AI's core cognitive functions." },
         { label: 'Memory Center', icon: MemoryIcon, action: () => { log('User opened Memory Center.'); setMemoryCenterOpen(true); }, tooltip: "Open the Memory Center to view and manage the AI's structured knowledge (entities). (Cmd+K)" },
         { label: 'Contacts Hub', icon: UsersIcon, action: () => { log('User opened Contacts Hub.'); setContactsHubOpen(true); }, tooltip: "Open the Contacts Hub to add, edit, and manage people and organizations the AI knows about." },

@@ -261,6 +261,28 @@ async function createTables() {
             );
         `;
         console.log("Table 'pipeline_run_steps' created or already exists.", pipelineRunStepsTable.command);
+        
+        const documentationsTable = await sql`
+            CREATE TABLE IF NOT EXISTS documentations (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                doc_key VARCHAR(255) NOT NULL UNIQUE,
+                title VARCHAR(255) NOT NULL,
+                content TEXT,
+                "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'documentations' created or already exists.", documentationsTable.command);
+
+        const hedraGoalsTable = await sql`
+            CREATE TABLE IF NOT EXISTS hedra_goals (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                section_key VARCHAR(255) NOT NULL UNIQUE,
+                content TEXT,
+                "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'hedra_goals' created or already exists.", hedraGoalsTable.command);
+
 
         // Insert default settings if they don't exist
         await sql`

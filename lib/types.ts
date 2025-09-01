@@ -216,3 +216,18 @@ export interface PipelineRunStep {
     end_time: Date | null;
     duration_ms: number | null;
 }
+
+export interface Documentation {
+    id: string;
+    doc_key: string;
+    title: string;
+    content: string;
+    lastUpdatedAt: Date;
+}
+
+export interface HedraGoal {
+    id: string;
+    section_key: 'main_goal' | 'ideas' | 'status';
+    content: string;
+    lastUpdatedAt: Date;
+}

@@ -118,7 +118,14 @@ const CognitiveInspectorModal = ({ isOpen, onClose, messageId }: CognitiveInspec
                  <div className="bg-gray-900/50 p-4 rounded-lg flex flex-col">
                     <h3 className="font-semibold text-lg mb-2 text-green-400">Execution Steps</h3>
                     <div className="space-y-3 overflow-y-auto flex-1 pr-2">
-                        {pipelineSteps.map(step => <PipelineStep key={step.id} step={step} />)}
+                        {/* FIX: Wrapped the iterated component in a div with the key to resolve a TypeScript error.
+                            The 'key' prop is a React-specific prop for list reconciliation and is not passed to the component,
+                            but the type system was flagging it as an unexpected prop. */}
+                        {pipelineSteps.map(step => (
+                            <div key={step.id}>
+                                <PipelineStep step={step} />
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

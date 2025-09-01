@@ -15,15 +15,18 @@ interface EndpointNavigatorPanelProps {
 const EndpointNavigatorPanel = ({ endpoints, onSelectEndpoint, selectedEndpointId }: EndpointNavigatorPanelProps) => {
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+    // FIX: Used the generic parameter on `reduce` to improve type inference. This ensures
+    // TypeScript correctly understands that `groupedEndpoints` is a record of string to `ApiEndpoint[]`,
+    // resolving subsequent errors where properties like `.length` and `.map` were not found on type 'unknown'.
     const groupedEndpoints = useMemo(() => {
-        return endpoints.reduce((acc, endpoint) => {
+        return endpoints.reduce<Record<string, ApiEndpoint[]>>((acc, endpoint) => {
             const groupName = endpoint.group_name;
             if (!acc[groupName]) {
                 acc[groupName] = [];
             }
             acc[groupName].push(endpoint);
             return acc;
-        }, {} as Record<string, ApiEndpoint[]>);
+        }, {});
     }, [endpoints]);
     
     // Default all groups to open on first render

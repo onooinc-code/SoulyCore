@@ -13,6 +13,7 @@ import {
     RefreshIcon,
     MinusIcon,
     BrainIcon,
+    DashboardIcon,
 } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -42,6 +43,11 @@ const BrainCenter = dynamic(() => import('@/components/brain_center/BrainCenter'
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Brain Center...</p></div>
 });
 
+const DashboardCenter = dynamic(() => import('@/components/dashboard/DashboardCenter'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Dashboard...</p></div>
+});
+
 const GlobalSettingsModal = dynamic(() => import('@/components/GlobalSettingsModal'), {
     ssr: false,
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Settings...</p></div>
@@ -67,7 +73,7 @@ const PromptsHub = dynamic(() => import('@/components/PromptsHub'), {
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Prompts Hub...</p></div>
 });
 
-type ModalType = 'contactsHub' | 'memoryCenter' | 'devCenter' | 'globalSettings' | 'bookmarks' | 'addKnowledge' | 'shortcuts' | 'promptsHub' | 'brainCenter' | null;
+type ModalType = 'contactsHub' | 'memoryCenter' | 'devCenter' | 'globalSettings' | 'bookmarks' | 'addKnowledge' | 'shortcuts' | 'promptsHub' | 'brainCenter' | 'dashboardCenter' | null;
 
 const App = () => {
     const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -128,6 +134,7 @@ const App = () => {
         { label: 'Clear Messages', action: () => currentConversation && window.confirm('Are you sure you want to clear all messages in this conversation?') && clearMessages(currentConversation.id), icon: ClearIcon, disabled: !currentConversation || messages.length === 0 },
         { label: 'Delete Conversation', action: () => currentConversation && window.confirm('Are you sure you want to delete this conversation?') && deleteConversation(currentConversation.id), icon: TrashIcon, disabled: !currentConversation },
         { isSeparator: true },
+        { label: 'Open Dashboard', action: () => setActiveModal('dashboardCenter'), icon: DashboardIcon },
         { label: 'Add Knowledge Snippet', action: () => setActiveModal('addKnowledge'), icon: KnowledgeIcon },
         { label: 'Open Brain Center', action: () => setActiveModal('brainCenter'), icon: BrainIcon },
         { label: 'Open Memory Center', action: () => setActiveModal('memoryCenter'), icon: MemoryIcon },
@@ -157,6 +164,7 @@ const App = () => {
                             setContactsHubOpen={() => setActiveModal('contactsHub')}
                             setDevCenterOpen={() => setActiveModal('devCenter')}
                             setBrainCenterOpen={() => setActiveModal('brainCenter')}
+                            setDashboardCenterOpen={() => setActiveModal('dashboardCenter')}
                             setGlobalSettingsOpen={() => setActiveModal('globalSettings')}
                             setBookmarksOpen={() => setActiveModal('bookmarks')}
                             setPromptsHubOpen={() => setActiveModal('promptsHub')}
@@ -179,6 +187,7 @@ const App = () => {
             {activeModal === 'memoryCenter' && <MemoryCenter setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'devCenter' && <DevCenter setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'brainCenter' && <BrainCenter setIsOpen={() => setActiveModal(null)} />}
+            {activeModal === 'dashboardCenter' && <DashboardCenter setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'globalSettings' && <GlobalSettingsModal setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'bookmarks' && <BookmarksModal isOpen={activeModal === 'bookmarks'} setIsOpen={() => setActiveModal(null)} />}
             {activeModal === 'addKnowledge' && <AddKnowledgeModal isOpen={activeModal === 'addKnowledge'} onClose={() => setActiveModal(null)} />}
