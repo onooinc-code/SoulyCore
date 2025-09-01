@@ -1,9 +1,8 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from './providers/AppProvider';
-import { SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LogIcon, MinusIcon, PlusIcon, DocumentTextIcon } from './Icons';
+import { SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LogIcon, MinusIcon, PlusIcon } from './Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import ToolbarButton from './ToolbarButton';
 import type { VersionHistory } from '@/lib/types';
@@ -105,7 +104,6 @@ const Header = () => {
         isSidebarOpen,
         setSidebarOpen,
         setLogPanelOpen,
-        setResponseViewerOpen,
     } = useAppContext();
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState('');
@@ -218,10 +216,6 @@ const Header = () => {
                     {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                     <ToolbarButton onClick={() => setLogPanelOpen(prev => !prev)} title="Toggle Log Panel" color="cyan">
                         <LogIcon className="w-5 h-5" />
-                    </ToolbarButton>
-                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
-                    <ToolbarButton onClick={() => setResponseViewerOpen(true)} title="View Last Response Report" color="purple">
-                        <DocumentTextIcon className="w-5 h-5" />
                     </ToolbarButton>
                 </div>
             </div>

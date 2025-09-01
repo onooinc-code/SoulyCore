@@ -49,8 +49,6 @@ interface AppContextType {
     setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isLogPanelOpen: boolean;
     setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    isResponseViewerOpen: boolean;
-    setResponseViewerOpen: React.Dispatch<React.SetStateAction<boolean>>;
     backgroundTaskCount: number;
     startBackgroundTask: () => void;
     endBackgroundTask: () => void;
@@ -73,7 +71,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isLogPanelOpen, setLogPanelOpen] = useState(false);
-    const [isResponseViewerOpen, setResponseViewerOpen] = useState(false);
 
     const [unreadConversations, setUnreadConversations] = useState(new Set<string>());
     const isVisibleRef = useRef(true);
@@ -771,8 +768,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setSidebarOpen,
         isLogPanelOpen,
         setLogPanelOpen,
-        isResponseViewerOpen,
-        setResponseViewerOpen,
         backgroundTaskCount,
         startBackgroundTask,
         endBackgroundTask,
@@ -786,7 +781,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         generateConversationTitle, deleteMessage, updateMessage, regenerateAiResponse,
         regenerateUserPromptAndGetResponse, unreadConversations, clearMessages,
         changeFontSize, isSidebarOpen, setSidebarOpen, isLogPanelOpen, setLogPanelOpen,
-        isResponseViewerOpen, setResponseViewerOpen, backgroundTaskCount, startBackgroundTask, 
+        backgroundTaskCount, startBackgroundTask, 
         endBackgroundTask, startWorkflow, activeWorkflow
     ]);
 

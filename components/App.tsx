@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -73,11 +71,6 @@ const AddKnowledgeModal = dynamic(() => import('@/components/AddKnowledgeModal')
     loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading...</p></div>
 });
 
-const ResponseViewerModal = dynamic(() => import('@/components/ResponseViewerModal'), {
-    ssr: false,
-    loading: () => <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><p className="text-white">Loading Viewer...</p></div>
-});
-
 
 // FIX: Reconstructed the missing App component, which is the root of the application's UI.
 // This component manages the visibility of all major modals and panels, wires up keyboard shortcuts,
@@ -91,8 +84,6 @@ export const App = () => {
         setSidebarOpen, 
         isLogPanelOpen,
         setLogPanelOpen,
-        isResponseViewerOpen,
-        setResponseViewerOpen,
         changeFontSize
     } = useAppContext();
 
@@ -209,7 +200,6 @@ export const App = () => {
                 {isPromptsHubOpen && <PromptsHub setIsOpen={setPromptsHubOpen} />}
                 {isShortcutsModalOpen && <ShortcutsModal isOpen={isShortcutsModalOpen} onClose={() => setShortcutsModalOpen(false)} />}
                 {isAddKnowledgeModalOpen && <AddKnowledgeModal isOpen={isAddKnowledgeModalOpen} onClose={() => setAddKnowledgeModalOpen(false)} />}
-                {isResponseViewerOpen && <ResponseViewerModal isOpen={isResponseViewerOpen} onClose={() => setResponseViewerOpen(false)} />}
                 
                 <ContextMenu
                     isOpen={contextMenu.isOpen}
