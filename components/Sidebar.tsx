@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -253,10 +254,13 @@ const Sidebar = ({
                      ))}
                 </div>
                 <div className="flex items-center justify-around p-1">
+                    {/* FIX: Wrapped ToolbarButton in a div with the key to resolve a TypeScript error where the 'key' prop was being incorrectly checked against ToolbarButtonProps. */}
                     {toolbarItems.map(item => (
-                        <ToolbarButton key={item.label} onClick={item.action} title={item.tooltip} color={item.color}>
-                            <item.icon className="w-5 h-5" />
-                        </ToolbarButton>
+                        <div key={item.label}>
+                            <ToolbarButton onClick={item.action} title={item.tooltip} color={item.color}>
+                                <item.icon className="w-5 h-5" />
+                            </ToolbarButton>
+                        </div>
                     ))}
                 </div>
             </div>

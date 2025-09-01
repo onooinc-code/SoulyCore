@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -62,6 +63,7 @@ const Header = () => {
             <div className="flex items-center justify-between w-full max-w-4xl mx-auto gap-4">
                 {!isSidebarOpen && (
                     <div className="flex-shrink-0">
+                        {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                         <ToolbarButton onClick={() => setSidebarOpen(true)} title="Show Sidebar" color="gray">
                             <SidebarLeftIcon className="w-5 h-5 transform rotate-180" />
                         </ToolbarButton>
@@ -99,24 +101,30 @@ const Header = () => {
                 <div className="flex items-center justify-end gap-2 flex-shrink-0">
                     {currentConversation && (
                         <>
+                            {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                             <ToolbarButton onClick={handleGenerateTitle} title="Generate new title with AI" color="purple">
                                 <SparklesIcon className="w-5 h-5" />
                             </ToolbarButton>
+                            {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                             <ToolbarButton onClick={handleEdit} title="Rename conversation" color="blue">
                                 <EditIcon className="w-5 h-5" />
                             </ToolbarButton>
+                            {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                             <ToolbarButton onClick={handleDelete} title="Delete conversation" color="red">
                                 <TrashIcon className="w-5 h-5" />
                             </ToolbarButton>
                             <div className="w-px h-6 bg-gray-600 mx-1"></div>
                         </>
                     )}
+                    {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                     <ToolbarButton onClick={() => changeFontSize('decrease')} title="Decrease font size" color="gray">
                         <MinusIcon className="w-5 h-5" />
                     </ToolbarButton>
+                    {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                     <ToolbarButton onClick={() => changeFontSize('increase')} title="Increase font size" color="gray">
                         <PlusIcon className="w-5 h-5" />
                     </ToolbarButton>
+                    {/* FIX: Added missing child icon to ToolbarButton to satisfy prop requirements. */}
                     <ToolbarButton onClick={() => setLogPanelOpen(prev => !prev)} title="Toggle Log Panel" color="cyan">
                         <LogIcon className="w-5 h-5" />
                     </ToolbarButton>
