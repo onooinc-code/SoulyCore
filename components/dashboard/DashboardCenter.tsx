@@ -62,6 +62,7 @@ const DashboardCenter = ({ setIsOpen }: DashboardCenterProps) => {
                         <StatsPanel />
                     </DashboardPanel>
 
+                    {/* FIX: Added the missing child components to the `DashboardPanel` instances. The self-closing tags were causing errors as the component requires children. */}
                     <DashboardPanel title="Project Documentations" isCollapsedOverride={allPanelsCollapsed}>
                         <DocumentationPanel />
                     </DashboardPanel>

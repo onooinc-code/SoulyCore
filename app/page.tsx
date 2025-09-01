@@ -1,4 +1,4 @@
-import App from '@/components/App';
+import { App } from '@/components/App';
 import { AppProvider } from '@/components/providers/AppProvider';
 import { LogProvider } from '@/components/providers/LogProvider';
 
