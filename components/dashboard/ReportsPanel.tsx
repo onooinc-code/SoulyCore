@@ -8,23 +8,27 @@ const ReportsPanel = () => {
     const reports = [
         { id: 1, title: "Weekly Usage Summary", date: "2024-07-15" },
         { id: 2, title: "Memory Growth Analysis", date: "2024-07-14" },
+        { id: 3, title: "Most Used Prompts", date: "2024-07-12" },
+        { id: 4, title: "API Cost Breakdown", date: "2024-07-11" },
     ];
     return (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
            {reports.map(report => (
-                 <div key={report.id} className="bg-gray-900/50 p-3 rounded-lg flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <DocumentTextIcon className="w-5 h-5 text-gray-400" />
-                        <div>
-                            <h4 className="font-semibold text-gray-200">{report.title}</h4>
-                            <p className="text-xs text-gray-500">Generated: {report.date}</p>
+                 <div key={report.id} className="bg-gray-900/50 p-4 rounded-lg flex flex-col justify-between h-36">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <DocumentTextIcon className="w-6 h-6 text-gray-400" />
+                            <h4 className="font-semibold text-gray-200 flex-1">{report.title}</h4>
                         </div>
+                        <p className="text-xs text-gray-500">Generated: {report.date}</p>
                     </div>
-                    <button className="px-3 py-1 bg-gray-700 text-xs rounded-md hover:bg-gray-600">View</button>
+                    <div className="flex justify-end mt-2">
+                        <button className="px-3 py-1 bg-gray-700 text-xs rounded-md hover:bg-gray-600">View</button>
+                    </div>
                  </div>
             ))}
              {reports.length === 0 && (
-                <p className="text-center text-sm text-gray-500 py-4">No reports generated yet.</p>
+                <p className="text-center text-sm text-gray-500 py-4 md:col-span-2">No reports generated yet.</p>
             )}
         </div>
     );

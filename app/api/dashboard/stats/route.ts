@@ -7,15 +7,19 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
     try {
         const [
-            conversationCount,
+            conversationStats,
             messageCount,
             pipelineRunStats,
             pineconeStats,
             entityCount,
             contactCount,
-            featureStats
+            featureStats,
+            logCount,
+            testRunCount,
+            promptCount,
+            brainCount
         ] = await Promise.all([
-            sql`SELECT COUNT(*) FROM conversations;`,
+            sql`SELECT COUNT(*) as total_convos, AVG(msg_count) as avg_msgs_per_convo FROM (SELECT c.id, COUNT(m.id) as msg_count FROM conversations c LEFT JOIN messages m ON c.id = m."conversationId" GROUP BY c.id) as convo_msgs;`,
             sql`SELECT COUNT(*) FROM messages;`,
             sql`SELECT 
                 pipeline_type, 
@@ -27,12 +31,19 @@ export async function GET(req: NextRequest) {
             knowledgeBaseIndex.describeIndexStats(),
             sql`SELECT COUNT(*) FROM entities;`,
             sql`SELECT COUNT(*) FROM contacts;`,
-            sql`SELECT status, COUNT(*)::int as count FROM features GROUP BY status;`
+            sql`SELECT status, COUNT(*)::int as count FROM features GROUP BY status;`,
+            sql`SELECT COUNT(*) FROM logs;`,
+            sql`SELECT COUNT(*) FROM endpoint_test_logs;`,
+            sql`SELECT COUNT(*) FROM prompts;`,
+            sql`SELECT COUNT(*) FROM brains;`
         ]);
+
+        const totalFeatures = featureStats.rows.reduce((acc, r) => acc + r.count, 0);
 
         const stats = {
             conversations: {
-                total: parseInt(conversationCount.rows[0].count, 10),
+                total: parseInt(conversationStats.rows[0].total_convos, 10),
+                avgMessages: parseFloat(conversationStats.rows[0].avg_msgs_per_convo || 0).toFixed(1),
             },
             messages: {
                 total: parseInt(messageCount.rows[0].count, 10),
@@ -53,14 +64,16 @@ export async function GET(req: NextRequest) {
                 semanticVectors: pineconeStats.totalRecordCount || 0,
                 structuredEntities: parseInt(entityCount.rows[0].count, 10),
                 contacts: parseInt(contactCount.rows[0].count, 10),
+                brains: parseInt(brainCount.rows[0].count, 10),
             },
             project: {
+                featuresTracked: totalFeatures,
                 featuresCompleted: featureStats.rows.find(r => r.status === '✅ Completed')?.count || 0,
-                featuresInProgress: featureStats.rows.reduce((acc, r) => {
-                    if (r.status !== '✅ Completed' && r.status !== '⚪ Planned') return acc + r.count;
-                    return acc;
-                }, 0),
-                 featuresPlanned: featureStats.rows.find(r => r.status === '⚪ Planned')?.count || 0,
+                prompts: parseInt(promptCount.rows[0].count, 10),
+            },
+            system: {
+                logs: parseInt(logCount.rows[0].count, 10),
+                apiTestsRun: parseInt(testRunCount.rows[0].count, 10),
             }
         };
 

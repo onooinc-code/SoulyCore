@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { BeakerIcon } from '../Icons';
+import { BeakerIcon, RefreshIcon, TrashIcon, ArrowDownOnSquareIcon } from '../Icons';
 import { useLog } from '../providers/LogProvider';
 
 interface ActionButtonProps {
@@ -25,13 +25,20 @@ const ActionButton = ({ title, description, action, icon }: ActionButtonProps) =
     };
 
     return (
-        <div className="bg-gray-900/50 p-3 rounded-lg">
-            <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-600/20 text-indigo-300 rounded-full">{icon}</div>
-                <div className="flex-1">
+        <div className="bg-gray-900/50 p-4 rounded-lg flex flex-col justify-between h-36">
+            <div>
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-indigo-600/20 text-indigo-300 rounded-full">{icon}</div>
                     <h4 className="font-semibold text-gray-200">{title}</h4>
-                    <p className="text-xs text-gray-400">{description}</p>
                 </div>
+                <p className="text-xs text-gray-400">{description}</p>
+            </div>
+            <div className="flex justify-between items-center mt-2">
+                {result ? (
+                    <p className="text-xs text-green-300 p-1 flex-1 text-center">{result}</p>
+                ) : (
+                    <div/> 
+                )}
                 <button 
                     onClick={handleClick}
                     disabled={isLoading}
@@ -40,7 +47,6 @@ const ActionButton = ({ title, description, action, icon }: ActionButtonProps) =
                     {isLoading ? 'Running...' : 'Run'}
                 </button>
             </div>
-            {result && <p className="text-xs text-green-300 mt-2 p-2 bg-green-900/50 rounded-md">{result}</p>}
         </div>
     );
 };
@@ -60,15 +66,37 @@ const ActionsPanel = () => {
         }
     };
 
+    const mockAction = (name: string) => async (): Promise<string> => {
+        log(`User triggered mock action: ${name}`);
+        return new Promise(resolve => setTimeout(() => resolve(`${name} completed successfully.`), 1500));
+    };
+
     return (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ActionButton 
                 title="Run All API Tests"
                 description="Execute a health check on all registered API endpoints."
                 action={runAllApiTests}
                 icon={<BeakerIcon className="w-5 h-5" />}
             />
-            {/* Add more actions here in the future */}
+             <ActionButton 
+                title="Re-index Semantic Memory"
+                description="(Mock) Rebuilds the Pinecone vector index from source documents."
+                action={mockAction("Re-index")}
+                icon={<RefreshIcon className="w-5 h-5" />}
+            />
+             <ActionButton 
+                title="Clear Application Cache"
+                description="(Mock) Purges all temporary data from the Vercel KV store."
+                action={mockAction("Cache Clear")}
+                icon={<TrashIcon className="w-5 h-5" />}
+            />
+             <ActionButton 
+                title="Trigger System Backup"
+                description="(Mock) Creates a snapshot of the primary database."
+                action={mockAction("Backup")}
+                icon={<ArrowDownOnSquareIcon className="w-5 h-5" />}
+            />
         </div>
     );
 };

@@ -52,40 +52,29 @@ const DashboardCenter = ({ setIsOpen }: DashboardCenterProps) => {
                 </header>
                 
                 <main className="flex-1 p-4 overflow-y-auto space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div className="lg:col-span-3">
-                            <HeaderPanel />
-                        </div>
-                        <div className="lg:col-span-2">
-                             <DashboardPanel title="Hedra Strategic Goals" isCollapsedOverride={allPanelsCollapsed}>
-                                <HedraGoalsPanel />
-                            </DashboardPanel>
-                        </div>
-                         <div className="lg:col-span-1">
-                             <DashboardPanel title="Project Documentations" isCollapsedOverride={allPanelsCollapsed}>
-                                <DocumentationPanel />
-                            </DashboardPanel>
-                        </div>
-                        <div className="lg:col-span-3">
-                            <DashboardPanel title="System Statistics" isCollapsedOverride={allPanelsCollapsed}>
-                                <StatsPanel />
-                            </DashboardPanel>
-                        </div>
-                        <div className="lg:col-span-1">
-                             <DashboardPanel title="Action Center" isCollapsedOverride={allPanelsCollapsed}>
-                                <ActionsPanel />
-                            </DashboardPanel>
-                        </div>
-                        <div className="lg:col-span-1">
-                             <DashboardPanel title="Needed Decisions" isCollapsedOverride={allPanelsCollapsed}>
-                                <DecisionsPanel />
-                            </DashboardPanel>
-                        </div>
-                        <div className="lg:col-span-1">
-                             <DashboardPanel title="Important Reports" isCollapsedOverride={allPanelsCollapsed}>
-                                <ReportsPanel />
-                            </DashboardPanel>
-                        </div>
+                    <HeaderPanel />
+                    
+                    <DashboardPanel title="Hedra Strategic Goals" isCollapsedOverride={allPanelsCollapsed}>
+                        <HedraGoalsPanel />
+                    </DashboardPanel>
+                    
+                    <DashboardPanel title="System Statistics" isCollapsedOverride={allPanelsCollapsed}>
+                        <StatsPanel />
+                    </DashboardPanel>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <DashboardPanel title="Project Documentations" isCollapsedOverride={allPanelsCollapsed}>
+                            <DocumentationPanel />
+                        </DashboardPanel>
+                        <DashboardPanel title="Action Center" isCollapsedOverride={allPanelsCollapsed}>
+                            <ActionsPanel />
+                        </DashboardPanel>
+                        <DashboardPanel title="Needed Decisions" isCollapsedOverride={allPanelsCollapsed}>
+                            <DecisionsPanel />
+                        </DashboardPanel>
+                        <DashboardPanel title="Important Reports" isCollapsedOverride={allPanelsCollapsed}>
+                            <ReportsPanel />
+                        </DashboardPanel>
                     </div>
                 </main>
 

@@ -44,15 +44,18 @@ const DocumentationPanel = () => {
 
     return (
         <>
-            <div className="space-y-2">
-                {docs.map(doc => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {docs.slice(0, 4).map(doc => ( // Show a max of 4 for a clean 2x2 grid
                     <button 
                         key={doc.id}
                         onClick={() => handleSelectDoc(doc.doc_key)}
-                        className="w-full text-left flex items-center gap-3 p-2 bg-gray-900/50 rounded-md hover:bg-gray-900"
+                        className="w-full text-left p-4 bg-gray-900/50 rounded-md hover:bg-gray-900 transition-colors flex flex-col justify-between h-36"
                     >
-                        <DocumentTextIcon className="w-5 h-5 text-indigo-400 flex-shrink-0" />
-                        <span className="text-sm font-medium text-gray-200 truncate">{doc.title}</span>
+                        <div>
+                            <DocumentTextIcon className="w-6 h-6 text-indigo-400 mb-2" />
+                            <h4 className="text-sm font-semibold text-gray-200">{doc.title}</h4>
+                        </div>
+                        <p className="text-xs text-gray-500">Last updated: {new Date(doc.lastUpdatedAt).toLocaleDateString()}</p>
                     </button>
                 ))}
             </div>

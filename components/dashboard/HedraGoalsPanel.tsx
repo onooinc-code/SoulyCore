@@ -68,10 +68,10 @@ const HedraGoalsPanel = () => {
         return <div className="text-center text-red-400">Could not load strategic goals.</div>;
     }
 
-    const sections: Array<{ key: 'main_goal' | 'ideas' | 'status'; title: string }> = [
-        { key: 'main_goal', title: 'Main Goal & Methods' },
-        { key: 'ideas', title: 'Suggestions & Ideas' },
-        { key: 'status', title: 'Specs & Building Status' },
+    const sections: Array<{ key: 'main_goal' | 'ideas' | 'status'; title: string; style: string }> = [
+        { key: 'main_goal', title: 'Main Goal & Methods', style: 'bg-blue-900/30 border-blue-500/50' },
+        { key: 'ideas', title: 'Suggestions & Ideas', style: 'bg-yellow-900/30 border-yellow-500/50' },
+        { key: 'status', title: 'Specs & Building Status', style: 'bg-green-900/30 border-green-500/50' },
     ];
 
     return (
@@ -86,24 +86,26 @@ const HedraGoalsPanel = () => {
                     <button onClick={() => setIsEditing(true)} className="px-3 py-1 bg-indigo-600 text-xs rounded-md hover:bg-indigo-500">Edit</button>
                 )}
             </div>
-
-            {sections.map(({ key, title }) => (
-                <div key={key} className="bg-gray-900/50 p-3 rounded-lg">
-                    {isEditing ? (
-                        <textarea
-                            value={editedContent[key]?.content || ''}
-                            onChange={(e) => handleContentChange(key, e.target.value)}
-                            className="w-full h-48 p-2 bg-gray-800 rounded-md text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        />
-                    ) : (
-                        <div className="prose-custom prose-sm max-w-none">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {goals[key]?.content || `*No content for ${title} yet.*`}
-                            </ReactMarkdown>
-                        </div>
-                    )}
-                </div>
-            ))}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {sections.map(({ key, title, style }) => (
+                    <div key={key} className={`p-4 rounded-lg border ${style} h-96 flex flex-col`}>
+                        {isEditing ? (
+                            <textarea
+                                value={editedContent[key]?.content || ''}
+                                onChange={(e) => handleContentChange(key, e.target.value)}
+                                className="w-full flex-1 p-2 bg-gray-800 rounded-md text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                            />
+                        ) : (
+                            <div className="prose-custom prose-sm max-w-none flex-1 overflow-y-auto">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {goals[key]?.content || `*No content for ${title} yet.*`}
+                                </ReactMarkdown>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };

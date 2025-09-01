@@ -3,25 +3,28 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLog } from '../providers/LogProvider';
 import { motion } from 'framer-motion';
-import { BrainIcon, ChatBubbleLeftRightIcon, CpuChipIcon, UsersIcon, CheckIcon } from '../Icons';
+import { BrainIcon, ChatBubbleLeftRightIcon, CpuChipIcon, UsersIcon, CheckIcon, LogIcon, BeakerIcon, PromptsIcon } from '../Icons';
 
 interface StatCardProps {
     title: string;
     value: string | number;
-    category: string;
     icon: React.ReactNode;
 }
 
-const StatCard = ({ title, value, category, icon }: StatCardProps) => (
-    <div className="bg-gray-900/50 p-4 rounded-lg flex items-center gap-4">
-        <div className="p-3 bg-indigo-600/20 text-indigo-300 rounded-full">{icon}</div>
-        <div>
-            <div className="text-2xl font-bold text-white">{value}</div>
-            <div className="text-sm text-gray-400">{title}</div>
-        </div>
-    </div>
-);
+const cardVariant = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+};
 
+const StatCard = ({ title, value, icon }: StatCardProps) => (
+    <motion.div variants={cardVariant} className="bg-gray-900/50 p-3 rounded-lg flex items-center gap-3">
+        <div className="p-2 bg-indigo-600/20 text-indigo-300 rounded-full">{icon}</div>
+        <div>
+            <div className="text-xl font-bold text-white">{value}</div>
+            <div className="text-xs text-gray-400">{title}</div>
+        </div>
+    </motion.div>
+);
 
 const StatsPanel = () => {
     const [stats, setStats] = useState<any | null>(null);
@@ -54,21 +57,31 @@ const StatsPanel = () => {
         return <div className="text-center text-red-400">Could not load statistics.</div>;
     }
 
-    const pipelineSuccessRate = (stats.pipelines.contextAssembly.completed + stats.pipelines.memoryExtraction.completed) / 
-                               (stats.pipelines.contextAssembly.completed + stats.pipelines.memoryExtraction.completed + stats.pipelines.contextAssembly.failed + stats.pipelines.memoryExtraction.failed) * 100;
-
     return (
         <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ staggerChildren: 0.1 }}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+            variants={{
+                hidden: {},
+                show: { transition: { staggerChildren: 0.05 } }
+            }}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
         >
-            <StatCard title="Total Conversations" value={stats.conversations.total} category="Usage" icon={<ChatBubbleLeftRightIcon className="w-6 h-6" />} />
-            <StatCard title="Semantic Memories" value={stats.memory.semanticVectors} category="Memory" icon={<BrainIcon className="w-6 h-6" />} />
-            <StatCard title="Structured Entities" value={stats.memory.structuredEntities} category="Memory" icon={<CpuChipIcon className="w-6 h-6" />} />
-            <StatCard title="Contacts" value={stats.memory.contacts} category="Memory" icon={<UsersIcon className="w-6 h-6" />} />
-            <StatCard title="Features Completed" value={stats.project.featuresCompleted} category="Project" icon={<CheckIcon className="w-6 h-6" />} />
+            {/* Row 1 */}
+            <StatCard title="Total Conversations" value={stats.conversations.total} icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} />
+            <StatCard title="Total Messages" value={stats.messages.total} icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} />
+            <StatCard title="Avg Msgs/Convo" value={stats.conversations.avgMessages} icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />} />
+            <StatCard title="Semantic Memories" value={stats.memory.semanticVectors} icon={<BrainIcon className="w-5 h-5" />} />
+            <StatCard title="Structured Entities" value={stats.memory.structuredEntities} icon={<CpuChipIcon className="w-5 h-5" />} />
+            <StatCard title="Contacts" value={stats.memory.contacts} icon={<UsersIcon className="w-5 h-5" />} />
+            
+            {/* Row 2 */}
+            <StatCard title="Active Brains" value={stats.memory.brains} icon={<BrainIcon className="w-5 h-5" />} />
+            <StatCard title="Saved Prompts" value={stats.project.prompts} icon={<PromptsIcon className="w-5 h-5" />} />
+            <StatCard title="Features Tracked" value={stats.project.featuresTracked} icon={<CheckIcon className="w-5 h-5" />} />
+            <StatCard title="API Tests Run" value={stats.system.apiTestsRun} icon={<BeakerIcon className="w-5 h-5" />} />
+            <StatCard title="Total Logs" value={stats.system.logs} icon={<LogIcon className="w-5 h-5" />} />
+            <StatCard title="Mock Stat" value="123" icon={<CpuChipIcon className="w-5 h-5" />} />
         </motion.div>
     );
 };
