@@ -6,6 +6,7 @@ import { PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, SettingsIc
 import { useLog } from './providers/LogProvider';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Conversation } from '@/lib/types';
+import ToolbarButton from './ToolbarButton';
 
 // Helper function to format relative dates
 const getRelativeTime = (date: Date): string => {
@@ -151,11 +152,11 @@ const Sidebar = ({
     ];
     
     const toolbarItems = [
-        { label: 'Bookmarks', icon: BookmarkListIcon, action: () => { log('User opened Bookmarks modal.'); setBookmarksOpen(true); }, tooltip: "View all your bookmarked messages from all conversations." },
-        { label: 'Global Settings', icon: SettingsIcon, action: () => { log('User opened Global Settings.'); setGlobalSettingsOpen(true); }, tooltip: "Configure application-wide default settings for new conversations and models." },
-        { label: 'Toggle Log Panel', icon: LogIcon, action: () => { log('User toggled the log panel.'); setLogPanelOpen(prev => !prev); }, tooltip: "Show or hide the developer log panel at the bottom of the screen." },
-        { label: 'Hide Sidebar', icon: SidebarLeftIcon, action: () => { log('User hid sidebar.'); setSidebarOpen(false); }, tooltip: "Collapse the sidebar to focus on the conversation." },
-        { label: 'Suggestions', icon: LightbulbIcon, action: () => alert('Feature coming soon!'), tooltip: "View AI-powered suggestions for improving your workflow (Coming Soon)." },
+        { label: 'Bookmarks', icon: BookmarkListIcon, action: () => { log('User opened Bookmarks modal.'); setBookmarksOpen(true); }, tooltip: "View all your bookmarked messages from all conversations.", color: "yellow" },
+        { label: 'Global Settings', icon: SettingsIcon, action: () => { log('User opened Global Settings.'); setGlobalSettingsOpen(true); }, tooltip: "Configure application-wide default settings for new conversations and models.", color: "gray" },
+        { label: 'Toggle Log Panel', icon: LogIcon, action: () => { log('User toggled the log panel.'); setLogPanelOpen(prev => !prev); }, tooltip: "Show or hide the developer log panel at the bottom of the screen.", color: "cyan" },
+        { label: 'Suggestions', icon: LightbulbIcon, action: () => alert('Feature coming soon!'), tooltip: "View AI-powered suggestions for improving your workflow (Coming Soon).", color: "lime" },
+        { label: 'Hide Sidebar', icon: SidebarLeftIcon, action: () => { log('User hid sidebar.'); setSidebarOpen(false); }, tooltip: "Collapse the sidebar to focus on the conversation.", color: "gray" },
     ];
 
     return (
@@ -251,11 +252,11 @@ const Sidebar = ({
                         </button>
                      ))}
                 </div>
-                <div className="flex items-center justify-around p-1 bg-black/20 rounded-xl">
+                <div className="flex items-center justify-around p-1">
                     {toolbarItems.map(item => (
-                        <button key={item.label} onClick={item.action} title={item.tooltip} className="p-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
+                        <ToolbarButton key={item.label} onClick={item.action} title={item.tooltip} color={item.color}>
                             <item.icon className="w-5 h-5" />
-                        </button>
+                        </ToolbarButton>
                     ))}
                 </div>
             </div>

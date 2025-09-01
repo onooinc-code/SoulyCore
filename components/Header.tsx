@@ -1,12 +1,11 @@
-
 "use client";
 
 import React, { useState } from 'react';
 import { useAppContext } from './providers/AppProvider';
 import { SparklesIcon, EditIcon, TrashIcon, SidebarLeftIcon, LogIcon, MinusIcon, PlusIcon } from './Icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import ToolbarButton from './ToolbarButton';
 
-// FIX: Removed `React.FC` to fix framer-motion type inference issue.
 const Header = () => {
     const { 
         currentConversation, 
@@ -16,7 +15,6 @@ const Header = () => {
         changeFontSize,
         isSidebarOpen,
         setSidebarOpen,
-        isLogPanelOpen,
         setLogPanelOpen,
     } = useAppContext();
     const [isEditing, setIsEditing] = useState(false);
@@ -52,7 +50,7 @@ const Header = () => {
             initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4, ease: 'easeInOut' }}
-            className="relative w-full bg-gray-800/80 backdrop-blur-sm z-10 p-3 border-b border-gray-700 flex-shrink-0"
+            className="relative w-full bg-gray-800/80 backdrop-blur-sm z-10 p-2 border-b border-gray-700/50 flex-shrink-0"
         >
             <div 
                 className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"
@@ -60,71 +58,68 @@ const Header = () => {
                     animation: 'move-glow 4s linear infinite'
                 }}
             ></div>
-            {/* FIX: Replaced duplicated and non-standard <style jsx> tags with a single standard <style> tag.
-                This resolves the TypeScript error and removes the redundant CSS definition. */}
-            <style>{`
-                @keyframes move-glow {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(100%); }
-                }
-            `}</style>
-            <div className="max-w-4xl mx-auto flex justify-between items-center gap-4">
+
+            <div className="flex items-center justify-between w-full max-w-4xl mx-auto gap-4">
+                {!isSidebarOpen && (
+                    <div className="flex-shrink-0">
+                        <ToolbarButton onClick={() => setSidebarOpen(true)} title="Show Sidebar" color="gray">
+                            <SidebarLeftIcon className="w-5 h-5 transform rotate-180" />
+                        </ToolbarButton>
+                    </div>
+                )}
                 <div className="flex-1 min-w-0">
                     <AnimatePresence mode="wait">
-                        {isEditing && currentConversation ? (
-                             <motion.div key="editor" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: '100%' }} exit={{ opacity: 0, width: 0 }}>
-                                <input 
+                        {isEditing ? (
+                            <motion.div key="editing-title" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                <input
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     onBlur={handleSave}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                                    className="bg-gray-700 text-white text-lg font-semibold w-full rounded-md px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full bg-gray-700 text-white rounded-md px-2 py-1 text-lg font-semibold"
                                     autoFocus
                                 />
                             </motion.div>
                         ) : (
                             <motion.h1 
-                                key="title" 
+                                key="display-title" 
                                 initial={{ opacity: 0 }} 
                                 animate={{ opacity: 1 }} 
                                 exit={{ opacity: 0 }}
-                                className="text-lg font-semibold text-gray-200 truncate"
+                                className="text-lg font-semibold truncate text-gray-200 cursor-pointer"
+                                onDoubleClick={handleEdit}
+                                title="Double-click to rename"
                             >
-                                {currentConversation?.title || "SoulyCore"}
+                                {currentConversation?.title || 'New Conversation'}
                             </motion.h1>
                         )}
                     </AnimatePresence>
                 </div>
-
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <button onClick={() => setSidebarOpen(prev => !prev)} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}>
-                        <SidebarLeftIcon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => setLogPanelOpen(prev => !prev)} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title={isLogPanelOpen ? "Hide Log Panel" : "Show Log Panel"}>
-                        <LogIcon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => changeFontSize('decrease')} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title="Decrease font size">
-                        <MinusIcon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => changeFontSize('increase')} className="p-2 rounded-xl text-gray-200 transition-all duration-200 bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:scale-110" title="Increase font size">
-                        <PlusIcon className="w-5 h-5" />
-                    </button>
-
+                <div className="flex items-center justify-end gap-2 flex-shrink-0">
                     {currentConversation && (
                         <>
-                            <div className="w-px h-6 bg-gray-700 mx-2"></div>
-                            <button onClick={handleGenerateTitle} className="p-2 rounded-xl text-indigo-300 transition-all duration-200 bg-indigo-500/10 border border-indigo-400/20 backdrop-blur-sm hover:bg-indigo-500/20 hover:scale-110" title="Ask the AI to generate a new, concise title for this conversation based on its content.">
+                            <ToolbarButton onClick={handleGenerateTitle} title="Generate new title with AI" color="purple">
                                 <SparklesIcon className="w-5 h-5" />
-                            </button>
-                            <button onClick={handleEdit} className="p-2 rounded-xl text-blue-300 transition-all duration-200 bg-blue-500/10 border border-blue-400/20 backdrop-blur-sm hover:bg-blue-500/20 hover:scale-110" title="Manually edit the title of this conversation.">
+                            </ToolbarButton>
+                            <ToolbarButton onClick={handleEdit} title="Rename conversation" color="blue">
                                 <EditIcon className="w-5 h-5" />
-                            </button>
-                            <button onClick={handleDelete} className="p-2 rounded-xl text-red-300 transition-all duration-200 bg-red-500/10 border border-red-400/20 backdrop-blur-sm hover:bg-red-500/20 hover:scale-110" title="Permanently delete this entire conversation and all its messages.">
+                            </ToolbarButton>
+                            <ToolbarButton onClick={handleDelete} title="Delete conversation" color="red">
                                 <TrashIcon className="w-5 h-5" />
-                            </button>
+                            </ToolbarButton>
+                            <div className="w-px h-6 bg-gray-600 mx-1"></div>
                         </>
                     )}
+                    <ToolbarButton onClick={() => changeFontSize('decrease')} title="Decrease font size" color="gray">
+                        <MinusIcon className="w-5 h-5" />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => changeFontSize('increase')} title="Increase font size" color="gray">
+                        <PlusIcon className="w-5 h-5" />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => setLogPanelOpen(prev => !prev)} title="Toggle Log Panel" color="cyan">
+                        <LogIcon className="w-5 h-5" />
+                    </ToolbarButton>
                 </div>
             </div>
         </motion.header>

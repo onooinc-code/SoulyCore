@@ -111,29 +111,34 @@ export const App = () => {
         event.preventDefault();
 
         const menuItems: MenuItem[] = [
-            { label: 'Application', isSeparator: true },
+            // FIX: Removed 'label' property from separator items to conform to the 'MenuItem' type definition.
+            { isSeparator: true },
             { label: 'Toggle Sidebar', icon: SidebarLeftIcon, action: () => setSidebarOpen(prev => !prev) },
             { label: 'Toggle Log Panel', icon: LogIcon, action: () => setLogPanelOpen(prev => !prev) },
             { label: 'Increase Font Size', icon: PlusIcon, action: () => changeFontSize('increase') },
             { label: 'Decrease Font Size', icon: MinusIcon, action: () => changeFontSize('decrease') },
             { isSeparator: true },
-            { label: 'Conversation', isSeparator: true },
+            // FIX: Removed 'label' property from separator items to conform to the 'MenuItem' type definition.
+            { isSeparator: true },
             { label: 'New Chat', icon: PlusIcon, action: createNewConversation, disabled: !createNewConversation },
             { label: 'Clear Messages', icon: ClearIcon, action: () => currentConversation && clearMessages(currentConversation.id), disabled: !currentConversation },
             { label: 'Delete Conversation', icon: TrashIcon, action: () => alert("Not implemented"), disabled: !currentConversation },
             { isSeparator: true },
-            { label: 'Memory', isSeparator: true },
+            // FIX: Removed 'label' property from separator items to conform to the 'MenuItem' type definition.
+            { isSeparator: true },
             { label: 'Add Knowledge Snippet', icon: KnowledgeIcon, action: () => setAddKnowledgeModalOpen(true) },
             { label: 'Memory Center', icon: MemoryIcon, action: () => setMemoryCenterOpen(true) },
             { isSeparator: true },
-            { label: 'Quick Access', isSeparator: true },
+            // FIX: Removed 'label' property from separator items to conform to the 'MenuItem' type definition.
+            { isSeparator: true },
             { label: 'Dashboard Center', icon: DashboardIcon, action: () => setDashboardCenterOpen(true) },
             { label: 'Brain Center', icon: BrainIcon, action: () => setBrainCenterOpen(true) },
             { label: 'Contacts Hub', icon: UsersIcon, action: () => setContactsHubOpen(true) },
             { label: 'Prompts Hub', icon: PromptsIcon, action: () => setPromptsHubOpen(true) },
             { label: 'Dev Center', icon: CodeIcon, action: () => setDevCenterOpen(true) },
             { isSeparator: true },
-            { label: 'Help', isSeparator: true },
+            // FIX: Removed 'label' property from separator items to conform to the 'MenuItem' type definition.
+            { isSeparator: true },
             { label: 'Keyboard Shortcuts', icon: KeyboardIcon, action: () => setShortcutsModalOpen(true) },
         ];
         
