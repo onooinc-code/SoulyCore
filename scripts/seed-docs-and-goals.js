@@ -19,9 +19,19 @@ const docsToSeed = [
 ];
 
 const goalsToSeed = {
-    main_goal: '### The Main Goal For Hedra\nTo build a suite of interconnected AI-powered tools (HedraSoul, SoulyCore, etc.) that serve as a personal cognitive assistant for tracking, improving, and discovering new methods and features to achieve high-level personal and professional objectives.',
-    ideas: '### Suggestions and Ideas\n- Integrate a knowledge graph to visually map connections between projects, ideas, and people.\n- Develop a proactive alerting system that identifies potential project risks or opportunities based on conversation analysis.\n- Create an AI-powered "Red Team" persona to challenge and critique new ideas and specifications.',
-    status: '### Building Status\n- **SoulyCore v2:** Cognitive engine refactor complete. API and memory systems are robust.\n- **HedraSoul:** (Conceptual) - The overarching personal management system.\n- **Next Steps:** Focus on building out the Dashboard Center to provide a unified view of all systems.'
+    main_goal: `### Objective 1: Achieve "Total Recall Companion" Status by Q4 2024
+- **Key Result 1.1:** Implement and validate the full Cognitive Architecture v2.0, ensuring all memory modules are operational.
+- **Key Result 1.2:** Reduce context assembly pipeline latency to under 500ms on average.
+- **Key Result 1.3:** Achieve a 95% pass rate on all registered feature health tests.`,
+    ideas: `### Strategic Initiatives
+- **Initiative A: Generative Tooling Framework.** Develop an SDK and sandboxed environment for the AI to create and use its own tools.
+- **Initiative B: Proactive Intelligence Engine.** Build a service that analyzes user workflow patterns to proactively suggest automations and insights.
+- **Initiative C: Multi-Modal Ingestion.** Extend the knowledge ingestion pipeline to support audio, video, and images.`,
+    status: `### Q3 2024 Focus & KPIs
+- **Focus:** Complete the Dashboard Center UI to provide a unified view of all systems and statistics.
+- **KPI 1:** Ship all 8 core dashboard panels to production.
+- **KPI 2:** Increase API test coverage to 80% of all endpoints.
+- **KPI 3:** Onboard the first internal power user for feedback.`
 };
 
 async function seedDocumentations() {

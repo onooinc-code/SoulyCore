@@ -5,6 +5,24 @@ import type { HedraGoal } from '@/lib/types';
 import { useLog } from '../providers/LogProvider';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { motion } from 'framer-motion';
+import { SparklesIcon, SearchIcon, LightbulbIcon, PromptsIcon } from '../Icons';
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.15
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+};
+
 
 const HedraGoalsPanel = () => {
     const [goals, setGoals] = useState<Record<string, HedraGoal> | null>(null);
@@ -69,27 +87,41 @@ const HedraGoalsPanel = () => {
     }
 
     const sections: Array<{ key: 'main_goal' | 'ideas' | 'status'; title: string; style: string }> = [
-        { key: 'main_goal', title: 'Main Goal & Methods', style: 'bg-blue-900/30 border-blue-500/50' },
-        { key: 'ideas', title: 'Suggestions & Ideas', style: 'bg-yellow-900/30 border-yellow-500/50' },
-        { key: 'status', title: 'Specs & Building Status', style: 'bg-green-900/30 border-green-500/50' },
+        { key: 'main_goal', title: 'Objective & Key Results', style: 'bg-blue-900/30 border-blue-500/50' },
+        { key: 'ideas', title: 'Strategic Initiatives', style: 'bg-yellow-900/30 border-yellow-500/50' },
+        { key: 'status', title: 'Current Focus & KPIs', style: 'bg-green-900/30 border-green-500/50' },
     ];
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end gap-2">
-                {isEditing ? (
-                    <>
-                        <button onClick={() => { setIsEditing(false); fetchGoals(); }} className="px-3 py-1 bg-gray-600 text-xs rounded-md hover:bg-gray-500">Cancel</button>
-                        <button onClick={handleSave} className="px-3 py-1 bg-green-600 text-xs rounded-md hover:bg-green-500">Save Changes</button>
-                    </>
-                ) : (
-                    <button onClick={() => setIsEditing(true)} className="px-3 py-1 bg-indigo-600 text-xs rounded-md hover:bg-indigo-500">Edit</button>
-                )}
+            <div className="flex justify-between items-center">
+                 <div className="flex items-center gap-1">
+                    <button onClick={() => alert('AI Update clicked!')} className="p-2 text-gray-300 bg-gray-700/50 rounded-md hover:bg-gray-700" title="Update goals with AI"><SparklesIcon className="w-4 h-4" /></button>
+                    <button onClick={() => alert('Search clicked!')} className="p-2 text-gray-300 bg-gray-700/50 rounded-md hover:bg-gray-700" title="Search goals"><SearchIcon className="w-4 h-4" /></button>
+                    <button onClick={() => alert('Suggest clicked!')} className="p-2 text-gray-300 bg-gray-700/50 rounded-md hover:bg-gray-700" title="Suggest new initiative"><LightbulbIcon className="w-4 h-4" /></button>
+                    <button onClick={() => alert('Custom prompt clicked!')} className="p-2 text-gray-300 bg-gray-700/50 rounded-md hover:bg-gray-700" title="Use custom prompt"><PromptsIcon className="w-4 h-4" /></button>
+                </div>
+                <div className="flex justify-end gap-2">
+                    {isEditing ? (
+                        <>
+                            <button onClick={() => { setIsEditing(false); fetchGoals(); }} className="px-3 py-1 bg-gray-600 text-xs rounded-md hover:bg-gray-500">Cancel</button>
+                            <button onClick={handleSave} className="px-3 py-1 bg-green-600 text-xs rounded-md hover:bg-green-500">Save Changes</button>
+                        </>
+                    ) : (
+                        <button onClick={() => setIsEditing(true)} className="px-3 py-1 bg-indigo-600 text-xs rounded-md hover:bg-indigo-500">Edit</button>
+                    )}
+                </div>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="flex flex-col gap-4"
+            >
                 {sections.map(({ key, title, style }) => (
-                    <div key={key} className={`p-4 rounded-lg border ${style} h-96 flex flex-col`}>
+                    <motion.div key={key} variants={itemVariants} className={`p-4 rounded-lg border ${style} min-h-[12rem] flex flex-col`}>
+                         <h4 className="font-bold text-gray-200 mb-2 text-sm">{title}</h4>
                         {isEditing ? (
                             <textarea
                                 value={editedContent[key]?.content || ''}
@@ -103,9 +135,9 @@ const HedraGoalsPanel = () => {
                                 </ReactMarkdown>
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </div>
     );
 };

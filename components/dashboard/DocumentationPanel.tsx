@@ -44,8 +44,8 @@ const DocumentationPanel = () => {
 
     return (
         <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {docs.slice(0, 4).map(doc => ( // Show a max of 4 for a clean 2x2 grid
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {docs.slice(0, 8).map(doc => ( 
                     <button 
                         key={doc.id}
                         onClick={() => handleSelectDoc(doc.doc_key)}

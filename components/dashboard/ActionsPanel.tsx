@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { BeakerIcon, RefreshIcon, TrashIcon, ArrowDownOnSquareIcon } from '../Icons';
+// FIX: Imported the `CodeIcon` component from `../Icons` to resolve the 'Cannot find name' error.
+import { BeakerIcon, RefreshIcon, TrashIcon, ArrowDownOnSquareIcon, CpuChipIcon, DocumentTextIcon, SparklesIcon, CodeIcon } from '../Icons';
 import { useLog } from '../providers/LogProvider';
 
 interface ActionButtonProps {
@@ -29,7 +30,7 @@ const ActionButton = ({ title, description, action, icon }: ActionButtonProps) =
             <div>
                 <div className="flex items-center gap-3 mb-2">
                     <div className="p-2 bg-indigo-600/20 text-indigo-300 rounded-full">{icon}</div>
-                    <h4 className="font-semibold text-gray-200">{title}</h4>
+                    <h4 className="font-semibold text-gray-200 text-sm">{title}</h4>
                 </div>
                 <p className="text-xs text-gray-400">{description}</p>
             </div>
@@ -72,7 +73,7 @@ const ActionsPanel = () => {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <ActionButton 
                 title="Run All API Tests"
                 description="Execute a health check on all registered API endpoints."
@@ -96,6 +97,30 @@ const ActionsPanel = () => {
                 description="(Mock) Creates a snapshot of the primary database."
                 action={mockAction("Backup")}
                 icon={<ArrowDownOnSquareIcon className="w-5 h-5" />}
+            />
+            <ActionButton 
+                title="Optimize Database"
+                description="(Mock) Runs VACUUM and ANALYZE on the Postgres database."
+                action={mockAction("DB Optimize")}
+                icon={<CpuChipIcon className="w-5 h-5" />}
+            />
+            <ActionButton 
+                title="Run Security Scan"
+                description="(Mock) Initiates a mock vulnerability scan on the system."
+                action={mockAction("Security Scan")}
+                icon={<SparklesIcon className="w-5 h-5" />}
+            />
+            <ActionButton 
+                title="Generate Weekly Report"
+                description="(Mock) Generates and saves the weekly system usage report."
+                action={mockAction("Report Gen")}
+                icon={<DocumentTextIcon className="w-5 h-5" />}
+            />
+             <ActionButton 
+                title="Sync with GitHub"
+                description="(Mock) Fetches latest feature specs from a linked repo."
+                action={mockAction("GitHub Sync")}
+                icon={<CodeIcon className="w-5 h-5" />}
             />
         </div>
     );
