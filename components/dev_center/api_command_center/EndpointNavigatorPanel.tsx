@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -17,10 +15,10 @@ interface EndpointNavigatorPanelProps {
 const EndpointNavigatorPanel = ({ endpoints, onSelectEndpoint, selectedEndpointId }: EndpointNavigatorPanelProps) => {
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-    // FIX: Used the generic parameter on `reduce` to improve type inference. This ensures
-    // TypeScript correctly understands that `groupedEndpoints` is a record of string to `ApiEndpoint[]`,
-    // resolving subsequent errors where properties like `.length` and `.map` were not found on type 'unknown'.
     const groupedEndpoints = useMemo(() => {
+        // Fix: Used the generic parameter on `reduce` to improve type inference. This ensures
+        // TypeScript correctly understands that `groupedEndpoints` is a record of string to `ApiEndpoint[]`,
+        // resolving subsequent errors where properties like `.length` and `.map` were not found on type 'unknown'.
         return endpoints.reduce<Record<string, ApiEndpoint[]>>((acc, endpoint) => {
             const groupName = endpoint.group_name;
             if (!acc[groupName]) {
@@ -55,14 +53,11 @@ const EndpointNavigatorPanel = ({ endpoints, onSelectEndpoint, selectedEndpointI
         <div className="h-full flex flex-col">
             <h3 className="text-lg font-bold p-4 flex-shrink-0">API Endpoints</h3>
             <div className="flex-1 overflow-y-auto pr-2">
-                {Object.entries(groupedEndpoints).sort(([a], [b]) => a.localeCompare(b)).map(([groupName, endpointsInGroup]) => (
+                {Object.keys(groupedEndpoints).sort().map(groupName => (
                     <div key={groupName} className="mb-2">
-                        <button onClick={() => toggleGroup(groupName)} className="w-full flex items-center justify-between p-2 rounded-md hover:bg-gray-700">
-                            <div className="flex items-center gap-2">
-                                <ServerIcon className="w-4 h-4 text-gray-400" />
-                                <span className="font-semibold text-sm capitalize">{groupName}</span>
-                            </div>
-                            <span className="text-xs text-gray-500">{endpointsInGroup.length}</span>
+                        <button onClick={() => toggleGroup(groupName)} className="w-full flex justify-between items-center p-2 text-sm font-bold text-gray-300 bg-gray-900/50 rounded-md hover:bg-gray-900">
+                            <span>{groupName}</span>
+                            <span>{openGroups[groupName] ? '−' : '+'}</span>
                         </button>
                         <AnimatePresence>
                             {openGroups[groupName] && (
@@ -70,19 +65,23 @@ const EndpointNavigatorPanel = ({ endpoints, onSelectEndpoint, selectedEndpointI
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    className="pl-4 mt-1 space-y-1 overflow-hidden"
+                                    className="overflow-hidden"
                                 >
-                                    {endpointsInGroup.map(endpoint => (
-                                        <button 
-                                            key={endpoint.id}
-                                            onClick={() => onSelectEndpoint(endpoint)}
-                                            className={`w-full text-left p-2 rounded-md flex items-center gap-3 text-sm ${selectedEndpointId === endpoint.id ? 'bg-indigo-600/20 text-indigo-300' : 'hover:bg-gray-700/50'}`}
-                                        >
-                                            <StatusIndicator status={endpoint.last_test_status} />
-                                            <span className={`font-mono font-bold w-14 flex-shrink-0 ${methodColorMap[endpoint.method] || 'text-gray-400'}`}>{endpoint.method}</span>
-                                            <span className="truncate">{endpoint.path}</span>
-                                        </button>
-                                    ))}
+                                    <div className="pt-1 space-y-1">
+                                        {groupedEndpoints[groupName].map(endpoint => (
+                                            <button
+                                                key={endpoint.id}
+                                                onClick={() => onSelectEndpoint(endpoint)}
+                                                className={`w-full text-left p-2 rounded-md transition-colors ${selectedEndpointId === endpoint.id ? 'bg-indigo-600/30' : 'hover:bg-gray-700/50'}`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <StatusIndicator status={endpoint.last_test_status} />
+                                                    <span className={`w-12 text-xs font-bold flex-shrink-0 ${methodColorMap[endpoint.method] || 'text-gray-400'}`}>{endpoint.method}</span>
+                                                    <span className="text-xs truncate">{endpoint.path}</span>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -93,4 +92,5 @@ const EndpointNavigatorPanel = ({ endpoints, onSelectEndpoint, selectedEndpointI
     );
 };
 
+// FIX: Added a default export to resolve the module import error.
 export default EndpointNavigatorPanel;

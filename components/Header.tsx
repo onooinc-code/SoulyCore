@@ -101,8 +101,8 @@ const Header = () => {
         updateConversationTitle,
         generateConversationTitle,
         changeFontSize,
-        isSidebarOpen,
-        setSidebarOpen,
+        isConversationPanelOpen,
+        setConversationPanelOpen,
         setLogPanelOpen,
     } = useAppContext();
     const [isEditing, setIsEditing] = useState(false);
@@ -149,9 +149,9 @@ const Header = () => {
 
             <div className="flex items-center justify-between w-full max-w-4xl mx-auto gap-4">
                 {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
-                {!isSidebarOpen && (
+                {!isConversationPanelOpen && (
                     <div className="flex-shrink-0">
-                        <ToolbarButton onClick={() => setSidebarOpen(true)} title="Show Sidebar" color="gray">
+                        <ToolbarButton onClick={() => setConversationPanelOpen(true)} title="Show Sidebar" color="gray">
                             <SidebarLeftIcon className="w-5 h-5 transform rotate-180" />
                         </ToolbarButton>
                     </div>

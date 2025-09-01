@@ -239,3 +239,18 @@ export interface VersionHistory {
     changes: string; // Markdown content
     createdAt: Date;
 }
+
+// --- New Dashboard Chart Types ---
+export interface FeatureStatusChartData {
+    id: string; 
+    label: string;
+    value: number;
+    color: string;
+}
+
+export interface PipelinePerformanceChartData {
+    pipeline: 'Context Assembly' | 'Memory Extraction';
+    Completed: number;
+    Failed: number;
+    'Avg Duration (ms)': number;
+}

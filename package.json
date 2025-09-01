@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
+    "@nivo/bar": "^0.87.0",
+    "@nivo/core": "^0.87.0",
+    "@nivo/pie": "^0.87.0",
     "@pinecone-database/pinecone": "^6.1.2",
     "@vercel/kv": "^2.0.0",
     "@vercel/postgres": "^0.10.0",

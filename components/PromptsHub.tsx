@@ -7,12 +7,8 @@ import { XIcon, PlusIcon, TrashIcon, EditIcon, MenuIcon, UserCircleIcon, ArrowDo
 import { useAppContext } from '@/components/providers/AppProvider';
 import { useLog } from './providers/LogProvider';
 
-interface PromptsHubProps {
-    setIsOpen: (isOpen: boolean) => void;
-}
-
 // FIX: Removed React.FC to fix framer-motion type inference issue.
-const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
+const PromptsHub = () => {
     const { setStatus, clearError } = useAppContext();
     const { log } = useLog();
     const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -155,7 +151,7 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
     }, [prompts, searchTerm, activeFilter]);
     
     const renderPromptForm = () => (
-        <div className="bg-gray-900 p-4 rounded-lg mb-4 space-y-3">
+        <div className="bg-gray-800 p-4 rounded-lg mb-4 space-y-3">
             <h3 className="font-semibold text-lg">{currentPrompt?.id ? 'Edit Prompt' : 'New Prompt'}</h3>
             <div className="flex items-center gap-4 text-sm">
                 <span>Type:</span>
@@ -192,53 +188,50 @@ const PromptsHub = ({ setIsOpen }: PromptsHubProps) => {
     );
     
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col p-6">
-                <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-700 flex-shrink-0">
-                    <h2 className="text-xl font-bold">Prompts Hub</h2>
-                    <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-gray-700"><XIcon className="w-6 h-6" /></button>
+        <div className="bg-gray-900 w-full h-full flex flex-col p-6">
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-700 flex-shrink-0">
+                <h2 className="text-xl font-bold">Prompts Hub</h2>
+            </div>
+
+            <div className="flex-1 flex gap-6 overflow-hidden">
+                <div className="w-1/4 bg-gray-800/50 rounded-lg p-3 flex-shrink-0 flex flex-col overflow-y-auto">
+                     <button onClick={() => handleOpenForm()} className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm mb-4" title="Add a new reusable prompt.">
+                        <PlusIcon className="w-5 h-5" /> Add Prompt
+                    </button>
+                    <input type="text" placeholder="Search all prompts..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full mb-4 px-3 py-2 bg-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    
+                    <button onClick={() => setActiveFilter({ type: 'all', value: null })} className={`w-full text-left px-3 py-2 text-sm rounded-md mb-2 ${activeFilter.type === 'all' ? 'bg-gray-700 font-semibold' : 'hover:bg-gray-700/50'}`}>All Prompts</button>
+                    <div>
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">Folders</h3>
+                        <ul className="space-y-1">{folders.map(folder => <li key={folder}><button onClick={() => setActiveFilter({ type: 'folder', value: folder })} className={`w-full text-left px-3 py-1.5 text-sm rounded-md truncate ${activeFilter.type === 'folder' && activeFilter.value === folder ? 'bg-gray-700 font-semibold' : 'hover:bg-gray-700/50'}`}>{folder}</button></li>)}</ul>
+                    </div>
+                    <div className="mt-4"><h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">Tags</h3><div className="flex flex-wrap gap-2 px-3">{tags.map(tag => <button key={tag} onClick={() => setActiveFilter({ type: 'tag', value: tag })} className={`px-2 py-0.5 text-xs rounded-full ${activeFilter.type === 'tag' && activeFilter.value === tag ? 'bg-indigo-600 text-white font-semibold' : 'bg-gray-600 hover:bg-gray-500'}`}>#{tag}</button>)}</div></div>
                 </div>
 
-                <div className="flex-1 flex gap-6 overflow-hidden">
-                    <div className="w-1/4 bg-gray-900/50 rounded-lg p-3 flex-shrink-0 flex flex-col overflow-y-auto">
-                         <button onClick={() => handleOpenForm()} className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm mb-4" title="Add a new reusable prompt.">
-                            <PlusIcon className="w-5 h-5" /> Add Prompt
-                        </button>
-                        <input type="text" placeholder="Search all prompts..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full mb-4 px-3 py-2 bg-gray-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                        
-                        <button onClick={() => setActiveFilter({ type: 'all', value: null })} className={`w-full text-left px-3 py-2 text-sm rounded-md mb-2 ${activeFilter.type === 'all' ? 'bg-gray-700 font-semibold' : 'hover:bg-gray-700/50'}`}>All Prompts</button>
-                        <div>
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">Folders</h3>
-                            <ul className="space-y-1">{folders.map(folder => <li key={folder}><button onClick={() => setActiveFilter({ type: 'folder', value: folder })} className={`w-full text-left px-3 py-1.5 text-sm rounded-md truncate ${activeFilter.type === 'folder' && activeFilter.value === folder ? 'bg-gray-700 font-semibold' : 'hover:bg-gray-700/50'}`}>{folder}</button></li>)}</ul>
-                        </div>
-                        <div className="mt-4"><h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">Tags</h3><div className="flex flex-wrap gap-2 px-3">{tags.map(tag => <button key={tag} onClick={() => setActiveFilter({ type: 'tag', value: tag })} className={`px-2 py-0.5 text-xs rounded-full ${activeFilter.type === 'tag' && activeFilter.value === tag ? 'bg-indigo-600 text-white font-semibold' : 'bg-gray-600 hover:bg-gray-500'}`}>#{tag}</button>)}</div></div>
-                    </div>
+                <div className="flex-1 flex flex-col overflow-hidden">
+                     <AnimatePresence>{currentPrompt && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden flex-shrink-0">{renderPromptForm()}</motion.div>}</AnimatePresence>
 
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                         <AnimatePresence>{currentPrompt && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden flex-shrink-0">{renderPromptForm()}</motion.div>}</AnimatePresence>
-
-                        <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-                            {isLoading ? <p className="text-center text-gray-400 py-8">Loading prompts...</p>
-                            : filteredPrompts.length > 0 ? filteredPrompts.map(prompt => (
-                                <div key={prompt.id} className={`bg-gray-900/50 p-4 rounded-lg border-l-4 ${prompt.type === 'chain' ? 'border-indigo-500' : 'border-gray-700'}`}>
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-gray-200 break-words">{prompt.name}</h4>
-                                            {prompt.type === 'chain' && <span className="text-xs text-indigo-400 font-semibold">WORKFLOW</span>}
-                                        </div>
-                                        <div className="flex gap-1 flex-shrink-0 ml-4">
-                                            <button onClick={() => handleOpenForm(prompt)} title="Edit this prompt" className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-blue-400"><EditIcon className="w-5 h-5"/></button>
-                                            <button onClick={() => handleDeletePrompt(prompt.id)} title="Delete this prompt" className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-red-500"><TrashIcon className="w-5 h-5"/></button>
-                                        </div>
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                        {isLoading ? <p className="text-center text-gray-400 py-8">Loading prompts...</p>
+                        : filteredPrompts.length > 0 ? filteredPrompts.map(prompt => (
+                            <div key={prompt.id} className={`bg-gray-800/50 p-4 rounded-lg border-l-4 ${prompt.type === 'chain' ? 'border-indigo-500' : 'border-gray-700'}`}>
+                                <div className="flex justify-between items-start">
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-gray-200 break-words">{prompt.name}</h4>
+                                        {prompt.type === 'chain' && <span className="text-xs text-indigo-400 font-semibold">WORKFLOW</span>}
                                     </div>
-                                    <p className="mt-3 text-sm text-gray-400 font-mono bg-gray-800 p-2 rounded-md whitespace-pre-wrap max-h-24 overflow-y-auto">{prompt.content}</p>
+                                    <div className="flex gap-1 flex-shrink-0 ml-4">
+                                        <button onClick={() => handleOpenForm(prompt)} title="Edit this prompt" className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-blue-400"><EditIcon className="w-5 h-5"/></button>
+                                        <button onClick={() => handleDeletePrompt(prompt.id)} title="Delete this prompt" className="p-2 rounded-lg text-gray-300 transition-colors hover:bg-white/10 hover:text-red-500"><TrashIcon className="w-5 h-5"/></button>
+                                    </div>
                                 </div>
-                            )) : <p className="text-center text-gray-400 py-8">No prompts found for this filter.</p>}
-                        </div>
+                                <p className="mt-3 text-sm text-gray-400 font-mono bg-gray-900 p-2 rounded-md whitespace-pre-wrap max-h-24 overflow-y-auto">{prompt.content}</p>
+                            </div>
+                        )) : <p className="text-center text-gray-400 py-8">No prompts found for this filter.</p>}
                     </div>
                 </div>
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
     );
 };
 

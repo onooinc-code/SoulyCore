@@ -45,8 +45,8 @@ interface AppContextType {
     unreadConversations: Set<string>;
     clearMessages: (conversationId: string) => Promise<void>;
     changeFontSize: (direction: 'increase' | 'decrease') => void;
-    isSidebarOpen: boolean;
-    setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    isConversationPanelOpen: boolean;
+    setConversationPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isLogPanelOpen: boolean;
     setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
     backgroundTaskCount: number;
@@ -54,6 +54,8 @@ interface AppContextType {
     endBackgroundTask: () => void;
     startWorkflow: (prompt: Prompt, userInputs: Record<string, string>) => void;
     activeWorkflow: ActiveWorkflowState | null;
+    activeView: string;
+    setActiveView: (view: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -69,8 +71,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const { log, setLoggingEnabled } = useLog();
 
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const [isConversationPanelOpen, setConversationPanelOpen] = useState(true);
     const [isLogPanelOpen, setLogPanelOpen] = useState(false);
+
+    const [activeView, setActiveView] = useState('dashboard'); // Default view
 
     const [unreadConversations, setUnreadConversations] = useState(new Set<string>());
     const isVisibleRef = useRef(true);
@@ -221,10 +225,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             log('Clearing current conversation.');
             setCurrentConversation(null);
             setMessages([]);
+            setActiveView('dashboard'); // Go to dashboard if no chat is active
             return;
         }
 
         log(`Setting current conversation to: ${conversationId}`);
+        setActiveView('chat'); // Switch to chat view when a conversation is selected
+
         const findAndSetConvo = (convos: Conversation[]) => {
             const convo = convos.find(c => c.id === conversationId);
             if (convo) {
@@ -278,7 +285,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             log('Successfully created new conversation in DB.', newConversation);
 
             await loadConversations(); // Refresh the sidebar list
-            setCurrentConversationById(newConversation.id); // Set the new conversation as active
+            setCurrentConversationById(newConversation.id); // Set the new conversation as active and switch view
+            setConversationPanelOpen(true);
 
         } catch (error) {
             const errorMessage = (error as Error).message;
@@ -764,8 +772,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         unreadConversations,
         clearMessages,
         changeFontSize,
-        isSidebarOpen,
-        setSidebarOpen,
+        isConversationPanelOpen,
+        setConversationPanelOpen,
         isLogPanelOpen,
         setLogPanelOpen,
         backgroundTaskCount,
@@ -773,6 +781,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         endBackgroundTask,
         startWorkflow,
         activeWorkflow,
+        activeView,
+        setActiveView,
     }), [
         conversations, currentConversation, messages, setCurrentConversationById,
         updateCurrentConversation, createNewConversation, addMessage, toggleBookmark,
@@ -780,9 +790,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         settings, loadSettings, setSettings, deleteConversation, updateConversationTitle,
         generateConversationTitle, deleteMessage, updateMessage, regenerateAiResponse,
         regenerateUserPromptAndGetResponse, unreadConversations, clearMessages,
-        changeFontSize, isSidebarOpen, setSidebarOpen, isLogPanelOpen, setLogPanelOpen,
+        changeFontSize, isConversationPanelOpen, setConversationPanelOpen, isLogPanelOpen, setLogPanelOpen,
         backgroundTaskCount, startBackgroundTask, 
-        endBackgroundTask, startWorkflow, activeWorkflow
+        endBackgroundTask, startWorkflow, activeWorkflow, activeView, setActiveView
     ]);
 
     return (

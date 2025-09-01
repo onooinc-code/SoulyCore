@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -10,12 +9,8 @@ import { useLog } from './providers/LogProvider';
 
 type Tab = 'structured' | 'procedural' | 'settings';
 
-interface MemoryCenterProps {
-    setIsOpen: (isOpen: boolean) => void;
-}
-
 // FIX: Removed React.FC to fix framer-motion type inference issue.
-const MemoryCenter = ({ setIsOpen }: MemoryCenterProps) => {
+const MemoryCenter = () => {
     const { setStatus, clearError } = useAppContext();
     const { log } = useLog();
     
@@ -130,7 +125,7 @@ const MemoryCenter = ({ setIsOpen }: MemoryCenterProps) => {
                 </div>
             </div>
             {isEntityFormVisible && (
-                <div className="bg-gray-900 p-4 rounded-lg mb-4 space-y-3">
+                <div className="bg-gray-800 p-4 rounded-lg mb-4 space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <input value={entityForm.name || ''} onChange={e => setEntityForm({...entityForm, name: e.target.value})} placeholder="Entity Name" className={`w-full p-2 bg-gray-700 rounded-lg text-sm ${formErrors.name ? 'border border-red-500' : ''}`}/>
@@ -153,7 +148,7 @@ const MemoryCenter = ({ setIsOpen }: MemoryCenterProps) => {
             )}
             <div className="flex-1 overflow-auto">
                 <table className="w-full text-sm text-left text-gray-300">
-                    <thead className="text-xs text-gray-400 uppercase bg-gray-900 sticky top-0">
+                    <thead className="text-xs text-gray-400 uppercase bg-gray-800 sticky top-0">
                         <tr>
                             <th className="p-3">Name</th>
                             <th className="p-3">Type</th>
@@ -192,18 +187,15 @@ const MemoryCenter = ({ setIsOpen }: MemoryCenterProps) => {
     );
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col p-6">
-                <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-700">
-                    <h2 className="text-xl font-bold">Memory Center</h2>
-                    <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-gray-700"><XIcon className="w-6 h-6" /></button>
-                </div>
-                {/* Tabs could go here if more memory types are added */}
-                <div className="flex-1 overflow-hidden">
-                    {activeTab === 'structured' && renderStructuredMemory()}
-                </div>
-            </motion.div>
-        </motion.div>
+        <div className="w-full h-full flex flex-col p-6 bg-gray-900">
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-700">
+                <h2 className="text-xl font-bold">Memory Center</h2>
+            </div>
+            {/* Tabs could go here if more memory types are added */}
+            <div className="flex-1 overflow-hidden">
+                {activeTab === 'structured' && renderStructuredMemory()}
+            </div>
+        </div>
     );
 };
 
