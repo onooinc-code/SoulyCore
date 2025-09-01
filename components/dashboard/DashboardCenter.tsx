@@ -62,20 +62,18 @@ const DashboardCenter = ({ setIsOpen }: DashboardCenterProps) => {
                         <StatsPanel />
                     </DashboardPanel>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <DashboardPanel title="Project Documentations" isCollapsedOverride={allPanelsCollapsed}>
-                            <DocumentationPanel />
-                        </DashboardPanel>
-                        <DashboardPanel title="Action Center" isCollapsedOverride={allPanelsCollapsed}>
-                            <ActionsPanel />
-                        </DashboardPanel>
-                        <DashboardPanel title="Needed Decisions" isCollapsedOverride={allPanelsCollapsed}>
-                            <DecisionsPanel />
-                        </DashboardPanel>
-                        <DashboardPanel title="Important Reports" isCollapsedOverride={allPanelsCollapsed}>
-                            <ReportsPanel />
-                        </DashboardPanel>
-                    </div>
+                    <DashboardPanel title="Project Documentations" isCollapsedOverride={allPanelsCollapsed}>
+                        <DocumentationPanel />
+                    </DashboardPanel>
+                    <DashboardPanel title="Action Center" isCollapsedOverride={allPanelsCollapsed}>
+                        <ActionsPanel />
+                    </DashboardPanel>
+                    <DashboardPanel title="Needed Decisions" isCollapsedOverride={allPanelsCollapsed}>
+                        <DecisionsPanel />
+                    </DashboardPanel>
+                    <DashboardPanel title="Important Reports" isCollapsedOverride={allPanelsCollapsed}>
+                        <ReportsPanel />
+                    </DashboardPanel>
                 </main>
 
                 <footer className="p-2 border-t border-gray-700/50 text-center text-xs text-gray-500 flex-shrink-0">
