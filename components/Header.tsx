@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -148,7 +149,6 @@ const Header = () => {
             ></div>
 
             <div className="flex items-center justify-between w-full max-w-4xl mx-auto gap-4">
-                {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                 {!isConversationPanelOpen && (
                     <div className="flex-shrink-0">
                         {/* FIX: Passed icon as a child to satisfy the ToolbarButtonProps['children'] requirement. */}
@@ -191,17 +191,14 @@ const Header = () => {
                     <div className="w-px h-6 bg-gray-600 mx-1"></div>
                     {currentConversation && (
                         <>
-                            {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                             {/* FIX: Passed icon as a child to satisfy the ToolbarButtonProps['children'] requirement. */}
                             <ToolbarButton onClick={handleGenerateTitle} title="Generate new title with AI" color="purple">
                                 <SparklesIcon className="w-5 h-5" />
                             </ToolbarButton>
-                            {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                             {/* FIX: Passed icon as a child to satisfy the ToolbarButtonProps['children'] requirement. */}
                             <ToolbarButton onClick={handleEdit} title="Rename conversation" color="blue">
                                 <EditIcon className="w-5 h-5" />
                             </ToolbarButton>
-                            {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                             {/* FIX: Passed icon as a child to satisfy the ToolbarButtonProps['children'] requirement. */}
                             <ToolbarButton onClick={handleDelete} title="Delete conversation" color="red">
                                 <TrashIcon className="w-5 h-5" />
@@ -209,17 +206,14 @@ const Header = () => {
                             <div className="w-px h-6 bg-gray-600 mx-1"></div>
                         </>
                     )}
-                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                     {/* FIX: Passed icon as a child to satisfy the ToolbarButtonProps['children'] requirement. */}
                     <ToolbarButton onClick={() => changeFontSize('decrease')} title="Decrease font size" color="gray">
                         <MinusIcon className="w-5 h-5" />
                     </ToolbarButton>
-                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                     {/* FIX: Passed icon as a child to satisfy the ToolbarButtonProps['children'] requirement. */}
                     <ToolbarButton onClick={() => changeFontSize('increase')} title="Increase font size" color="gray">
                         <PlusIcon className="w-5 h-5" />
                     </ToolbarButton>
-                    {/* FIX: The ToolbarButton component expects a 'children' prop. The icon is now correctly passed as a child. */}
                     {/* FIX: Passed icon as a child to satisfy the ToolbarButtonProps['children'] requirement. */}
                     <ToolbarButton onClick={() => setLogPanelOpen(prev => !prev)} title="Toggle Log Panel" color="cyan">
                         <LogIcon className="w-5 h-5" />
