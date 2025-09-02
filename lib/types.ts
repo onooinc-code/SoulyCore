@@ -253,4 +253,6 @@ export interface PipelinePerformanceChartData {
     Completed: number;
     Failed: number;
     'Avg Duration (ms)': number;
+    // Add index signature to be compatible with Nivo's BarDatum
+    [key: string]: string | number;
 }
