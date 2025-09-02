@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -64,23 +62,25 @@ const MorningBriefing = () => {
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
                         transition={{ duration: 0.2 }}
-                        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4 border border-indigo-500/50"
+                        className="bg-gray-800 rounded-lg shadow-xl w-11/12 md:max-w-2xl max-h-[90vh] flex flex-col border border-indigo-500/50"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-6 flex-shrink-0">
                             <h2 className="text-xl font-bold">Your Morning Briefing</h2>
                             <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-gray-700">
                                 <XIcon className="w-6 h-6" />
                             </button>
                         </div>
-                        <div className="prose-custom max-h-80 overflow-y-auto">
+                        <div className="prose-custom px-6 pb-4 overflow-y-auto">
                             {isLoading ? (
                                 <p>Preparing your daily summary...</p>
                             ) : (
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
                             )}
                         </div>
-                         <button onClick={() => setIsOpen(false)} className="w-full px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-sm">Continue</button>
+                         <div className="p-6 pt-4 mt-auto flex-shrink-0">
+                             <button onClick={() => setIsOpen(false)} className="w-full px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-sm">Continue</button>
+                         </div>
                     </motion.div>
                 </motion.div>
             )}

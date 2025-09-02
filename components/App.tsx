@@ -77,7 +77,9 @@ export const App = () => {
         clearMessages, 
         currentConversation, 
         isConversationPanelOpen, 
-        setConversationPanelOpen, 
+        setConversationPanelOpen,
+        isConversationPanelMinimized,
+        setIsConversationPanelMinimized,
         isLogPanelOpen,
         setLogPanelOpen,
         changeFontSize,
@@ -101,29 +103,30 @@ export const App = () => {
         event.preventDefault();
 
         const menuItems: MenuItem[] = [
-            { isSeparator: true },
-            { label: 'Toggle Conversation Panel', icon: SidebarLeftIcon, action: () => setConversationPanelOpen(prev => !prev) },
-            { label: 'Toggle Log Panel', icon: LogIcon, action: () => setLogPanelOpen(prev => !prev) },
-            { label: 'Increase Font Size', icon: PlusIcon, action: () => changeFontSize('increase') },
-            { label: 'Decrease Font Size', icon: MinusIcon, action: () => changeFontSize('decrease') },
-            { isSeparator: true },
-            { isSeparator: true },
+            // Main Actions (Ungrouped)
             { label: 'New Chat', icon: PlusIcon, action: createNewConversation, disabled: !createNewConversation },
             { label: 'Clear Messages', icon: ClearIcon, action: () => currentConversation && clearMessages(currentConversation.id), disabled: !currentConversation },
             { label: 'Delete Conversation', icon: TrashIcon, action: () => alert("Not implemented"), disabled: !currentConversation },
             { isSeparator: true },
+            // View Group
+            { label: 'Toggle Conversations', icon: SidebarLeftIcon, action: () => setConversationPanelOpen(prev => !prev) },
+            { label: 'Minimize Conversations', icon: SidebarLeftIcon, action: () => setIsConversationPanelMinimized(prev => !prev) },
+            { label: 'Toggle Log Panel', icon: LogIcon, action: () => setLogPanelOpen(prev => !prev) },
+            { label: 'Increase Font Size', icon: PlusIcon, action: () => changeFontSize('increase') },
+            { label: 'Decrease Font Size', icon: MinusIcon, action: () => changeFontSize('decrease') },
             { isSeparator: true },
+             // Memory & Hubs Group
             { label: 'Add Knowledge Snippet', icon: KnowledgeIcon, action: () => setAddKnowledgeModalOpen(true) },
             { label: 'Memory Center', icon: MemoryIcon, action: () => setActiveView('memory_center') },
-            { isSeparator: true },
-            { isSeparator: true },
-            { label: 'Dashboard Center', icon: DashboardIcon, action: () => setActiveView('dashboard') },
-            { label: 'Brain Center', icon: BrainIcon, action: () => setActiveView('brain_center') },
             { label: 'Contacts Hub', icon: UsersIcon, action: () => setActiveView('contacts_hub') },
             { label: 'Prompts Hub', icon: PromptsIcon, action: () => setActiveView('prompts_hub') },
+            { isSeparator: true },
+            // Development Group
+            { label: 'Dashboard Center', icon: DashboardIcon, action: () => setActiveView('dashboard') },
+            { label: 'Brain Center', icon: BrainIcon, action: () => setActiveView('brain_center') },
             { label: 'Dev Center', icon: CodeIcon, action: () => setActiveView('dev_center') },
             { isSeparator: true },
-            { isSeparator: true },
+            // Application Group
             { label: 'Keyboard Shortcuts', icon: KeyboardIcon, action: () => setShortcutsModalOpen(true) },
         ];
         
@@ -166,12 +169,12 @@ export const App = () => {
                     {isConversationPanelOpen && (
                         <motion.div
                             initial={{ width: 0, opacity: 0, x: -50 }}
-                            animate={{ width: 320, opacity: 1, x: 0 }}
+                            animate={{ width: isConversationPanelMinimized ? 80 : 320, opacity: 1, x: 0 }}
                             exit={{ width: 0, opacity: 0, x: -50 }}
                             transition={{ duration: 0.3, ease: "easeInOut" }}
                             className="flex-shrink-0"
                         >
-                            <ConversationPanel />
+                            <ConversationPanel isMinimized={isConversationPanelMinimized} />
                         </motion.div>
                     )}
                 </AnimatePresence>

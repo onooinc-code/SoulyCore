@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SVGProps } from 'react';
 
@@ -32,6 +31,7 @@ interface ContextMenuProps {
 // FIX: Removed React.FC to fix framer-motion type inference issue.
 const ContextMenu = ({ items, position, isOpen, onClose }: ContextMenuProps) => {
     const menuRef = useRef<HTMLDivElement>(null);
+    const [adjustedPosition, setAdjustedPosition] = useState(position);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -44,6 +44,19 @@ const ContextMenu = ({ items, position, isOpen, onClose }: ContextMenuProps) => 
                 onClose();
             }
         };
+        
+        if (isOpen && menuRef.current) {
+            const menuRect = menuRef.current.getBoundingClientRect();
+            const newPos = { x: position.x, y: position.y };
+
+            if (position.x + menuRect.width > window.innerWidth) {
+                newPos.x = window.innerWidth - menuRect.width - 10;
+            }
+            if (position.y + menuRect.height > window.innerHeight) {
+                newPos.y = window.innerHeight - menuRect.height - 10;
+            }
+            setAdjustedPosition(newPos);
+        }
 
         if (isOpen) {
             document.addEventListener('mousedown', handleClickOutside);
@@ -54,21 +67,7 @@ const ContextMenu = ({ items, position, isOpen, onClose }: ContextMenuProps) => 
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isOpen, onClose]);
-
-    const getPositionStyles = () => {
-        const styles: React.CSSProperties = {};
-        if (typeof window !== 'undefined') {
-            const menuWidth = 240; // approx width
-            const menuHeight = items.length * 36; // approx height
-            styles.left = position.x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : position.x;
-            styles.top = position.y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : position.y;
-        } else {
-            styles.left = position.x;
-            styles.top = position.y;
-        }
-        return styles;
-    };
+    }, [isOpen, onClose, position]);
     
     return (
         <AnimatePresence>
@@ -79,7 +78,7 @@ const ContextMenu = ({ items, position, isOpen, onClose }: ContextMenuProps) => 
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.1 }}
-                    style={getPositionStyles()}
+                    style={{ top: adjustedPosition.y, left: adjustedPosition.x }}
                     className="fixed w-60 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-[100] p-1.5"
                 >
                     {items.map((item, index) => {
