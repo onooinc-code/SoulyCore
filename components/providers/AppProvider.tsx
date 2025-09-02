@@ -47,6 +47,8 @@ interface AppContextType {
     changeFontSize: (direction: 'increase' | 'decrease') => void;
     isConversationPanelOpen: boolean;
     setConversationPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    isConversationPanelMinimized: boolean;
+    setIsConversationPanelMinimized: React.Dispatch<React.SetStateAction<boolean>>;
     isLogPanelOpen: boolean;
     setLogPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
     backgroundTaskCount: number;
@@ -72,6 +74,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { log, setLoggingEnabled } = useLog();
 
     const [isConversationPanelOpen, setConversationPanelOpen] = useState(true);
+    const [isConversationPanelMinimized, setIsConversationPanelMinimized] = useState(false);
     const [isLogPanelOpen, setLogPanelOpen] = useState(false);
 
     const [activeView, setActiveView] = useState('dashboard'); // Default view
@@ -774,6 +777,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         changeFontSize,
         isConversationPanelOpen,
         setConversationPanelOpen,
+        isConversationPanelMinimized,
+        setIsConversationPanelMinimized,
         isLogPanelOpen,
         setLogPanelOpen,
         backgroundTaskCount,
@@ -790,7 +795,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         settings, loadSettings, setSettings, deleteConversation, updateConversationTitle,
         generateConversationTitle, deleteMessage, updateMessage, regenerateAiResponse,
         regenerateUserPromptAndGetResponse, unreadConversations, clearMessages,
-        changeFontSize, isConversationPanelOpen, setConversationPanelOpen, isLogPanelOpen, setLogPanelOpen,
+        changeFontSize, isConversationPanelOpen, setConversationPanelOpen, 
+        isConversationPanelMinimized, setIsConversationPanelMinimized,
+        isLogPanelOpen, setLogPanelOpen,
         backgroundTaskCount, startBackgroundTask, 
         endBackgroundTask, startWorkflow, activeWorkflow, activeView, setActiveView
     ]);
