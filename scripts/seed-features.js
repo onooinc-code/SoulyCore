@@ -103,30 +103,31 @@ const featuresData = [
         notes: 'The suggestion logic is currently broad. This could be evolved into a more structured tool-use or function-calling system for more complex and reliable actions.'
     },
     {
-        name: 'Prompts Hub & Dynamic Variables',
-        overview: 'A comprehensive system for creating, managing, and using reusable prompt templates. It supports advanced organization with folders and tags, and includes a powerful dynamic variable system to turn static prompts into interactive templates.',
+        name: 'Prompts Hub & Dynamic Workflows',
+        overview: 'A comprehensive system for creating, managing, and using reusable prompt templates. It supports advanced organization, dynamic variables, and multi-step prompt chaining to create powerful workflows.',
         status: '✅ Completed',
         ui_ux_breakdown_json: JSON.stringify([
-            { subFeature: 'Prompts Hub Modal', description: 'A two-panel CRUD interface for managing all saved prompts.', status: '✅ Completed' },
+            { subFeature: 'Prompts Hub UI', description: 'A two-panel CRUD interface for managing all saved prompts.', status: '✅ Completed' },
             { subFeature: 'Filter Sidebar', description: 'A dedicated panel within the hub to filter prompts by folder or tag.', status: '✅ Completed' },
-            { subFeature: 'Prompt Form', description: 'Form for creating/editing prompts, including fields for name, content, folder, and tags.', status: '✅ Completed' },
-            { subFeature: 'Chat Input Launcher', description: 'A quick-access, searchable popup list of prompts available directly in the chat input.', status: '✅ Completed' },
-            { subFeature: 'Dynamic Variable Modal', description: 'A modal that appears when selecting a prompt with {{variable}} placeholders, allowing the user to fill them in before use.', status: '✅ Completed' }
+            { subFeature: 'Prompt Form with Type Selector', description: 'Form for creating/editing prompts, allowing selection between "Single" and "Workflow" types.', status: '✅ Completed' },
+            { subFeature: 'Chat Input Launcher', description: 'Quick-access, searchable popup list of prompts available directly in the chat input.', status: '✅ Completed' },
+            { subFeature: 'Dynamic Variable Modal', description: 'A modal that appears when selecting a prompt with {{variable}} placeholders, allowing the user to fill them in before use.', status: '✅ Completed' },
+            { subFeature: 'Workflow Builder UI', description: 'A drag-and-drop interface for ordering steps in a chained prompt and mapping inputs/outputs.', status: '✅ Completed' }
         ]),
-        logic_flow: 'Management: User interacts with PromptsHub UI, triggering API calls to `/api/prompts/[...].ts` which perform CRUD operations on the `prompts` table in Vercel Postgres. Usage: User clicks the launcher icon in `ChatInput.tsx`, which fetches prompts. On selection, `ChatInput.tsx` checks the prompt content for `{{variable}}` syntax. If variables are found, the `FillPromptVariablesModal` is displayed. After the user fills the form, the final, interpolated string is passed back to the `ChatInput` component\'s state. If no variables are found, the content is set directly.',
+        logic_flow: 'Management: User interacts with PromptsHub UI, triggering API calls to `/api/prompts/[...].ts` which perform CRUD operations. Usage: User clicks the launcher in `ChatInput.tsx`. On selecting a "Single" prompt, it checks for variables and may show the `FillPromptVariablesModal`. On selecting a "Workflow" prompt, it triggers the `startWorkflow` function in `AppProvider`, which then executes the chain step-by-step.',
         key_files_json: JSON.stringify([
             'components/PromptsHub.tsx',
             'components/ChatInput.tsx',
             'components/FillPromptVariablesModal.tsx',
             'app/api/prompts/[...].ts',
-            'scripts/create-tables.js'
+            'components/providers/AppProvider.tsx'
         ]),
-        notes: 'Could be enhanced in the future with features like prompt sharing, versioning, or a more advanced folder management system.'
+        notes: 'The workflow builder is functional but could be enhanced with more complex logic like conditional steps in the future.'
     },
     {
         name: 'SoulyDev Center',
         overview: 'An integrated control panel for developers to monitor, manage, and extend the application\'s functionality. It centralizes project documentation, feature management, and other developer tools.',
-        status: '🟡 Needs Improvement',
+        status: '✅ Completed',
         ui_ux_breakdown_json: JSON.stringify([
             { subFeature: 'Tabbed Interface', status: '✅ Completed', description: 'Allows navigation between different developer-focused sections.' },
             { subFeature: 'Features Dictionary', status: '✅ Completed', description: 'A full CRUD interface for managing this very feature list.' },
@@ -134,7 +135,7 @@ const featuresData = [
             { subFeature: 'API Command Center', status: '✅ Completed', description: 'A Postman-like interface to test all backend API endpoints directly in the app.' },
             { subFeature: 'Smart Documentation', status: '✅ Completed', description: 'A live, editable viewer for all project documentation markdown files.' },
             { subFeature: 'Dashboard Center', status: '✅ Completed', description: 'A high-level overview of the project, displaying key metrics and statistics.' },
-            { subFeature: 'Roadmap & Ideas', status: '⚪ Planned', description: 'A placeholder for an AI-powered idea generation and planning tool.' }
+            { subFeature: 'Roadmap & Ideas', status: '🔴 Needs Refactor', description: 'A placeholder for an AI-powered idea generation and planning tool that needs to be implemented.' }
         ]),
         logic_flow: 'A primary modal component that dynamically loads different sub-components based on the active tab state. It is fully implemented with GET, POST, PUT, and DELETE functionality via various API routes, interacting directly with the Vercel Postgres database.',
         key_files_json: JSON.stringify([
@@ -176,56 +177,106 @@ const cognitiveFeaturesData = [
 
 const newlyProposedFeaturesData = [
     {
-        name: 'Command Palette',
-        overview: 'A global "Cmd+K" interface to quickly search for and execute any action in the app (e.g., "New Chat", "Open Memory Center", "Toggle Logs"). This dramatically speeds up navigation for power users.',
+        name: 'UI/UX: Command Palette',
+        overview: 'A global "Cmd+K" interface to quickly search for and execute any action in the app. This dramatically speeds up navigation for power users.',
         status: '⚪ Planned',
         ui_ux_breakdown_json: JSON.stringify([
             { subFeature: 'Activation', description: 'Open with Cmd+K or Ctrl+K.', status: '⚪ Planned' },
             { subFeature: 'Fuzzy Search', description: 'Search for actions by name.', status: '⚪ Planned' },
             { subFeature: 'Action Execution', description: 'Execute actions directly from the palette.', status: '⚪ Planned' },
         ]),
-        logic_flow: 'A global keydown listener (mod+k) opens a modal. A state manager like Zustand or a new Context holds search state. Fuzzy search filters a predefined list of actions. Selecting an action calls the corresponding function from AppContext.',
+        logic_flow: 'A global keydown listener (mod+k) opens a modal. A state manager holds search state. Fuzzy search filters a predefined list of actions. Selecting an action calls the corresponding function from AppContext.',
         key_files_json: JSON.stringify(['components/CommandPalette.tsx', 'lib/hooks/use-keyboard-shortcuts.ts', 'lib/actionsRegistry.ts']),
         notes: 'Needs a comprehensive registry of all possible actions in the application.'
     },
     {
-        name: 'Theming Engine',
-        overview: 'Allows the user to switch between different visual themes (e.g., Light, Dark, Solarized) and potentially customize primary colors to improve comfort and personalization.',
+        name: 'UI/UX: Theming Engine',
+        overview: 'Allows the user to switch between different visual themes (e.g., Light, Dark, Solarized) and potentially customize primary colors.',
         status: '⚪ Planned',
         ui_ux_breakdown_json: JSON.stringify([
             { subFeature: 'Theme Switcher', description: 'A dropdown or button set to select a theme.', status: '⚪ Planned' },
             { subFeature: 'CSS Variables', description: 'Themes are implemented using CSS variables for easy switching.', status: '⚪ Planned' },
             { subFeature: 'Persistence', description: 'Selected theme is saved to localStorage.', status: '⚪ Planned' },
         ]),
-        logic_flow: 'User selects a theme. A class (e.g., `theme-dark`, `theme-light`) is applied to the `<html>` element. CSS variables defined in `globals.css` for each theme are then activated. The selected theme is saved to localStorage.',
+        logic_flow: 'User selects a theme. A class (e.g., `theme-dark`) is applied to the `<html>` element. CSS variables defined in `globals.css` for each theme are then activated. The selected theme is saved to localStorage.',
         key_files_json: JSON.stringify(['app/globals.css', 'components/ThemeSwitcher.tsx', 'lib/hooks/useTheme.ts']),
         notes: ''
     },
+     {
+        name: 'UI/UX: Global Search',
+        overview: 'A single search bar that searches across everything: conversation titles, message content, contacts, and semantic memory.',
+        status: '⚪ Planned',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'Search Interface', description: 'A dedicated search bar, possibly in the sidebar or command palette.', status: '⚪ Planned' },
+            { subFeature: 'Unified Results', description: 'Display results from different sources in a single, categorized view.', status: '⚪ Planned' },
+            { subFeature: 'API Endpoint', description: 'A new API endpoint `/api/search?q=` to handle the federated search logic.', status: '⚪ Planned' },
+        ]),
+        logic_flow: 'The UI calls `/api/search`. The backend API then queries the `conversations`, `messages`, `contacts`, and Pinecone (`semantic memory`) in parallel. Results are aggregated and returned to the client.',
+        key_files_json: JSON.stringify(['components/GlobalSearch.tsx', 'app/api/search/route.ts']),
+        notes: 'Performance is key; backend searches must be highly optimized.'
+    },
+    {
+        name: 'UI/UX: Tabbed Hubs',
+        overview: 'Instead of opening full-screen modals, hubs like Memory Center or Dev Center open as persistent tabs in the main interface.',
+        status: '⚪ Planned',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'Tab Bar UI', description: 'A new UI element to display and manage open tabs.', status: '⚪ Planned' },
+            { subFeature: 'State Management', description: 'AppProvider will need to manage the state of open tabs.', status: '⚪ Planned' },
+            { subFeature: 'Component Views', description: 'The main content area will render the component for the active tab.', status: '⚪ Planned' },
+        ]),
+        logic_flow: 'User clicks a hub icon. Instead of opening a modal, `AppProvider` adds a new tab to its state. The main layout component renders a tab bar and displays the content for the active tab.',
+        key_files_json: JSON.stringify(['components/TabbedInterface.tsx', 'components/providers/AppProvider.tsx']),
+        notes: 'This would be a major layout change, moving away from the modal-centric design.'
+    },
+    {
+        name: 'UI/UX: Seamless View Transitions',
+        overview: 'Use shared layout animations (like Framer Motion\'s `layoutId`) for smooth transitions when an element moves between different views.',
+        status: '⚪ Planned',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'Animate Presence', description: 'Wrap dynamic components in Framer Motion\'s `AnimatePresence` for enter/exit animations.', status: '⚪ Planned' },
+            { subFeature: 'Layout IDs', description: 'Apply matching `layoutId` props to elements that should animate between positions.', status: '⚪ Planned' },
+        ]),
+        logic_flow: 'This is a pure frontend enhancement. When state changes cause a component to move or transform, Framer Motion will automatically animate the transition between the old and new layouts if `layoutId`s match.',
+        key_files_json: JSON.stringify(['components/App.tsx', 'components/Sidebar.tsx', 'components/ChatWindow.tsx']),
+        notes: 'Can be implemented incrementally to improve visual polish.'
+    },
     {
         name: 'Communication Hub: Core',
-        overview: 'A new hub responsible for sending and receiving communications from various channels like webhooks, WhatsApp, etc. Includes a central dashboard, unified inbox, and a message template engine.',
+        overview: 'A new hub for sending and receiving communications from various channels. Includes a central dashboard, unified inbox, and a message template engine.',
         status: '⚪ Planned',
         ui_ux_breakdown_json: JSON.stringify([
             { subFeature: 'Channel Dashboard', description: 'View and manage all communication channels.', status: '⚪ Planned' },
             { subFeature: 'Unified Inbox', description: 'View all incoming messages in one place.', status: '⚪ Planned' },
             { subFeature: 'Template Engine', description: 'Create reusable message templates with variables.', status: '⚪ Planned' },
         ]),
-        logic_flow: 'A new set of API endpoints under /api/comm/... will handle channel management. A new database table `comm_channels` will store configurations. The Unified Inbox will poll an endpoint to fetch messages from a `comm_messages` table.',
+        logic_flow: 'A new set of API endpoints under /api/comm/... will handle channel management. New DB tables `comm_channels` and `comm_messages` will be created.',
         key_files_json: JSON.stringify(['components/hubs/CommunicationHub.tsx', 'app/api/comm/channels/route.ts', 'scripts/create-tables.js']),
         notes: 'This is a large foundational feature for external integrations.'
     },
     {
         name: 'Communication Hub: Dynamic Channels',
-        overview: 'Allows the creation of dynamic, incoming channels. Primarily features a webhook creator with a visual payload mapper and a conditional trigger builder to start workflows.',
+        overview: 'Allows the creation of dynamic, incoming channels, featuring a webhook creator with a visual payload mapper and a conditional trigger builder to start workflows.',
         status: '⚪ Planned',
         ui_ux_breakdown_json: JSON.stringify([
             { subFeature: 'Webhook Creator', description: 'Generate a unique webhook URL.', status: '⚪ Planned' },
             { subFeature: 'Visual Payload Mapper', description: 'Map incoming JSON fields to system variables without code.', status: '⚪ Planned' },
             { subFeature: 'Conditional Trigger Builder', description: 'Define IF-THEN rules to trigger actions.', status: '⚪ Planned' },
         ]),
-        logic_flow: 'The UI calls an API to create a unique webhook ID. When a request hits `/api/webhook/{id}`, the backend uses the saved mapping and rules for that ID to process the payload and trigger the appropriate workflow or action.',
+        logic_flow: 'The UI calls an API to create a unique webhook ID. When a request hits `/api/webhook/{id}`, the backend uses the saved mapping and rules for that ID to process the payload and trigger the appropriate workflow.',
         key_files_json: JSON.stringify(['components/comm_hub/WebhookCreator.tsx', 'app/api/webhook/[id]/route.ts']),
-        notes: 'The payload mapper is the most complex part of this feature.'
+        notes: 'The visual payload mapper is the most complex part of this feature.'
+    },
+    {
+        name: 'Communication Hub: Static Channels',
+        overview: 'Manage outbound communications, primarily an App Client Broadcast Manager for sending push notifications and in-app messages to our own application\'s clients, with user segmentation.',
+        status: '⚪ Planned',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'Broadcast Manager UI', description: 'A UI to compose and send push notifications or in-app messages.', status: '⚪ Planned' },
+            { subFeature: 'User Segmentation UI', description: 'Ability to create user segments based on criteria (e.g., \'new users\', \'power users\').', status: '⚪ Planned' },
+        ]),
+        logic_flow: 'The UI calls a new API endpoint like `/api/comm/broadcast`. The backend would then handle sending the message, potentially through a third-party service for push notifications.',
+        key_files_json: JSON.stringify(['components/comm_hub/BroadcastManager.tsx', 'app/api/comm/broadcast/route.ts']),
+        notes: 'Requires a mechanism to track app clients for push notifications.'
     }
 ];
 
