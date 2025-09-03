@@ -2,23 +2,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import type { Feature } from '@/lib/types';
+import type { Feature, FeatureTest as TestCase, TestStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { useLog } from '../providers/LogProvider';
 import { CheckIcon, XIcon, MinusIcon } from '../Icons';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
-// --- Type Definitions ---
-type TestStatus = 'Passed' | 'Failed' | 'Not Run';
-interface TestCase {
-    id: string;
-    featureId: string;
-    description: string;
-    manual_steps: string;
-    expected_result: string;
-    last_run_status: TestStatus;
-    last_run_at: Date | null;
-}
 type FeatureHealth = 'Healthy' | 'Failing' | 'Untested' | 'Partial';
 
 // --- UI Mappings ---
@@ -68,9 +59,7 @@ const FeatureRow = ({
     const healthInfo = healthStatusMap[health];
 
     return (
-// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
         <motion.div layout className="bg-gray-800 rounded-lg overflow-hidden">
-{/* FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components. */}
             <motion.div layout className="flex items-center p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
                 <div className="flex items-center gap-3 w-1/4">
                     <span className={healthInfo.color}>{healthInfo.icon}</span>
@@ -85,7 +74,6 @@ const FeatureRow = ({
             </motion.div>
              <AnimatePresence>
                 {isExpanded && (
-// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -123,4 +111,160 @@ const TestExecutionView = ({ test, onUpdateStatus, isUpdating }: { test: TestCas
 
             <div className="space-y-4 flex-1 overflow-y-auto pr-2">
                 <div>
-                    <h5 className="font-semibold text-gray-300 mb-1
+                    <h5 className="font-semibold text-gray-300 mb-1">Manual Steps:</h5>
+                    <div className="prose-custom text-sm bg-gray-900/50 p-3 rounded-md">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{test.manual_steps || 'No steps provided.'}</ReactMarkdown>
+                    </div>
+                </div>
+                <div>
+                    <h5 className="font-semibold text-gray-300 mb-1">Expected Result:</h5>
+                    <div className="prose-custom text-sm bg-gray-900/50 p-3 rounded-md">
+                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{test.expected_result}</ReactMarkdown>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-shrink-0 pt-4 border-t border-gray-700 mt-4">
+                <p className="text-xs text-gray-400 mb-2">After manually performing the test, record the outcome:</p>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={() => onUpdateStatus(test.id, 'Passed')}
+                        disabled={isUpdating}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-500 disabled:opacity-50"
+                    >
+                        Mark as Passed
+                    </button>
+                    <button 
+                        onClick={() => onUpdateStatus(test.id, 'Failed')}
+                        disabled={isUpdating}
+                        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-500 disabled:opacity-50"
+                    >
+                        Mark as Failed
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// Main Component
+const FeatureHealthDashboard = () => {
+    const { setStatus, clearError } = useAppContext();
+    const { log } = useLog();
+    const [features, setFeatures] = useState<Feature[]>([]);
+    const [tests, setTests] = useState<TestCase[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [selectedTest, setSelectedTest] = useState<TestCase | null>(null);
+
+    const fetchData = useCallback(async () => {
+        setIsLoading(true);
+        clearError();
+        try {
+            const [featuresRes, testsRes] = await Promise.all([
+                fetch('/api/features'),
+                fetch('/api/tests')
+            ]);
+            if (!featuresRes.ok || !testsRes.ok) throw new Error('Failed to fetch data');
+            
+            const featuresData = await featuresRes.json();
+            const testsData = await testsRes.json();
+            setFeatures(featuresData);
+            setTests(testsData);
+
+        } catch (error) {
+            setStatus({ error: (error as Error).message });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [clearError, setStatus, log]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const handleUpdateTestStatus = async (testId: string, status: TestStatus) => {
+        setIsUpdating(true);
+        log(`Updating test status`, { testId, status });
+        try {
+            const res = await fetch(`/api/tests/${testId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ last_run_status: status }),
+            });
+            if (!res.ok) throw new Error('Failed to update test status');
+            await fetchData(); // Refresh data
+        } catch (error) {
+            setStatus({ error: (error as Error).message });
+            log('Failed to update test status', { error }, 'error');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+    
+    const testsByFeature = useMemo(() => {
+        return tests.reduce((acc, test) => {
+            if (!acc[test.featureId]) {
+                acc[test.featureId] = [];
+            }
+            acc[test.featureId].push(test);
+            return acc;
+        }, {} as Record<string, TestCase[]>);
+    }, [tests]);
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center h-full"><p>Loading health dashboard...</p></div>;
+    }
+
+    return (
+        <div className="h-full flex flex-col">
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                <h3 className="text-2xl font-bold">Feature Health Dashboard</h3>
+            </div>
+
+            <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden">
+                <div className="col-span-7 overflow-y-auto pr-2 space-y-3">
+                     {features.map(feature => (
+                        // FIX: Wrapped the iterated `FeatureRow` component in a div with the `key` prop to resolve a TypeScript error.
+                        // The `key` prop is for React's reconciliation and should be on the wrapping element of a list, not passed as a prop to the component itself.
+                        <div key={feature.id}>
+                            <FeatureRow 
+                                feature={feature}
+                                tests={testsByFeature[feature.id] || []}
+                                onSelectTest={setSelectedTest}
+                                selectedTestId={selectedTest?.id || null}
+                            />
+                        </div>
+                    ))}
+                </div>
+                 <div className="col-span-5">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={selectedTest ? selectedTest.id : 'empty'}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                            className="h-full"
+                        >
+                            {selectedTest ? (
+                                <TestExecutionView 
+                                    test={selectedTest}
+                                    onUpdateStatus={handleUpdateTestStatus}
+                                    isUpdating={isUpdating}
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-gray-500 bg-gray-800/50 rounded-lg">
+                                    <p>Select a test case to view details.</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default FeatureHealthDashboard;
