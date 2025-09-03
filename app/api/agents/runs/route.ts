@@ -46,30 +46,45 @@ export async function POST(req: NextRequest) {
         runId = run.id;
 
         let stepOrder = 1;
-        const maxSteps = 10;
+        const maxSteps = 15; // Increased max steps for complex tasks
         let history: { thought: string; action: any; observation: string }[] = [];
 
         for (let i = 0; i < maxSteps; i++) {
             const historyString = history.map((h, index) => 
                 `Step ${index + 1}:\nThought: ${h.thought}\nAction: ${JSON.stringify(h.action)}\nObservation: ${h.observation}`
-            ).join('\n\n');
+            ).join('\n\n---\n\n');
 
-            const prompt = `You are an autonomous agent. Your goal is: "${goal}".
-You have access to one tool: \`send_prompt(prompt: string)\`.
-To solve the goal, you must think step-by-step. For each step, provide your reasoning ("Thought") and the next action to take in a JSON block.
+            const prompt = `
+You are an autonomous agent designed to achieve a high-level goal by breaking it down into a sequence of smaller steps.
 
-Here is the history of your previous steps:
-${historyString}
+**Main Goal:** "${goal}"
 
-Your next step:
+**Available Tools:**
+1. \`send_prompt(prompt: string)\`: Sends a prompt to a powerful AI assistant to get information or process text. Use this for research, analysis, and content generation.
+2. \`finish(final_answer: string)\`: Use this action ONLY when you have fully completed the main goal and have the final, complete answer.
 
-Thought: [Your reasoning for the next action]
+**Your Task:**
+Based on the main goal and the history of your previous steps, decide on the very next action to take. You must follow the ReAct (Reason + Act) methodology.
+
+1.  **Thought:** First, reason about your current situation. Analyze the goal, review the history, and decide what single, small step you need to take next to get closer to the final answer.
+2.  **Action:** Formulate the action to take based on your thought. Your action MUST be one of the available tools.
+
+**Output Format:**
+Your response MUST be ONLY a single "Thought" followed by a single JSON block. Do NOT add any other text, explanations, or conversational filler.
+
+**Execution History:**
+${historyString || 'No steps taken yet.'}
+
+**Your Next Step:**
+
+Thought: [Your reasoning for the next single action]
 \`\`\`json
 {
-  "action": "send_prompt | finish",
-  "input": "If action is 'send_prompt', this is the prompt for the assistant. If 'finish', this is the final answer."
+  "action": "send_prompt" or "finish",
+  "input": "If action is 'send_prompt', this is the precise text for the prompt. If 'finish', this is the final, comprehensive answer to the user's main goal."
 }
-\`\`\``;
+\`\`\`
+`;
 
             // 1. Get next thought and action from agent
             const ai = getAiClient();
@@ -83,21 +98,30 @@ Thought: [Your reasoning for the next action]
                 throw new Error("Agent failed to generate a response. The response from the model was empty.");
             }
 
-            const thoughtMatch = responseText.match(/Thought:\s*(.*)/);
+            const thoughtMatch = responseText.match(/Thought:\s*([\s\S]*?)(?=```json)/);
             const thought = thoughtMatch ? thoughtMatch[1].trim() : 'No thought process found.';
             
             const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
             if (!jsonMatch) {
+                console.error("Invalid agent response format:", responseText);
                 throw new Error('Agent did not return a valid JSON action block.');
             }
-            const action = JSON.parse(jsonMatch[1]);
+            
+            let action;
+            try {
+                 action = JSON.parse(jsonMatch[1]);
+            } catch(e) {
+                console.error("Failed to parse JSON action block:", jsonMatch[1]);
+                throw new Error('Agent returned a malformed JSON action block.');
+            }
+
 
             // 2. Execute the action
             let observation = '';
             if (action.action === 'finish') {
                 await sql<AgentRunStep>`
                     INSERT INTO agent_run_steps (run_id, step_order, thought, action_type, action_input, observation)
-                    VALUES (${runId}, ${stepOrder}, ${thought}, ${action.action}, ${action.input ? JSON.stringify(action.input) : null}, 'Goal marked as finished.');
+                    VALUES (${runId}, ${stepOrder}, ${thought}, ${action.action}, ${action.input ? JSON.stringify({input: action.input}) : null}, 'Goal marked as finished.');
                 `;
                 const duration = Date.now() - startTime;
                 await sql`
@@ -110,7 +134,7 @@ Thought: [Your reasoning for the next action]
                 const assistantResponse = await generateChatResponse([{ role: 'user', parts: [{ text: action.input }] }], 'You are a helpful assistant.');
                 observation = assistantResponse?.text || 'No response from assistant.';
             } else {
-                observation = `Unknown action: ${action.action}`;
+                observation = `Error: Unknown action '${action.action}'. Available actions are 'send_prompt' and 'finish'.`;
             }
 
             // 3. Log the step and observation
