@@ -129,6 +129,7 @@ export interface AppSettings {
     featureFlags: {
         enableMemoryExtraction: boolean;
         enableProactiveSuggestions: boolean;
+
         enableAutoSummarization: boolean;
     };
 }
@@ -277,4 +278,40 @@ export interface AgentRunStep {
     action_input: Record<string, any> | null;
     observation: string | null;
     createdAt: Date;
+}
+
+// --- Hedra Goals V2 Types ---
+export type HealthScore = 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';
+
+export interface SubsystemResource {
+  name: 'Figma' | 'Google Docs' | 'Notion' | 'GitHub Repo';
+  url: string;
+}
+
+export interface SubsystemMilestone {
+  description: string;
+  completed: boolean;
+}
+
+export interface SubsystemGitHubStats {
+    commits: number;
+    pullRequests: number;
+    issues: number;
+    repoUrl: string;
+}
+
+export interface Subsystem {
+  id: string;
+  name: string;
+  description: string;
+  progress: number;
+  healthScore: HealthScore;
+  dependencies: string[];
+  resources: SubsystemResource[];
+  milestones: SubsystemMilestone[];
+  githubStats: SubsystemGitHubStats;
+  tasks?: { // For drill-down modal
+      completed: string[];
+      remaining: string[];
+  }
 }
