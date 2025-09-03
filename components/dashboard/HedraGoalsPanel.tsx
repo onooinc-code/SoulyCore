@@ -38,10 +38,13 @@ const AccordionItem = ({ title, arabicContent, englishContent, isEditing, onCont
                 <p>{englishContent}</p>
             </div>
             
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center p-4 text-right">
-                <span className="font-bold text-lg text-gray-200">{title}</span>
-                <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            <button 
+                onClick={() => setIsOpen(!isOpen)} 
+                className="w-full flex justify-between items-center p-4 text-right bg-indigo-900/20 hover:bg-indigo-900/40 transition-colors duration-300 animate-pulse"
+            >
+                <span className="font-bold text-lg text-white">{title}</span>
+                <motion.div animate={{ rotate: isOpen ? 0 : -180 }} transition={{ duration: 0.3 }}>
+                    <svg className="w-6 h-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </motion.div>
             </button>
             <AnimatePresence>
@@ -53,7 +56,7 @@ const AccordionItem = ({ title, arabicContent, englishContent, isEditing, onCont
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                     >
-                        <div className="p-4 pt-0">
+                        <div className="p-4 pt-2" dir="rtl">
                             {isEditing ? (
                                 <textarea
                                     value={arabicContent}
@@ -295,7 +298,7 @@ const HedraGoalsPanel = () => {
                 </div>
 
                 {/* Right Column */}
-                <div className="lg:col-span-2 space-y-4 text-right">
+                <div className="lg:col-span-2 space-y-4" dir="rtl">
                     <AccordionItem
                         title={sections.main_goal.title}
                         arabicContent={editedContent.main_goal?.content}
