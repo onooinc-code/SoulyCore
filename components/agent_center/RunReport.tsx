@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { AgentRun, AgentRunStep } from '@/lib/types';
 import { useLog } from '../providers/LogProvider';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SparklesIcon, CheckIcon, XIcon, LightbulbIcon, ServerIcon } from '../Icons';
+import { SparklesIcon, CheckIcon, XIcon, LightbulbIcon, ServerIcon, ClockIcon } from '../Icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -83,11 +83,15 @@ const RunReport = ({ runId }: RunReportProps) => {
         return <div className="flex items-center justify-center h-full text-gray-500">Could not find data for this run.</div>;
     }
 
-    const statusInfo = {
+    const statusInfoMap: Record<AgentRun['status'], { icon: React.FC<React.SVGProps<SVGSVGElement>>; color: string; label: string }> = {
+        planning: { icon: SparklesIcon, color: 'text-blue-400', label: 'Planning' },
+        awaiting_approval: { icon: ClockIcon, color: 'text-orange-400', label: 'Awaiting Approval' },
+        running: { icon: SparklesIcon, color: 'text-yellow-400', label: 'Running' },
         completed: { icon: CheckIcon, color: 'text-green-400', label: 'Completed' },
         failed: { icon: XIcon, color: 'text-red-400', label: 'Failed' },
-        running: { icon: SparklesIcon, color: 'text-yellow-400', label: 'Running' },
-    }[run.status];
+    };
+
+    const statusInfo = statusInfoMap[run.status];
 
     return (
         <div className="h-full flex flex-col">
