@@ -78,6 +78,10 @@ Thought: [Your reasoning for the next action]
                 contents: prompt,
             });
             const responseText = agentResponse.text;
+
+            if (!responseText) {
+                throw new Error("Agent failed to generate a response text.");
+            }
             
             const thoughtMatch = responseText.match(/Thought:\s*(.*)/);
             const thought = thoughtMatch ? thoughtMatch[1].trim() : 'No thought process found.';
