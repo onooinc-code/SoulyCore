@@ -68,12 +68,14 @@ const PlanDisplay = ({ goal, plan, state, onApprove, onDiscard, onReplan }: Plan
                     </div>
                 )}
                 <AnimatePresence>
+                     {/* FIX: Wrapped the iterated `PhaseCard` component in a `div` with a `key` prop to resolve a TypeScript error where the key was being passed down as a prop. */}
                      {plan && plan.map((phase, index) => (
-                        <PhaseCard 
-                            key={index} 
-                            phase={phase}
-                            isActive={state === 'executing' && phase.status === 'running'} // This will be dynamic later
-                        />
+                        <div key={index}>
+                            <PhaseCard 
+                                phase={phase}
+                                isActive={state === 'executing' && phase.status === 'running'} // This will be dynamic later
+                            />
+                        </div>
                     ))}
                 </AnimatePresence>
             </div>

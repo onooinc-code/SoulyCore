@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -37,23 +38,29 @@ const DashboardCenter = () => {
             <main className="flex-1 p-4 overflow-y-auto space-y-4">
                 <HeaderPanel />
                 
+                {/* FIX: Pass panel components as children to DashboardPanel to resolve missing 'children' prop error. */}
                 <DashboardPanel title="Hedra Strategic Goals" isCollapsedOverride={allPanelsCollapsed}>
                     <HedraGoalsPanel />
                 </DashboardPanel>
                 
+                {/* FIX: Pass panel components as children to DashboardPanel to resolve missing 'children' prop error. */}
                 <DashboardPanel title="System Statistics" isCollapsedOverride={allPanelsCollapsed}>
                     <StatsPanel />
                 </DashboardPanel>
 
+                {/* FIX: Pass panel components as children to DashboardPanel to resolve missing 'children' prop error. */}
                 <DashboardPanel title="Project Documentations" isCollapsedOverride={allPanelsCollapsed}>
                     <DocumentationPanel />
                 </DashboardPanel>
+                {/* FIX: Pass panel components as children to DashboardPanel to resolve missing 'children' prop error. */}
                 <DashboardPanel title="Action Center" isCollapsedOverride={allPanelsCollapsed}>
                     <ActionsPanel />
                 </DashboardPanel>
+                {/* FIX: Pass panel components as children to DashboardPanel to resolve missing 'children' prop error. */}
                 <DashboardPanel title="Needed Decisions" isCollapsedOverride={allPanelsCollapsed}>
                     <DecisionsPanel />
                 </DashboardPanel>
+                {/* FIX: Pass panel components as children to DashboardPanel to resolve missing 'children' prop error. */}
                 <DashboardPanel title="Important Reports" isCollapsedOverride={allPanelsCollapsed}>
                     <ReportsPanel />
                 </DashboardPanel>

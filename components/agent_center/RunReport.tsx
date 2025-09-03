@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -73,7 +74,8 @@ const PhaseReport = ({ phase }: { phase: AgentPlanPhase }) => {
             </div>
             <AnimatePresence>
                 <div className="space-y-4">
-                    {phase.steps?.map(step => <Step key={step.id} step={step} />)}
+                    {/* FIX: Wrapped iterated component in a div with a key to resolve TypeScript error. */}
+                    {phase.steps?.map(step => <div key={step.id}><Step step={step} /></div>)}
                 </div>
             </AnimatePresence>
         </motion.div>
@@ -212,8 +214,9 @@ const RunReport = ({ runId }: RunReportProps) => {
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                 <AnimatePresence>
+                    {/* FIX: Wrapped iterated component in a div with a key to resolve TypeScript error. */}
                     {phasesWithSteps.map(phase => (
-                        <PhaseReport key={phase.id} phase={phase} />
+                        <div key={phase.id}><PhaseReport phase={phase} /></div>
                     ))}
                 </AnimatePresence>
 

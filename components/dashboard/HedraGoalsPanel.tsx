@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -95,13 +96,15 @@ const HedraGoalsPanel = () => {
                     <div className="bg-gray-800 p-4 rounded-lg">
                         <h4 className="font-semibold text-center mb-4">الأنظمة الفرعية (Subsystems)</h4>
                         <Reorder.Group axis="y" values={subsystems} onReorder={setSubsystems} className="space-y-3">
+                            {/* FIX: Wrapped the iterated `SubsystemCard` component in a `Reorder.Item` to use framer-motion's reordering feature correctly and resolve a TypeScript error where the `key` prop was being passed down. */}
                             {subsystems.map(sub => (
-                                <SubsystemCard 
-                                    key={sub.id} 
-                                    subsystem={sub} 
-                                    onOpenDetails={() => setSelectedSubsystem(sub)}
-                                    onAiAction={handleAiAction}
-                                />
+                                <Reorder.Item key={sub.id} value={sub}>
+                                    <SubsystemCard 
+                                        subsystem={sub} 
+                                        onOpenDetails={() => setSelectedSubsystem(sub)}
+                                        onAiAction={handleAiAction}
+                                    />
+                                </Reorder.Item>
                             ))}
                         </Reorder.Group>
                     </div>
