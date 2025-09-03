@@ -8,7 +8,6 @@ export interface Conversation {
     createdAt: Date;
     lastUpdatedAt: Date;
     systemPrompt?: string;
-    agentPersonality?: string;
     useSemanticMemory?: boolean;
     useStructuredMemory?: boolean;
     model?: string;
@@ -36,6 +35,7 @@ export interface Contact {
     email?: string;
     company?: string;
     phone?: string;
+
     linkedin_url?: string;
     address?: string;
     tags?: string[];
@@ -263,16 +263,29 @@ export interface PipelinePerformanceChartData {
 export interface AgentRun {
     id: string;
     goal: string;
-    status: 'running' | 'completed' | 'failed';
+    status: 'planning' | 'awaiting_approval' | 'running' | 'completed' | 'failed';
     final_result: string | null;
     createdAt: Date;
     completedAt: Date | null;
     duration_ms: number | null;
 }
 
+export interface AgentPlanPhase {
+    id: string;
+    run_id: string;
+    phase_order: number;
+    goal: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    result: string | null;
+    steps?: AgentRunStep[];
+    started_at?: Date | null;
+    completed_at?: Date | null;
+}
+
 export interface AgentRunStep {
     id: string;
     run_id: string;
+    phase_id?: string; // Link step to a phase
     step_order: number;
     thought: string | null;
     action_type: 'prompt' | 'tool' | 'finish';
@@ -280,6 +293,7 @@ export interface AgentRunStep {
     observation: string | null;
     createdAt: Date;
 }
+
 
 // --- Hedra Goals V2 Types ---
 export type HealthScore = 'A+' | 'A' | 'B' | 'C' | 'D' | 'F';

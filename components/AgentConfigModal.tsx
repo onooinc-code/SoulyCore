@@ -1,8 +1,9 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { Conversation } from '@/lib/types';
-import { XIcon, SparklesIcon, LightbulbIcon, SummarizeIcon, DocumentTextIcon, CodeIcon } from './Icons';
+import { XIcon } from './Icons';
 import { useAppContext } from '@/components/providers/AppProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLog } from './providers/LogProvider';
@@ -13,43 +14,11 @@ interface AgentConfigModalProps {
     conversation: Conversation | null;
 }
 
-type Personality = 'Balanced' | 'Creative' | 'Concise' | 'Detailed' | 'Code Focused';
-
-const personalities: Record<Personality, { label: string; prompt: string; icon: React.FC<any> }> = {
-    'Balanced': {
-        label: 'Balanced',
-        prompt: 'You are a helpful AI assistant. Provide clear, balanced, and informative responses.',
-        icon: SparklesIcon
-    },
-    'Creative': {
-        label: 'Creative',
-        prompt: "You are a highly creative and imaginative AI assistant. Your responses should be inspiring, unconventional, and explore novel ideas. Think outside the box and don't be afraid to be playful.",
-        icon: LightbulbIcon
-    },
-    'Concise': {
-        label: 'Concise',
-        prompt: "You are a concise and to-the-point AI assistant. Your answers must be short, direct, and contain only the most essential information. Use bullet points or numbered lists whenever possible to improve clarity.",
-        icon: SummarizeIcon
-    },
-    'Detailed': {
-        label: 'Detailed',
-        prompt: "You are a detailed, thorough, and expert AI assistant. Provide comprehensive, in-depth explanations. Cover all relevant aspects of the topic, provide background context, and use examples where appropriate.",
-        icon: DocumentTextIcon
-    },
-    'Code Focused': {
-        label: 'Code Focused',
-        prompt: "You are an expert programmer and code assistant. Your primary focus is on providing accurate, efficient, and well-documented code. Prioritize code examples over lengthy explanations. Explain code with comments where necessary.",
-        icon: CodeIcon
-    }
-};
-
-
 // FIX: Removed React.FC to fix framer-motion type inference issue.
 const AgentConfigModal = ({ isOpen, onClose, conversation }: AgentConfigModalProps) => {
     const { updateCurrentConversation, setStatus, clearError } = useAppContext();
     const { log } = useLog();
     const [systemPrompt, setSystemPrompt] = useState('');
-    const [agentPersonality, setAgentPersonality] = useState<Personality>('Balanced');
     const [useSemanticMemory, setUseSemanticMemory] = useState(false);
     const [useStructuredMemory, setUseStructuredMemory] = useState(true);
     const [enableMemoryExtraction, setEnableMemoryExtraction] = useState(true);
@@ -59,7 +28,6 @@ const AgentConfigModal = ({ isOpen, onClose, conversation }: AgentConfigModalPro
     useEffect(() => {
         if (conversation && isOpen) {
             setSystemPrompt(conversation.systemPrompt || 'You are a helpful AI assistant.');
-            setAgentPersonality(conversation.agentPersonality as Personality || 'Balanced');
             setUseSemanticMemory(conversation.useSemanticMemory ?? true);
             setUseStructuredMemory(conversation.useStructuredMemory ?? true);
             setEnableMemoryExtraction(conversation.enableMemoryExtraction ?? true);
@@ -68,18 +36,12 @@ const AgentConfigModal = ({ isOpen, onClose, conversation }: AgentConfigModalPro
         }
     }, [conversation, isOpen, log]);
 
-    const handlePersonalityChange = (personality: Personality) => {
-        setAgentPersonality(personality);
-        setSystemPrompt(personalities[personality].prompt);
-    };
-
     const handleSave = async () => {
         if (!conversation) return;
         clearError();
         
         const updatedConversationData = {
             systemPrompt,
-            agentPersonality,
             useSemanticMemory,
             useStructuredMemory,
             enableMemoryExtraction,
@@ -139,35 +101,11 @@ const AgentConfigModal = ({ isOpen, onClose, conversation }: AgentConfigModalPro
                         <h2 className="text-xl font-bold">Agent Configuration</h2>
                         <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700"><XIcon className="w-6 h-6" /></button>
                     </div>
-                    <div className="p-6 space-y-6 overflow-y-auto">
+                    <div className="p-6 space-y-4 overflow-y-auto">
                         <div>
                             <label htmlFor="systemPrompt" className="block text-sm font-medium text-gray-400 mb-1">System Instructions</label>
-                            <p className="text-xs text-gray-500 mb-2">This is the core instruction that guides the AI's behavior. Selecting a personality below will set a default prompt, which you can then customize.</p>
                             <textarea id="systemPrompt" value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} rows={5} className="w-full p-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
                         </div>
-
-                        <div>
-                            <h3 className="text-lg font-medium text-gray-300 mb-2">Agent Personality</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {Object.keys(personalities).map(key => {
-                                    const personality = personalities[key as Personality];
-                                    const isSelected = agentPersonality === key;
-                                    return (
-                                        <button
-                                            key={key}
-                                            onClick={() => handlePersonalityChange(key as Personality)}
-                                            className={`p-3 rounded-lg text-left transition-all duration-200 border-2 ${isSelected ? 'bg-indigo-600/30 border-indigo-500' : 'bg-gray-700/50 border-transparent hover:border-indigo-500/50'}`}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <personality.icon className={`w-5 h-5 ${isSelected ? 'text-indigo-400' : 'text-gray-400'}`} />
-                                                <span className={`font-semibold ${isSelected ? 'text-white' : 'text-gray-300'}`}>{personality.label}</span>
-                                            </div>
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h3 className="text-lg font-medium text-gray-300 mb-2">Memory Association</h3>

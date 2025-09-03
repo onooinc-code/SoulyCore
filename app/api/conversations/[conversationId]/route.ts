@@ -10,8 +10,7 @@ export async function PUT(req: NextRequest, { params }: { params: { conversation
             title, summary, systemPrompt, 
             useSemanticMemory, useStructuredMemory, 
             model, temperature, topP,
-            enableMemoryExtraction, enableProactiveSuggestions, enableAutoSummarization,
-            agentPersonality
+            enableMemoryExtraction, enableProactiveSuggestions, enableAutoSummarization
         } = await req.json();
         
         const updates: string[] = [];
@@ -61,10 +60,6 @@ export async function PUT(req: NextRequest, { params }: { params: { conversation
         if (enableAutoSummarization !== undefined) {
             updates.push(`"enableAutoSummarization" = $${queryIndex++}`);
             values.push(enableAutoSummarization);
-        }
-        if (agentPersonality !== undefined) {
-            updates.push(`"agentPersonality" = $${queryIndex++}`);
-            values.push(agentPersonality);
         }
         
         updates.push(`"lastUpdatedAt" = CURRENT_TIMESTAMP`);

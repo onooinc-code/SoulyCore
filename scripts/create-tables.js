@@ -14,7 +14,6 @@ async function createTables() {
                 "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 "systemPrompt" TEXT,
-                "agentPersonality" VARCHAR(50) DEFAULT 'Balanced',
                 "useSemanticMemory" BOOLEAN DEFAULT true,
                 "useStructuredMemory" BOOLEAN DEFAULT true,
                 model VARCHAR(255),
@@ -60,11 +59,6 @@ async function createTables() {
             await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "enableAutoSummarization" BOOLEAN DEFAULT true;`;
         } catch (e) {
             if (!e.message.includes('column "enableAutoSummarization" already exists')) throw e;
-        }
-         try {
-            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "agentPersonality" VARCHAR(50) DEFAULT 'Balanced';`;
-        } catch (e) {
-            if (!e.message.includes('column "agentPersonality" already exists')) throw e;
         }
         console.log("Conversation model and feature columns checked.");
 
@@ -313,10 +307,26 @@ async function createTables() {
         `;
         console.log("Table 'agent_runs' created or already exists.", agentRunsTable.command);
 
+        const agentRunPhasesTable = await sql`
+            CREATE TABLE IF NOT EXISTS agent_run_phases (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                run_id UUID REFERENCES agent_runs(id) ON DELETE CASCADE,
+                phase_order INTEGER NOT NULL,
+                goal TEXT NOT NULL,
+                status VARCHAR(50) NOT NULL DEFAULT 'pending',
+                result TEXT,
+                started_at TIMESTAMP WITH TIME ZONE,
+                completed_at TIMESTAMP WITH TIME ZONE,
+                UNIQUE(run_id, phase_order)
+            );
+        `;
+        console.log("Table 'agent_run_phases' created or already exists.", agentRunPhasesTable.command);
+
         const agentRunStepsTable = await sql`
             CREATE TABLE IF NOT EXISTS agent_run_steps (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 run_id UUID REFERENCES agent_runs(id) ON DELETE CASCADE,
+                phase_id UUID REFERENCES agent_run_phases(id) ON DELETE CASCADE,
                 step_order INTEGER NOT NULL,
                 thought TEXT,
                 action_type VARCHAR(50) NOT NULL,
@@ -325,7 +335,17 @@ async function createTables() {
                 "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `;
-        console.log("Table 'agent_run_steps' created or already exists.", agentRunStepsTable.command);
+        console.log("Table 'agent_run_steps' updated or already exists.", agentRunStepsTable.command);
+
+        // Ensure new column exists for existing deployments
+        try {
+            await sql`ALTER TABLE agent_run_steps ADD COLUMN IF NOT EXISTS phase_id UUID REFERENCES agent_run_phases(id) ON DELETE CASCADE;`;
+        } catch (e) {
+            if (!e.message.includes('column "phase_id" of relation "agent_run_steps" already exists')) {
+                 console.warn(`Could not add phase_id column automatically: ${e.message}`);
+            }
+        }
+        console.log("Agent run steps table columns checked.");
 
 
         // Insert default settings if they don't exist
