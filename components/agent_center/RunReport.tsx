@@ -115,7 +115,7 @@ const RunReport = ({ runId }: RunReportProps) => {
                     {steps.map(step => <Step key={step.id} step={step} />)}
                 </AnimatePresence>
 
-                {run.status !== 'running' && (
+                {run.status !== 'running' && run.status !== 'planning' && run.status !== 'awaiting_approval' && (
                     <motion.div
                         layout
                         initial={{ opacity: 0 }}
