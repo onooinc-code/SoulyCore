@@ -171,6 +171,18 @@ async function createTables() {
         }
         console.log("Prompts table columns checked.");
 
+        const toolsTable = await sql`
+            CREATE TABLE IF NOT EXISTS tools (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                name VARCHAR(255) NOT NULL UNIQUE,
+                description TEXT,
+                schema_json JSONB,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'tools' created or already exists.", toolsTable.command);
+
         const brainsTable = await sql`
             CREATE TABLE IF NOT EXISTS brains (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

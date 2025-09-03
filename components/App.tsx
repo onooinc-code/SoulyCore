@@ -15,6 +15,7 @@ import {
     BrainIcon,
     DashboardIcon,
     RocketLaunchIcon,
+    ToolsIcon,
 } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -54,6 +55,11 @@ const AgentCenter = dynamic(() => import('@/components/agent_center/AgentCenter'
 const DashboardCenter = dynamic(() => import('@/components/dashboard/DashboardCenter'), {
     ssr: false,
     loading: () => <div className="w-full h-full flex items-center justify-center"><p>Loading Dashboard...</p></div>
+});
+
+const ToolsHub = dynamic(() => import('@/components/ToolsHub'), {
+    ssr: false,
+    loading: () => <div className="w-full h-full flex items-center justify-center"><p>Loading Tools Hub...</p></div>
 });
 
 const BookmarksModal = dynamic(() => import('@/components/BookmarksModal'), {
@@ -127,6 +133,7 @@ export const App = () => {
             { label: 'Memory Center', icon: MemoryIcon, action: () => setActiveView('memory_center') },
             { label: 'Contacts Hub', icon: UsersIcon, action: () => setActiveView('contacts_hub') },
             { label: 'Prompts Hub', icon: PromptsIcon, action: () => setActiveView('prompts_hub') },
+            { label: 'Tools Hub', icon: ToolsIcon, action: () => setActiveView('tools_hub') },
             { isSeparator: true },
             // Development Group
             { label: 'Dashboard Center', icon: DashboardIcon, action: () => setActiveView('dashboard') },
@@ -158,6 +165,7 @@ export const App = () => {
             case 'memory_center': return <MemoryCenter />;
             case 'contacts_hub': return <ContactsHub />;
             case 'prompts_hub': return <PromptsHub />;
+            case 'tools_hub': return <ToolsHub />;
             case 'dev_center': return <DevCenter />;
             case 'chat':
             default:

@@ -80,6 +80,8 @@ export interface Tool {
     name: string;
     description: string;
     schema_json: string;
+    createdAt: Date;
+    lastUpdatedAt: Date;
 }
 
 export interface PromptChainStep {

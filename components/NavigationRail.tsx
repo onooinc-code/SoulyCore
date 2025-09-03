@@ -7,7 +7,8 @@ import {
     PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, 
     SettingsIcon, LogIcon, BrainIcon, DashboardIcon, PromptsIcon, 
     ChatBubbleLeftRightIcon,
-    RocketLaunchIcon
+    RocketLaunchIcon,
+    ToolsIcon
 } from '@/components/Icons';
 import { useLog } from './providers/LogProvider';
 
@@ -39,6 +40,7 @@ const NavigationRail = ({ setBookmarksOpen, setGlobalSettingsOpen }: {
         { viewName: 'memory_center', label: 'Memory Center', icon: MemoryIcon, tooltip: "View and manage the AI's structured knowledge. (Cmd+K)" },
         { viewName: 'contacts_hub', label: 'Contacts Hub', icon: UsersIcon, tooltip: "Manage people and organizations the AI knows about." },
         { viewName: 'prompts_hub', label: 'Prompts Hub', icon: PromptsIcon, tooltip: "Create and manage reusable prompt templates." },
+        { viewName: 'tools_hub', label: 'Tools Hub', icon: ToolsIcon, tooltip: "Manage agent tools and capabilities." },
         { viewName: 'dev_center', label: 'Dev Center', icon: CodeIcon, tooltip: "Access developer tools and project documentation." },
     ];
 
