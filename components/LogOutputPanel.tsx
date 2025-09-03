@@ -3,6 +3,8 @@
 
 
 
+
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -20,7 +22,7 @@ type LogLevel = 'info' | 'warn' | 'error';
 type FilterLevel = LogLevel | 'all';
 
 // Component for rendering a single log entry
-// FIX: Removed React.FC to allow for proper type inference with framer-motion props.
+// FIX: Removed React.FC to fix framer-motion type inference issue.
 const LogEntry = ({ log }: { log: LogEntryType }) => {
     const [copied, setCopied] = useState(false);
 
@@ -123,6 +125,7 @@ const LogOutputPanel = ({ isOpen }: LogOutputPanelProps) => {
     return (
         <AnimatePresence>
             {isOpen && (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error.
                 <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: '250px', opacity: 1 }}

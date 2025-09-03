@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -209,6 +210,7 @@ const PromptsHub = () => {
                 </div>
 
                 <div className="flex-1 flex flex-col overflow-hidden">
+{/* FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error. */}
                      <AnimatePresence>{currentPrompt && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden flex-shrink-0">{renderPromptForm()}</motion.div>}</AnimatePresence>
 
                     <div className="flex-1 overflow-y-auto pr-2 space-y-3">

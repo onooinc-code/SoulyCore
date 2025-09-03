@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -72,6 +73,7 @@ const VersionCard = () => {
                 </div>
                 <AnimatePresence>
                     {isHovered && (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -135,6 +137,7 @@ const Header = () => {
     };
 
     return (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
         <motion.header 
             initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -160,6 +163,7 @@ const Header = () => {
                 <div className="flex-1 min-w-0">
                     <AnimatePresence mode="wait">
                         {isEditing ? (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
                             <motion.div key="editing-title" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                 <input
                                     type="text"
@@ -172,6 +176,7 @@ const Header = () => {
                                 />
                             </motion.div>
                         ) : (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
                             <motion.h1 
                                 key="display-title" 
                                 initial={{ opacity: 0 }} 

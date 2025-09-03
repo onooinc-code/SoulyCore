@@ -294,6 +294,33 @@ async function createTables() {
         `;
         console.log("Table 'version_history' created or already exists.", versionHistoryTable.command);
 
+        const agentRunsTable = await sql`
+            CREATE TABLE IF NOT EXISTS agent_runs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                goal TEXT NOT NULL,
+                status VARCHAR(50) NOT NULL DEFAULT 'running',
+                final_result TEXT,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                "completedAt" TIMESTAMP WITH TIME ZONE,
+                duration_ms INTEGER
+            );
+        `;
+        console.log("Table 'agent_runs' created or already exists.", agentRunsTable.command);
+
+        const agentRunStepsTable = await sql`
+            CREATE TABLE IF NOT EXISTS agent_run_steps (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                run_id UUID REFERENCES agent_runs(id) ON DELETE CASCADE,
+                step_order INTEGER NOT NULL,
+                thought TEXT,
+                action_type VARCHAR(50) NOT NULL,
+                action_input JSONB,
+                observation TEXT,
+                "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        console.log("Table 'agent_run_steps' created or already exists.", agentRunStepsTable.command);
+
 
         // Insert default settings if they don't exist
         await sql`

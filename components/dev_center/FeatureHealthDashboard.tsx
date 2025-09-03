@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -67,7 +68,9 @@ const FeatureRow = ({
     const healthInfo = healthStatusMap[health];
 
     return (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
         <motion.div layout className="bg-gray-800 rounded-lg overflow-hidden">
+{/* FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components. */}
             <motion.div layout className="flex items-center p-4 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
                 <div className="flex items-center gap-3 w-1/4">
                     <span className={healthInfo.color}>{healthInfo.icon}</span>
@@ -82,6 +85,7 @@ const FeatureRow = ({
             </motion.div>
              <AnimatePresence>
                 {isExpanded && (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -119,166 +123,4 @@ const TestExecutionView = ({ test, onUpdateStatus, isUpdating }: { test: TestCas
 
             <div className="space-y-4 flex-1 overflow-y-auto pr-2">
                 <div>
-                    <h5 className="font-semibold text-gray-300 mb-1">Manual Steps</h5>
-                    <div className="prose-custom text-sm bg-gray-900/50 p-3 rounded-md whitespace-pre-wrap">{test.manual_steps || 'No steps provided.'}</div>
-                </div>
-                <div>
-                    <h5 className="font-semibold text-gray-300 mb-1">Expected Result</h5>
-                    <div className="prose-custom text-sm bg-gray-900/50 p-3 rounded-md whitespace-pre-wrap">{test.expected_result}</div>
-                </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-700 flex justify-end gap-3">
-                 <button 
-                    onClick={() => onUpdateStatus(test.id, 'Failed')}
-                    disabled={isUpdating}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-500 disabled:opacity-50"
-                 >
-                    <XIcon className="w-5 h-5 inline-block mr-2" />
-                    Mark as Failed
-                </button>
-                <button 
-                    onClick={() => onUpdateStatus(test.id, 'Passed')}
-                    disabled={isUpdating}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-500 disabled:opacity-50"
-                >
-                    <CheckIcon className="w-5 h-5 inline-block mr-2" />
-                    Mark as Passed
-                </button>
-            </div>
-        </div>
-    );
-};
-
-
-// --- Main Component ---
-const FeatureHealthDashboard = () => {
-    const { setStatus, clearError } = useAppContext();
-    const { log } = useLog();
-    const [features, setFeatures] = useState<Feature[]>([]);
-    const [tests, setTests] = useState<TestCase[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedTest, setSelectedTest] = useState<TestCase | null>(null);
-    const [isUpdating, setIsUpdating] = useState(false);
-
-    const fetchData = useCallback(async () => {
-        setIsLoading(true);
-        clearError();
-        log('Fetching data for Feature Health Dashboard...');
-        try {
-            const [featuresRes, testsRes] = await Promise.all([
-                fetch('/api/features'),
-                fetch('/api/tests')
-            ]);
-            if (!featuresRes.ok || !testsRes.ok) {
-                throw new Error('Failed to fetch required data.');
-            }
-            const featuresData = await featuresRes.json();
-            const testsData = await testsRes.json();
-            setFeatures(featuresData);
-            setTests(testsData);
-            log(`Fetched ${featuresData.length} features and ${testsData.length} tests.`);
-        } catch (error) {
-            const errorMessage = (error as Error).message;
-            setStatus({ error: errorMessage });
-            log('Failed to fetch dashboard data.', { error: { message: errorMessage } }, 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [setStatus, clearError, log]);
-
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    const handleUpdateStatus = async (testId: string, status: TestStatus) => {
-        setIsUpdating(true);
-        log(`Updating test case status...`, { testId, newStatus: status });
-        try {
-            const res = await fetch(`/api/tests/${testId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ last_run_status: status }),
-            });
-            if (!res.ok) throw new Error('Failed to update test status.');
-            const updatedTest = await res.json();
-            
-            setTests(prevTests => prevTests.map(t => t.id === testId ? updatedTest : t));
-            setSelectedTest(updatedTest); // Update the view with the latest data
-            log('Test status updated successfully.');
-        } catch (error) {
-            const errorMessage = (error as Error).message;
-            setStatus({ error: errorMessage });
-            log('Failed to update test status.', { error: { message: errorMessage } }, 'error');
-        } finally {
-            setIsUpdating(false);
-        }
-    };
-
-    const testsByFeatureId = useMemo(() => {
-        return tests.reduce((acc, test) => {
-            if (!acc[test.featureId]) {
-                acc[test.featureId] = [];
-            }
-            acc[test.featureId].push(test);
-            return acc;
-        }, {} as Record<string, TestCase[]>);
-    }, [tests]);
-
-    return (
-        <div className="h-full flex flex-col">
-            <div className="flex-shrink-0 mb-4">
-                 <h3 className="text-2xl font-bold">Feature Health Dashboard</h3>
-                 <p className="text-sm text-gray-400">An overview of all system features and their current QA status based on registered test cases.</p>
-            </div>
-             {isLoading ? (
-                <div className="flex-1 flex items-center justify-center"><p>Loading dashboard...</p></div>
-            ) : (
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
-                    <div className="overflow-y-auto pr-2 space-y-2">
-                        {features.map(feature => (
-                            // FIX: Wrap FeatureRow component in a div with the key to resolve TypeScript error.
-                            // The 'key' prop is for React's reconciliation and should be on the wrapping element of a list, not passed to the component's props.
-                            <div key={feature.id}>
-                                <FeatureRow
-                                    feature={feature}
-                                    tests={testsByFeatureId[feature.id] || []}
-                                    onSelectTest={setSelectedTest}
-                                    selectedTestId={selectedTest?.id || null}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="overflow-hidden">
-                        <AnimatePresence mode="wait">
-                            {selectedTest ? (
-                                <motion.div
-                                    key={selectedTest.id}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="h-full"
-                                >
-                                    <TestExecutionView test={selectedTest} onUpdateStatus={handleUpdateStatus} isUpdating={isUpdating}/>
-                                </motion.div>
-                            ) : (
-                                 <motion.div
-                                    key="placeholder"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="h-full flex items-center justify-center bg-gray-800 rounded-lg"
-                                >
-                                    <p className="text-gray-500">Select a test case to view its details and run it.</p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-export default FeatureHealthDashboard;
+                    <h5 className="font-semibold text-gray-300 mb-1

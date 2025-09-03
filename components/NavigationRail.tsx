@@ -5,7 +5,8 @@ import { useAppContext } from '@/components/providers/AppProvider';
 import { 
     PlusIcon, MemoryIcon, UsersIcon, CodeIcon, BookmarkListIcon, 
     SettingsIcon, LogIcon, BrainIcon, DashboardIcon, PromptsIcon, 
-    ChatBubbleLeftRightIcon
+    ChatBubbleLeftRightIcon,
+    RocketLaunchIcon
 } from '@/components/Icons';
 import { useLog } from './providers/LogProvider';
 
@@ -32,6 +33,7 @@ const NavigationRail = ({ setBookmarksOpen, setGlobalSettingsOpen }: {
 
     const mainViews: NavItemProps[] = [
         { viewName: 'dashboard', label: 'Dashboard', icon: DashboardIcon, tooltip: "Open the main Dashboard Center." },
+        { viewName: 'agent_center', label: 'Agent Center', icon: RocketLaunchIcon, tooltip: "Manage and run autonomous agents." },
         { viewName: 'brain_center', label: 'Brain Center', icon: BrainIcon, tooltip: "Manage the AI's core cognitive functions." },
         { viewName: 'memory_center', label: 'Memory Center', icon: MemoryIcon, tooltip: "View and manage the AI's structured knowledge. (Cmd+K)" },
         { viewName: 'contacts_hub', label: 'Contacts Hub', icon: UsersIcon, tooltip: "Manage people and organizations the AI knows about." },

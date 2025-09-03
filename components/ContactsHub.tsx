@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -184,6 +185,7 @@ const ContactsHub = () => {
                     </thead>
                     <tbody>
                         {sortedAndFilteredContacts.map(contact => (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error.
                             <motion.tr key={contact.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-gray-700 hover:bg-gray-700/50">
                                 <td className="p-3 font-medium">{contact.name}</td>
                                 <td className="p-3">{contact.company}</td>

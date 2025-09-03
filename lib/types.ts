@@ -256,3 +256,25 @@ export interface PipelinePerformanceChartData {
     // Add index signature to be compatible with Nivo's BarDatum
     [key: string]: string | number;
 }
+
+// --- New Autonomous Agent Types ---
+export interface AgentRun {
+    id: string;
+    goal: string;
+    status: 'running' | 'completed' | 'failed';
+    final_result: string | null;
+    createdAt: Date;
+    completedAt: Date | null;
+    duration_ms: number | null;
+}
+
+export interface AgentRunStep {
+    id: string;
+    run_id: string;
+    step_order: number;
+    thought: string | null;
+    action_type: 'prompt' | 'tool' | 'finish';
+    action_input: Record<string, any> | null;
+    observation: string | null;
+    createdAt: Date;
+}

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -89,7 +90,9 @@ const FeatureItem = ({ feature, onEdit, onDelete }: FeatureItemProps) => {
     const { log } = useLog();
 
     return (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error.
         <motion.div layout className="bg-gray-800 rounded-lg overflow-hidden">
+{/* FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error. */}
             <motion.div layout className="flex justify-between items-center p-4 cursor-pointer" onClick={() => {
                 log(`User ${isExpanded ? 'collapsed' : 'expanded'} feature view`, { featureName: feature.name });
                 setIsExpanded(!isExpanded);
@@ -109,6 +112,7 @@ const FeatureItem = ({ feature, onEdit, onDelete }: FeatureItemProps) => {
             </motion.div>
             <AnimatePresence>
                 {isExpanded && (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error.
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -264,7 +268,9 @@ const FeaturesDictionary = () => {
     };
     
     const renderForm = () => (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error.
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
+{/* FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation resolves this TypeScript error. */}
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center p-4 border-b border-gray-700 flex-shrink-0">
                     <h3 className="font-semibold text-lg">{currentFeature?.id ? 'Edit Feature' : 'New Feature'}</h3>

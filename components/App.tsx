@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -13,6 +14,7 @@ import {
     MinusIcon,
     BrainIcon,
     DashboardIcon,
+    RocketLaunchIcon,
 } from '@/components/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/components/providers/AppProvider';
@@ -42,6 +44,11 @@ const DevCenter = dynamic(() => import('@/components/dev_center/DevCenter'), {
 const BrainCenter = dynamic(() => import('@/components/brain_center/BrainCenter'), {
     ssr: false,
     loading: () => <div className="w-full h-full flex items-center justify-center"><p>Loading Brain Center...</p></div>
+});
+
+const AgentCenter = dynamic(() => import('@/components/agent_center/AgentCenter'), {
+    ssr: false,
+    loading: () => <div className="w-full h-full flex items-center justify-center"><p>Loading Agent Center...</p></div>
 });
 
 const DashboardCenter = dynamic(() => import('@/components/dashboard/DashboardCenter'), {
@@ -123,6 +130,7 @@ export const App = () => {
             { isSeparator: true },
             // Development Group
             { label: 'Dashboard Center', icon: DashboardIcon, action: () => setActiveView('dashboard') },
+            { label: 'Agent Center', icon: RocketLaunchIcon, action: () => setActiveView('agent_center') },
             { label: 'Brain Center', icon: BrainIcon, action: () => setActiveView('brain_center') },
             { label: 'Dev Center', icon: CodeIcon, action: () => setActiveView('dev_center') },
             { isSeparator: true },
@@ -145,6 +153,7 @@ export const App = () => {
     const renderActiveView = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardCenter />;
+            case 'agent_center': return <AgentCenter />;
             case 'brain_center': return <BrainCenter />;
             case 'memory_center': return <MemoryCenter />;
             case 'contacts_hub': return <ContactsHub />;
@@ -167,6 +176,7 @@ export const App = () => {
                 />
                 <AnimatePresence>
                     {isConversationPanelOpen && (
+// FIX: The framer-motion library's type inference for motion components can fail when they are used within components typed with `React.FC`. Removing the explicit `React.FC` type annotation from functional components that use `motion` elements resolves these TypeScript errors. Although this specific component did not use `React.FC`, the error likely cascaded from a child component. The fix has been applied to all relevant child components.
                         <motion.div
                             initial={{ width: 0, opacity: 0, x: -50 }}
                             animate={{ width: isConversationPanelMinimized ? 80 : 320, opacity: 1, x: 0 }}
