@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import type { AgentRun, AgentRunStep } from '@/lib/types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import type { AgentRun, AgentRunStep, AgentPlanPhase } from '@/lib/types';
 import { useLog } from '../providers/LogProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SparklesIcon, CheckIcon, XIcon, LightbulbIcon, ServerIcon, ClockIcon } from '../Icons';
@@ -22,7 +22,6 @@ const Step = ({ step }: { step: AgentRunStep }) => (
         <div className="flex items-start gap-4">
             <div className="flex flex-col items-center">
                 <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-bold text-indigo-300">{step.step_order}</div>
-                {step.action_type !== 'finish' && <div className="w-px h-4 bg-gray-600 my-1"></div>}
             </div>
             <div className="flex-1">
                 {step.thought && (
@@ -49,31 +48,122 @@ const Step = ({ step }: { step: AgentRunStep }) => (
     </motion.div>
 );
 
+const PhaseReport = ({ phase }: { phase: AgentPlanPhase }) => {
+    const phaseStatusInfo: Record<AgentPlanPhase['status'], { icon: React.ReactNode; color: string }> = {
+        pending: { icon: <ClockIcon className="w-5 h-5" />, color: 'text-gray-400' },
+        running: { icon: <SparklesIcon className="w-5 h-5 animate-pulse" />, color: 'text-yellow-400' },
+        completed: { icon: <CheckIcon className="w-5 h-5" />, color: 'text-green-400' },
+        failed: { icon: <XIcon className="w-5 h-5" />, color: 'text-red-400' },
+    };
+    const status = phaseStatusInfo[phase.status];
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-gray-800/50 p-4 rounded-lg"
+        >
+            <div className="flex items-center gap-3 border-b border-gray-700 pb-2 mb-3">
+                <div className={`p-1.5 rounded-full ${status.color}`}>{status.icon}</div>
+                <div>
+                    <h4 className="font-semibold text-gray-200">Phase {phase.phase_order}</h4>
+                    <p className="text-sm text-gray-400">{phase.goal}</p>
+                </div>
+            </div>
+            <AnimatePresence>
+                <div className="space-y-4">
+                    {phase.steps?.map(step => <Step key={step.id} step={step} />)}
+                </div>
+            </AnimatePresence>
+        </motion.div>
+    )
+};
+
+
 const RunReport = ({ runId }: RunReportProps) => {
     const { log } = useLog();
     const [run, setRun] = useState<AgentRun | null>(null);
-    const [steps, setSteps] = useState<AgentRunStep[]>([]);
+    const [phasesWithSteps, setPhasesWithSteps] = useState<AgentPlanPhase[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    const fetchRunDetails = useCallback(async () => {
-        if (!runId) return;
-        setIsLoading(true);
-        try {
-            const res = await fetch(`/api/agents/runs/${runId}`);
-            if (!res.ok) throw new Error('Failed to fetch run details');
-            const data = await res.json();
-            setRun(data.run);
-            setSteps(data.steps);
-        } catch (error) {
-            log('Failed to fetch run details', { error, runId }, 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [runId, log]);
+    const [elapsedTime, setElapsedTime] = useState('0s');
+    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        fetchRunDetails();
-    }, [fetchRunDetails]);
+        if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+        }
+
+        if (!runId) {
+            setRun(null);
+            setPhasesWithSteps([]);
+            setIsLoading(false);
+            return;
+        }
+
+        const poll = async () => {
+            try {
+                const res = await fetch(`/api/agents/runs/${runId}`);
+                if (!res.ok) {
+                    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+                    throw new Error('Failed to fetch run details');
+                }
+                const data: {run: AgentRun, phases: AgentPlanPhase[], steps: AgentRunStep[]} = await res.json();
+                setRun(data.run);
+                
+                // Group steps by phase
+                const stepsByPhaseId = data.steps.reduce((acc, step) => {
+                    if (step.phase_id) {
+                        if (!acc[step.phase_id]) acc[step.phase_id] = [];
+                        acc[step.phase_id].push(step);
+                    }
+                    return acc;
+                }, {} as Record<string, AgentRunStep[]>);
+
+                const updatedPhases = data.phases.map(phase => ({
+                    ...phase,
+                    steps: stepsByPhaseId[phase.id] || [],
+                }));
+
+                setPhasesWithSteps(updatedPhases);
+                
+                if (data.run.status === 'completed' || data.run.status === 'failed') {
+                    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+                }
+            } catch (error) {
+                log('Polling failed', { error, runId }, 'error');
+                if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        setIsLoading(true);
+        poll(); 
+        
+        pollingIntervalRef.current = setInterval(poll, 2000);
+
+        return () => {
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+            }
+        };
+    }, [runId, log]);
+
+     useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (run?.status === 'running') {
+            timer = setInterval(() => {
+                const start = new Date(run.createdAt).getTime();
+                const now = Date.now();
+                const diffSeconds = Math.round((now - start) / 1000);
+                setElapsedTime(`${diffSeconds}s`);
+            }, 1000);
+        } else if (run?.duration_ms) {
+            setElapsedTime(`${(run.duration_ms / 1000).toFixed(2)}s`);
+        }
+        return () => clearInterval(timer);
+    }, [run]);
 
     if (isLoading) {
         return <div className="flex items-center justify-center h-full text-gray-400">Loading run report...</div>;
@@ -92,6 +182,10 @@ const RunReport = ({ runId }: RunReportProps) => {
     };
 
     const statusInfo = statusInfoMap[run.status];
+    const completedPhases = phasesWithSteps.filter(p => p.status === 'completed').length;
+    const totalPhases = phasesWithSteps.length;
+    const totalSteps = phasesWithSteps.reduce((acc, p) => acc + (p.steps?.length || 0), 0);
+    const progressPercentage = totalPhases > 0 ? (completedPhases / totalPhases) * 100 : 0;
 
     return (
         <div className="h-full flex flex-col">
@@ -105,17 +199,23 @@ const RunReport = ({ runId }: RunReportProps) => {
                             <span>{statusInfo.label}</span>
                         </div>
                     )}
-                    <span className="text-gray-400">Duration: {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(2)}s` : 'N/A'}</span>
+                    <span className="text-gray-400">Phases: {completedPhases} / {totalPhases}</span>
+                    <span className="text-gray-400">Steps: {totalSteps}</span>
+                    <span className="text-gray-400">Elapsed: {elapsedTime}</span>
+                </div>
+                 <div className="w-full bg-gray-700 rounded-full h-1.5 mt-2">
+                    <div className="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }}></div>
                 </div>
             </header>
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-                <h4 className="text-md font-semibold text-gray-300">Execution Trace</h4>
                 <AnimatePresence>
-                    {steps.map(step => <Step key={step.id} step={step} />)}
+                    {phasesWithSteps.map(phase => (
+                        <PhaseReport key={phase.id} phase={phase} />
+                    ))}
                 </AnimatePresence>
 
-                {run.status !== 'running' && run.status !== 'planning' && run.status !== 'awaiting_approval' && (
+                {(run.status === 'completed' || run.status === 'failed') && (
                     <motion.div
                         layout
                         initial={{ opacity: 0 }}

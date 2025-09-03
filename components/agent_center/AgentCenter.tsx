@@ -71,23 +71,44 @@ const AgentCenter = () => {
     };
 
     const handleExecutePlan = async () => {
-        // NOTE: This is currently a placeholder.
-        // It should eventually call a modified /api/agents/runs endpoint.
         if (!currentPlan || !goal) return;
         setViewState('executing');
-        setStatus({ currentAction: 'Execution started (simulation)...' });
-        log('User approved plan. Execution would start here.', { goal, plan: currentPlan });
-        
-        // In a real implementation, we would now:
-        // 1. POST the goal and plan to /api/agents/runs
-        // 2. Get back a new runId.
-        // 3. Set activeRunId to the new ID.
-        // 4. Start polling /api/agents/runs/[runId] for updates to show progress.
-        
-        setTimeout(() => {
+        setIsLoading(true);
+        setStatus({ currentAction: 'Initiating agent run...' });
+        log('User approved plan. Starting execution.', { goal, plan: currentPlan });
+
+        try {
+            const res = await fetch('/api/agents/runs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ goal, plan: currentPlan }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error || 'Failed to start agent run');
+            }
+
+            const newRun: AgentRun = await res.json();
+            
+            await fetchRuns(); // Refresh the list
+            
+            // Immediately switch to the report view for the new run
+            setActiveRunId(newRun.id); 
+            
+            // Reset the creation view state, but keep the UI showing the new run
+            setViewState('idle');
+            setCurrentPlan(null);
+            setGoal('');
+
+        } catch (error) {
+            log('Failed to execute plan', { error }, 'error');
+            setStatus({ error: (error as Error).message });
+            setViewState('review'); // Go back to review on failure
+        } finally {
+            setIsLoading(false);
             setStatus({ currentAction: '' });
-            alert("Execution pipeline is not fully implemented yet. This is a UI demonstration of the planning and approval flow.");
-        }, 2000);
+        }
     };
     
     const handleDiscardPlan = () => {
@@ -98,30 +119,7 @@ const AgentCenter = () => {
     };
 
     const renderLeftPanel = () => {
-        if (viewState === 'review' || viewState === 'executing') {
-            return (
-                 <div className="bg-gray-800/50 p-4 rounded-lg flex-1 flex flex-col overflow-hidden">
-                    <h3 className="text-lg font-semibold mb-2">Run History</h3>
-                    <p className="text-xs text-gray-400 mb-4">A new run will appear here after the current plan is executed.</p>
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-2">
-                         {runs.map(run => (
-                            <button
-                                key={run.id}
-                                onClick={() => setActiveRunId(run.id)}
-                                className={`w-full text-left p-3 rounded-md transition-colors ${activeRunId === run.id ? 'bg-indigo-600/30' : 'bg-gray-700/50 hover:bg-gray-700'}`}
-                            >
-                                <p className="font-semibold truncate">{run.goal}</p>
-                                <div className="flex justify-between items-center text-xs text-gray-400 mt-1">
-                                    <span>{new Date(run.createdAt).toLocaleString()}</span>
-                                    <span className={`capitalize px-2 py-0.5 rounded-full ${run.status === 'completed' ? 'bg-green-600/50 text-green-300' : run.status === 'failed' ? 'bg-red-600/50 text-red-300' : 'bg-yellow-600/50 text-yellow-300'}`}>{run.status}</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-        
+        // Always show the run history now, as planning/review happens on the right panel
         return (
             <>
                 <div className="bg-gray-800/50 p-4 rounded-lg">
@@ -133,14 +131,14 @@ const AgentCenter = () => {
                         placeholder="e.g., 'Research the top 3 AI frameworks for frontend development and create a comparison table.'"
                         className="w-full p-2 bg-gray-700 rounded-lg text-sm resize-y"
                         rows={4}
-                        disabled={isLoading}
+                        disabled={isLoading || viewState !== 'idle'}
                     />
                     <button
                         onClick={handleCreatePlan}
-                        disabled={isLoading || !goal.trim()}
+                        disabled={isLoading || !goal.trim() || viewState !== 'idle'}
                         className="w-full mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold hover:bg-indigo-500 disabled:opacity-50"
                     >
-                        {isLoading ? 'Generating Plan...' : 'Create Plan'}
+                        {viewState === 'planning' ? 'Generating Plan...' : 'Create Plan'}
                     </button>
                 </div>
                 <div className="bg-gray-800/50 p-4 rounded-lg flex-1 flex flex-col overflow-hidden">
@@ -149,8 +147,13 @@ const AgentCenter = () => {
                         {runs.map(run => (
                             <button
                                 key={run.id}
-                                onClick={() => setActiveRunId(run.id)}
-                                className={`w-full text-left p-3 rounded-md transition-colors ${activeRunId === run.id ? 'bg-indigo-600/30' : 'bg-gray-700/50 hover:bg-gray-700'}`}
+                                onClick={() => {
+                                    if (viewState === 'idle') {
+                                        setActiveRunId(run.id)
+                                    }
+                                }}
+                                disabled={viewState !== 'idle'}
+                                className={`w-full text-left p-3 rounded-md transition-colors ${activeRunId === run.id && viewState === 'idle' ? 'bg-indigo-600/30' : 'bg-gray-700/50 hover:bg-gray-700'} disabled:cursor-not-allowed`}
                             >
                                 <p className="font-semibold truncate">{run.goal}</p>
                                 <div className="flex justify-between items-center text-xs text-gray-400 mt-1">
@@ -166,11 +169,11 @@ const AgentCenter = () => {
     }
 
     const renderRightPanel = () => {
-        if (viewState === 'review' || viewState === 'executing') {
+        if (viewState === 'planning' || viewState === 'review' || viewState === 'executing') {
             return (
                  <PlanDisplay 
                     goal={goal}
-                    plan={currentPlan!}
+                    plan={currentPlan}
                     state={viewState}
                     onApprove={handleExecutePlan}
                     onDiscard={handleDiscardPlan}

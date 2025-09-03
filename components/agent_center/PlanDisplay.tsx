@@ -5,11 +5,11 @@ import { AgentPlanPhase } from '@/lib/types';
 import PhaseCard from './PhaseCard';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type ViewState = 'review' | 'executing';
+type ViewState = 'idle' | 'planning' | 'review' | 'executing';
 
 interface PlanDisplayProps {
     goal: string;
-    plan: Omit<AgentPlanPhase, 'id' | 'run_id' | 'steps' | 'result' | 'started_at' | 'completed_at'>[];
+    plan: Omit<AgentPlanPhase, 'id' | 'run_id' | 'steps' | 'result' | 'started_at' | 'completed_at'>[] | null;
     state: ViewState;
     onApprove: () => void;
     onDiscard: () => void;
@@ -22,10 +22,10 @@ const PlanDisplay = ({ goal, plan, state, onApprove, onDiscard, onReplan }: Plan
         if (state === 'executing') {
             return (
                 <div className="flex justify-between items-center">
-                    <p className="text-sm text-gray-400">Executing plan...</p>
+                    <p className="text-sm text-yellow-400 animate-pulse">Executing plan...</p>
                     <div className="flex gap-2">
-                        <button className="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-semibold hover:bg-yellow-500">Pause</button>
-                        <button className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-500">Cancel</button>
+                        <button disabled className="px-4 py-2 bg-yellow-600/50 text-white rounded-md text-sm font-semibold cursor-not-allowed">Pause</button>
+                        <button disabled className="px-4 py-2 bg-red-600/50 text-white rounded-md text-sm font-semibold cursor-not-allowed">Cancel</button>
                     </div>
                 </div>
             )
@@ -55,14 +55,19 @@ const PlanDisplay = ({ goal, plan, state, onApprove, onDiscard, onReplan }: Plan
                 <p className="text-xs text-gray-500">Main Goal</p>
                 <h3 className="font-semibold text-lg text-gray-200">{goal}</h3>
                 <div className="mt-4">
-                    {renderHeader()}
+                    {state === 'review' || state === 'executing' ? renderHeader() : <div className="h-10"></div>}
                 </div>
             </header>
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-3">
                 <h4 className="text-md font-semibold text-gray-300">Execution Plan</h4>
+                {state === 'planning' && (
+                    <div className="text-center text-gray-400 py-8">
+                        <p className="animate-pulse">AI Orchestrator is generating a plan...</p>
+                    </div>
+                )}
                 <AnimatePresence>
-                     {plan.map((phase, index) => (
+                     {plan && plan.map((phase, index) => (
                         <PhaseCard 
                             key={index} 
                             phase={phase}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { AgentRun, AgentRunStep } from '@/lib/types';
+import { AgentRun, AgentRunStep, AgentPlanPhase } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,12 +16,17 @@ export async function GET(req: NextRequest, { params }: { params: { runId: strin
             return NextResponse.json({ error: 'Agent run not found' }, { status: 404 });
         }
         
+        const { rows: phaseRows } = await sql<AgentPlanPhase>`
+            SELECT * FROM agent_run_phases WHERE run_id = ${runId} ORDER BY phase_order ASC;
+        `;
+        
         const { rows: stepRows } = await sql<AgentRunStep>`
             SELECT * FROM agent_run_steps WHERE run_id = ${runId} ORDER BY step_order ASC;
         `;
 
         return NextResponse.json({
             run: runRows[0],
+            phases: phaseRows,
             steps: stepRows
         });
 
