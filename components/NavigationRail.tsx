@@ -83,7 +83,6 @@ const NavigationRail = ({ setBookmarksOpen, setGlobalSettingsOpen }: {
                         <ChatBubbleLeftRightIcon className="w-6 h-6" />
                     </button>
                     <hr className="border-gray-700 my-2" />
-                    {/* FIX: Wrap NavButton in a div with the key to resolve TypeScript error regarding the 'key' prop. */}
                     {mainViews.map(item => <div key={item.viewName}><NavButton item={item} /></div>)}
                 </div>
             </div>

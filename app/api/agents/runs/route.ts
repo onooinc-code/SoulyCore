@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     const startTime = Date.now();
-    let runId: string;
+    let runId: string = ''; // Initialize runId
     try {
         // Create initial run record
         const { rows: runRows } = await sql<AgentRun>`
@@ -78,11 +78,11 @@ Thought: [Your reasoning for the next action]
                 contents: prompt,
             });
             const responseText = agentResponse.text;
-
-            if (!responseText) {
-                throw new Error("Agent failed to generate a response text.");
-            }
             
+            if (!responseText) {
+                throw new Error("Agent failed to generate a response. The response from the model was empty.");
+            }
+
             const thoughtMatch = responseText.match(/Thought:\s*(.*)/);
             const thought = thoughtMatch ? thoughtMatch[1].trim() : 'No thought process found.';
             
@@ -136,7 +136,7 @@ Thought: [Your reasoning for the next action]
     } catch (error) {
         console.error('Agent run failed:', error);
         const duration = Date.now() - startTime;
-        if (runId!) {
+        if (runId) {
             await sql`
                 UPDATE agent_runs 
                 SET status = 'failed', final_result = ${(error as Error).message}, "completedAt" = CURRENT_TIMESTAMP, duration_ms = ${duration}

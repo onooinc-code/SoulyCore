@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-// FIX: Imported the `CodeIcon` component from `../Icons` to resolve the 'Cannot find name' error.
 import { BeakerIcon, RefreshIcon, TrashIcon, ArrowDownOnSquareIcon, CpuChipIcon, DocumentTextIcon, SparklesIcon, CodeIcon } from '../Icons';
 import { useLog } from '../providers/LogProvider';
 

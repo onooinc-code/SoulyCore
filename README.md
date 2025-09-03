@@ -62,7 +62,8 @@ This index provides an overview of the key directories and their purpose.
 - **`ChatWindow.tsx`**: The main chat interface.
 - **`Header.tsx`**: The header bar for the chat view.
 - **`Message.tsx`**: Renders a single chat message.
-- **`Sidebar.tsx`**: The main navigation sidebar (now deprecated in favor of `NavigationRail.tsx` and `ConversationPanel.tsx`).
+- **`NavigationRail.tsx`**: The new primary vertical navigation bar.
+- **`ConversationPanel.tsx`**: The new collapsible panel for listing conversations.
 
 ### `/core`
 * **The Cognitive Engine.** All decoupled, backend-only business logic resides here.*
@@ -89,6 +90,5 @@ This index provides an overview of the key directories and their purpose.
 
 ### Root Files
 - **`README.md`**: This file.
-- **`.gitignore`**: Specifies files and folders to be ignored by Git.
 - **`package.json`**: Project dependencies and scripts.
 - **`next.config.js`**: Configuration for the Next.js framework.

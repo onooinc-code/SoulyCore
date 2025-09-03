@@ -146,6 +146,46 @@ const featuresData = [
             'app/api/features/[...].ts'
         ]),
         notes: 'The "Roadmap & Ideas" tab needs to be implemented with real functionality and API integrations to be useful.'
+    },
+     {
+        name: 'Dashboard Center',
+        overview: 'A high-level command center for the entire application, providing at-a-glance views of system statistics, strategic goals, and live project documentation. It serves as the main entry point and overview for the user.',
+        status: '✅ Completed',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'System Stats Panel', description: 'Displays key metrics like conversation count, memory size, and pipeline performance using dynamic charts.', status: '✅ Completed' },
+            { subFeature: 'Live Hedra Goals Panel', description: 'Fetches and displays the project\'s core strategic goals from the database, allowing for in-place editing.', status: '✅ Completed' },
+            { subFeature: 'Live Documentation Panel', description: 'Shows an index of key project documents, which can be viewed and edited in a modal without leaving the app.', status: '✅ Completed' },
+            { subFeature: 'Action/Decision/Report Panels', description: 'Placeholder panels for future system-wide actions, pending user decisions, and generated reports.', status: '✅ Completed' }
+        ]),
+        logic_flow: 'The DashboardCenter.tsx component orchestrates multiple sub-panels. Each panel (e.g., StatsPanel.tsx) fetches its data from a dedicated API endpoint (e.g., /api/dashboard/stats). The HedraGoalsPanel and DocumentationPanel use PUT requests to save user edits back to the database, creating a live, interactive experience.',
+        key_files_json: JSON.stringify([
+            'components/dashboard/DashboardCenter.tsx',
+            'components/dashboard/DashboardPanel.tsx',
+            'components/dashboard/StatsPanel.tsx',
+            'components/dashboard/HedraGoalsPanel.tsx',
+            'app/api/dashboard/stats/route.ts',
+            'app/api/hedra-goals/route.ts'
+        ]),
+        notes: 'The dashboard is designed to be the default view, providing immediate value and context upon opening the application.'
+    },
+    {
+        name: 'Autonomous Agent Center',
+        overview: 'A dedicated hub for defining high-level goals and launching autonomous agents to achieve them. It provides real-time monitoring of the agent\'s thought process and a history of all previous runs.',
+        status: '✅ Completed',
+        ui_ux_breakdown_json: JSON.stringify([
+            { subFeature: 'Goal Definition UI', description: 'A simple textarea for the user to input a complex, multi-step goal for the agent.', status: '✅ Completed' },
+            { subFeature: 'Run History List', description: 'A list of all previous and ongoing agent runs, showing their status and final result.', status: '✅ Completed' },
+            { subFeature: 'Live Execution Report', description: 'A detailed, step-by-step view of a selected run, showing the agent\'s "Thought", "Action", and "Observation" for each step in the ReAct loop.', status: '✅ Completed' }
+        ]),
+        logic_flow: 'The user submits a goal via AgentCenter.tsx, which sends a POST request to /api/agents/runs. The backend API route initiates a long-running ReAct (Reason + Act) loop, saving each step to the database. The frontend\'s RunReport.tsx component polls the API or uses a future websocket connection to display the steps in real-time as they are completed.',
+        key_files_json: JSON.stringify([
+            'components/agent_center/AgentCenter.tsx',
+            'components/agent_center/RunReport.tsx',
+            'app/api/agents/runs/route.ts',
+            'app/api/agents/runs/[runId]/route.ts',
+            'scripts/create-tables.js'
+        ]),
+        notes: 'Currently uses a simple prompt-based tool. The architecture is designed to easily incorporate more complex, function-calling tools in the future.'
     }
 ];
 

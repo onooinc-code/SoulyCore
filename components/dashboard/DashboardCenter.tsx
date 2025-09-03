@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -46,19 +45,15 @@ const DashboardCenter = () => {
                     <StatsPanel />
                 </DashboardPanel>
 
-                {/* FIX: Added the missing child component to the `DashboardPanel` instance. The self-closing tag was causing an error as the component requires children. */}
                 <DashboardPanel title="Project Documentations" isCollapsedOverride={allPanelsCollapsed}>
                     <DocumentationPanel />
                 </DashboardPanel>
-                {/* FIX: Added the missing child component to the `DashboardPanel` instance. The self-closing tag was causing an error as the component requires children. */}
                 <DashboardPanel title="Action Center" isCollapsedOverride={allPanelsCollapsed}>
                     <ActionsPanel />
                 </DashboardPanel>
-                {/* FIX: Added the missing child component to the `DashboardPanel` instance. The self-closing tag was causing an error as the component requires children. */}
                 <DashboardPanel title="Needed Decisions" isCollapsedOverride={allPanelsCollapsed}>
                     <DecisionsPanel />
                 </DashboardPanel>
-                {/* FIX: Added the missing child component to the `DashboardPanel` instance. The self-closing tag was causing an error as the component requires children. */}
                 <DashboardPanel title="Important Reports" isCollapsedOverride={allPanelsCollapsed}>
                     <ReportsPanel />
                 </DashboardPanel>

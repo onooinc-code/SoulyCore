@@ -16,6 +16,7 @@ const docsToSeed = [
     { key: 'frontend_arch', title: 'Frontend Architecture', file: '06_Frontend_Architecture.md' },
     { key: 'setup', title: 'Setup & Deployment', file: '07_Setup_And_Deployment.md' },
     { key: 'security', title: 'Security Model', file: '08_Security_Model.md' },
+    { key: 'workflow', title: 'Development Workflow', file: '09_Development_Workflow.md' },
 ];
 
 const goalsToSeed = {
