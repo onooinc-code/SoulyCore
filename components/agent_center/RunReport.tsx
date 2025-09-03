@@ -108,7 +108,11 @@ const RunReport = ({ runId }: RunReportProps) => {
             <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                 <h4 className="text-md font-semibold text-gray-300">Execution Trace</h4>
                 <AnimatePresence>
-                    {steps.map(step => <Step key={step.id} step={step} />)}
+                    {steps.map(step => (
+                        <div key={step.id}>
+                            <Step step={step} />
+                        </div>
+                    ))}
                 </AnimatePresence>
 
                 {run.status !== 'running' && (

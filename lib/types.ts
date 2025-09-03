@@ -8,6 +8,7 @@ export interface Conversation {
     createdAt: Date;
     lastUpdatedAt: Date;
     systemPrompt?: string;
+    agentPersonality?: string;
     useSemanticMemory?: boolean;
     useStructuredMemory?: boolean;
     model?: string;

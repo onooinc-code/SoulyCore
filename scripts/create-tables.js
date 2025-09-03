@@ -14,6 +14,7 @@ async function createTables() {
                 "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 "lastUpdatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 "systemPrompt" TEXT,
+                "agentPersonality" VARCHAR(50) DEFAULT 'Balanced',
                 "useSemanticMemory" BOOLEAN DEFAULT true,
                 "useStructuredMemory" BOOLEAN DEFAULT true,
                 model VARCHAR(255),
@@ -59,6 +60,11 @@ async function createTables() {
             await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "enableAutoSummarization" BOOLEAN DEFAULT true;`;
         } catch (e) {
             if (!e.message.includes('column "enableAutoSummarization" already exists')) throw e;
+        }
+         try {
+            await sql`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS "agentPersonality" VARCHAR(50) DEFAULT 'Balanced';`;
+        } catch (e) {
+            if (!e.message.includes('column "agentPersonality" already exists')) throw e;
         }
         console.log("Conversation model and feature columns checked.");
 

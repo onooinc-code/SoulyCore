@@ -139,12 +139,15 @@ const HedraGoalsPanel = () => {
                         <h4 className="font-semibold text-center mb-4">الأنظمة الفرعية (Subsystems)</h4>
                         <Reorder.Group axis="y" values={subsystems} onReorder={setSubsystems} className="space-y-3">
                             {subsystems.map(sub => (
-                                <SubsystemCard 
-                                    key={sub.id} 
-                                    subsystem={sub} 
-                                    onOpenDetails={() => setSelectedSubsystem(sub)}
-                                    onAiAction={handleAiAction}
-                                />
+                                // FIX: Wrapped SubsystemCard component in a div with the key to resolve TypeScript error.
+                                // The 'key' prop is for React's reconciliation and should be on the wrapping element of a list, not passed to the component's props.
+                                <div key={sub.id}>
+                                    <SubsystemCard 
+                                        subsystem={sub} 
+                                        onOpenDetails={() => setSelectedSubsystem(sub)}
+                                        onAiAction={handleAiAction}
+                                    />
+                                </div>
                             ))}
                         </Reorder.Group>
                     </div>

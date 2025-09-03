@@ -40,9 +40,10 @@ export async function POST(req: NextRequest) {
             INSERT INTO conversations (
                 title, "systemPrompt", "useSemanticMemory", "useStructuredMemory", 
                 model, temperature, "topP",
-                "enableMemoryExtraction", "enableProactiveSuggestions", "enableAutoSummarization"
+                "enableMemoryExtraction", "enableProactiveSuggestions", "enableAutoSummarization",
+                "agentPersonality"
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING *;
         `;
         const values = [
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
             featureFlags.enableMemoryExtraction,
             featureFlags.enableProactiveSuggestions,
             featureFlags.enableAutoSummarization,
+            'Balanced',
         ];
 
         const { rows } = await db.query(query, values);
