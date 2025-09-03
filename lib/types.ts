@@ -329,4 +329,5 @@ export interface Subsystem {
       completed: string[];
       remaining: string[];
   }
+  orderIndex: number;
 }

@@ -87,7 +87,8 @@ const RunReport = ({ runId }: RunReportProps) => {
     const [phasesWithSteps, setPhasesWithSteps] = useState<AgentPlanPhase[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [elapsedTime, setElapsedTime] = useState('0s');
-    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    // FIX: Replaced NodeJS.Timeout with ReturnType<typeof setInterval> to avoid NodeJS namespace dependency in the browser.
+    const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         if (pollingIntervalRef.current) {
@@ -151,7 +152,8 @@ const RunReport = ({ runId }: RunReportProps) => {
     }, [runId, log]);
 
      useEffect(() => {
-        let timer: NodeJS.Timeout;
+        // FIX: Replaced NodeJS.Timeout with ReturnType<typeof setInterval> to avoid NodeJS namespace dependency in the browser.
+        let timer: ReturnType<typeof setInterval>;
         if (run?.status === 'running') {
             timer = setInterval(() => {
                 const start = new Date(run.createdAt).getTime();

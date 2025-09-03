@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 // FIX: Corrected typo from AnatePresence to AnimatePresence.
 import { motion, AnimatePresence } from 'framer-motion';
 import { Subsystem } from '@/lib/types';
@@ -9,82 +9,31 @@ import DependencyGraph from './DependencyGraph';
 import SubsystemDetailModal from './SubsystemDetailModal';
 import { Reorder } from 'framer-motion';
 
-// Mock data for the subsystems, as we don't have a DB table for this yet.
-const initialSubsystems: Subsystem[] = [
-    {
-        id: 'soulycore',
-        name: 'SoulyCore - Cognitive Engine',
-        description: 'The central AI brain managing memory and reasoning.',
-        progress: 85,
-        healthScore: 'A',
-        dependencies: [],
-        resources: [
-            { name: 'GitHub Repo', url: '#' },
-            { name: 'Google Docs', url: '#' },
-        ],
-        milestones: [
-            { description: 'V2 Cognitive Architecture Implemented', completed: true },
-            { description: 'Context Assembly Pipeline Complete', completed: true },
-            { description: 'Memory Extraction Pipeline Complete', completed: false },
-        ],
-        githubStats: { commits: 128, pullRequests: 12, issues: 3, repoUrl: '#' },
-        tasks: {
-            completed: ["Implement Episodic Memory", "Implement Semantic Memory"],
-            remaining: ["Optimize Context Pruning"]
-        }
-    },
-    {
-        id: 'hedra-ui',
-        name: 'HedraUI - Main Frontend',
-        description: 'The primary user interface built with Next.js and React.',
-        progress: 95,
-        healthScore: 'A+',
-        dependencies: ['soulycore'],
-        resources: [
-            { name: 'GitHub Repo', url: '#' },
-            { name: 'Figma', url: '#' },
-        ],
-        milestones: [
-            { description: 'Dashboard Center Complete', completed: true },
-            { description: 'Agent Center Complete', completed: true },
-            { description: 'Implement Theming Engine', completed: false },
-        ],
-        githubStats: { commits: 256, pullRequests: 25, issues: 1, repoUrl: '#' },
-         tasks: {
-            completed: ["Build Dashboard", "Build Agent Center", "Implement Navigation"],
-            remaining: ["Add i18n support"]
-        }
-    },
-    {
-        id: 'hedrasoul',
-        name: 'HedraSoul - API Orchestrator',
-        description: 'The main Laravel-based API gateway and business logic hub.',
-        progress: 60,
-        healthScore: 'B',
-        dependencies: ['soulycore'],
-        resources: [
-            { name: 'GitHub Repo', url: '#' },
-            { name: 'Notion', url: '#' },
-        ],
-        milestones: [
-            { description: 'User Authentication Complete', completed: true },
-            { description: 'Implement Core Endpoints', completed: true },
-            { description: 'Integrate with HedraLife', completed: false },
-        ],
-        githubStats: { commits: 78, pullRequests: 8, issues: 5, repoUrl: '#' },
-        tasks: {
-            completed: ["Setup Laravel project", "Implement JWT Auth"],
-            remaining: ["Build Billing Module", "Write API documentation"]
-        }
-    },
-];
-
 const HedraGoalsPanel = () => {
-    const [subsystems, setSubsystems] = useState<Subsystem[]>(initialSubsystems);
+    const [subsystems, setSubsystems] = useState<Subsystem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedSubsystem, setSelectedSubsystem] = useState<Subsystem | null>(null);
     const [aiAnalysisResult, setAiAnalysisResult] = useState<{ title: string; content: string } | null>(null);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     
+    const fetchSubsystems = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/subsystems');
+            if (!res.ok) throw new Error("Failed to fetch subsystems");
+            const data = await res.json();
+            setSubsystems(data);
+        } catch (error) {
+            console.error("HedraGoalsPanel Error:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchSubsystems();
+    }, [fetchSubsystems]);
+
     const handleAiAction = async (subsystem: Subsystem, action: 'summary' | 'risk') => {
         const url = action === 'summary' ? '/api/dashboard/ai-summary' : '/api/dashboard/ai-risk-assessment';
         const title = action === 'summary' ? `AI Summary for ${subsystem.name}` : `AI Risk Assessment for ${subsystem.name}`;
@@ -105,6 +54,14 @@ const HedraGoalsPanel = () => {
             setAiAnalysisResult({ title, content: `Error: ${(error as Error).message}` });
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="p-4 bg-gray-900/50 rounded-lg text-gray-400 text-center">
+                Loading Ecosystem Command Center...
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 bg-gray-900/50 rounded-lg text-gray-200" dir="rtl">

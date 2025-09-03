@@ -347,6 +347,23 @@ async function createTables() {
         }
         console.log("Agent run steps table columns checked.");
 
+        const subsystemsTable = await sql`
+            CREATE TABLE IF NOT EXISTS subsystems (
+                id VARCHAR(255) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                progress INTEGER NOT NULL DEFAULT 0,
+                "healthScore" VARCHAR(10) NOT NULL,
+                dependencies JSONB,
+                resources JSONB,
+                milestones JSONB,
+                "githubStats" JSONB,
+                tasks JSONB,
+                order_index INTEGER
+            );
+        `;
+        console.log("Table 'subsystems' created or already exists.", subsystemsTable.command);
+
 
         // Insert default settings if they don't exist
         await sql`

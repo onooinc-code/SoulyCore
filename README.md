@@ -39,7 +39,7 @@ Once a feature is approved, the following process must be followed:
 ### Step 4: Response Protocol
 All responses containing code changes must adhere to the following two-part structure:
 1.  **Immediate Response (`<changes>` XML):** The first response must **ONLY** contain the XML block with the file changes. No additional text or explanation.
-2.  **Detailed Report (`ResponseTemplate-X.html`):** The agent will then generate a new, sequentially numbered HTML report file (e.g., `ResponseTemplate-6.html`) in the `Docs/Res/` directory. This file will contain a detailed, user-friendly explanation of the changes, technical decisions, and any relevant diagrams or examples.
+2.  **Detailed Report (`ResponseTemplate-X.html`):** The agent will then generate a new, sequentially numbered HTML report file (e.g., `Docs/Res/ResponseTemplate-6.html`). This file will contain a detailed, user-friendly explanation of the changes, technical decisions, and any relevant diagrams or examples.
 
 ---
 
